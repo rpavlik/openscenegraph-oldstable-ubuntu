@@ -1,0 +1,169 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+
+@DPATCH@
+diff -ru OpenSceneGraph-2.0/OpenSceneGraph/include/osg/GraphicsContext OpenSceneGraph-old/OpenSceneGraph/include/osg/GraphicsContext
+--- OpenSceneGraph-2.0/OpenSceneGraph/include/osg/GraphicsContext	2007-06-12 17:32:04.000000000 +0200
++++ OpenSceneGraph-old/OpenSceneGraph/include/osg/GraphicsContext	2007-09-10 05:32:06.000000000 +0200
+@@ -43,6 +43,12 @@
+                 screenNum(in_screenNum) {}
+                 
+             std::string displayName() const;
++            
++            /** Read the DISPLAY environmental variable, and set the ScreenIdentifier accordingly.*/
++            void readDISPLAY();
++            
++            /** Set the screenIndentifier from the displayName string.*/
++            void setScreenIdentifier(const std::string& displayName);
+ 
+             std::string  hostName;
+             unsigned int displayNum;
+diff -ru OpenSceneGraph-2.0/OpenSceneGraph/src/osg/GraphicsContext.cpp OpenSceneGraph-old/OpenSceneGraph/src/osg/GraphicsContext.cpp
+--- OpenSceneGraph-2.0/OpenSceneGraph/src/osg/GraphicsContext.cpp	2007-05-30 11:25:01.000000000 +0200
++++ OpenSceneGraph-old/OpenSceneGraph/src/osg/GraphicsContext.cpp	2007-09-10 05:31:10.000000000 +0200
+@@ -59,6 +59,61 @@
+     return ostr.str();
+ }
+ 
++void GraphicsContext::ScreenIdentifier::readDISPLAY()
++{
++	const char* ptr = 0;
++	if ((ptr=getenv("DISPLAY")) != 0)
++	{
++		setScreenIdentifier(ptr);
++	}
++}
++
++void GraphicsContext::ScreenIdentifier::setScreenIdentifier(const std::string& displayName)
++{
++	std::string::size_type colon = displayName.find_last_of(':');
++	std::string::size_type point = displayName.find_last_of('.');
++
++	if (point!=std::string::npos && 
++		colon==std::string::npos && 
++		point < colon) point = std::string::npos;
++
++	if (colon==std::string::npos)
++	{
++		hostName = "";
++	}
++	else
++	{
++		hostName = displayName.substr(0,colon);
++	}
++
++	std::string::size_type startOfDisplayNum = (colon==std::string::npos) ? 0 : colon+1;
++	std::string::size_type endOfDisplayNum = (point==std::string::npos) ?  displayName.size() : point;
++
++	if (startOfDisplayNum<endOfDisplayNum)
++	{
++		displayNum = atoi(displayName.substr(startOfDisplayNum,endOfDisplayNum-startOfDisplayNum).c_str());
++	}
++	else
++	{
++		displayNum = -1;
++	}
++
++	if (point!=std::string::npos && point+1<displayName.size())
++	{
++		screenNum = atoi(displayName.substr(point+1,displayName.size()-point-1).c_str());
++	}
++	else
++	{
++		screenNum = -1;
++	}
++
++#if 0    
++	osg::notify(osg::NOTICE)<<"   hostName ["<<hostName<<"]"<<std::endl;
++	osg::notify(osg::NOTICE)<<"   displayNum "<<displayNum<<std::endl;
++	osg::notify(osg::NOTICE)<<"   screenNum "<<screenNum<<std::endl;
++#endif
++}
++
+ 
+ typedef std::map<unsigned int, unsigned int>  ContextIDMap;
+ static ContextIDMap s_contextIDMap;
+diff -ru OpenSceneGraph-2.0/OpenSceneGraph/src/osgViewer/View.cpp OpenSceneGraph-old/OpenSceneGraph/src/osgViewer/View.cpp
+--- OpenSceneGraph-2.0/OpenSceneGraph/src/osgViewer/View.cpp	2007-06-13 12:38:40.000000000 +0200
++++ OpenSceneGraph-old/OpenSceneGraph/src/osgViewer/View.cpp	2007-09-10 05:37:33.000000000 +0200
+@@ -254,13 +254,24 @@
+     double fovy, aspectRatio, zNear, zFar;        
+     _camera->getProjectionMatrixAsPerspective(fovy, aspectRatio, zNear, zFar);
+ 
+-    unsigned int numScreens = wsi->getNumScreens();
++	osg::GraphicsContext::ScreenIdentifier si;
++	si.readDISPLAY();
++
++	// displayNum has not been set so reset it to 0.
++	if (si.displayNum<0) si.displayNum = 0;
++
++	unsigned int numScreens = wsi->getNumScreens(si);
+     if (numScreens==1)
+     {
++		if (si.screenNum<0) si.screenNum = 0;
++
+         unsigned int width, height;
+-        wsi->getScreenResolution(osg::GraphicsContext::ScreenIdentifier(0), width, height);
++		wsi->getScreenResolution(si, width, height);
+ 
+         osg::ref_ptr<osg::GraphicsContext::Traits> traits = new osg::GraphicsContext::Traits;
++		traits->hostName = si.hostName;
++		traits->displayNum = si.displayNum;
++		traits->screenNum = si.screenNum;
+         traits->x = 0;
+         traits->y = 0;
+         traits->width = width;
+@@ -324,11 +335,15 @@
+     
+         for(unsigned int i=0; i<numScreens; ++i)
+         {
++			si.screenNum = i;
++
+             unsigned int width, height;
+-            wsi->getScreenResolution(osg::GraphicsContext::ScreenIdentifier(i), width, height);
++            wsi->getScreenResolution(si, width, height);
+ 
+             osg::ref_ptr<osg::GraphicsContext::Traits> traits = new osg::GraphicsContext::Traits;
+-            traits->screenNum = i;
++			traits->hostName = si.hostName;
++			traits->displayNum = si.displayNum;
++			traits->screenNum = si.screenNum;
+             traits->x = 0;
+             traits->y = 0;
+             traits->width = width;
+@@ -398,6 +413,10 @@
+     osg::DisplaySettings* ds = _displaySettings.valid() ? _displaySettings.get() : osg::DisplaySettings::instance();
+ 
+     osg::ref_ptr<osg::GraphicsContext::Traits> traits = new osg::GraphicsContext::Traits;
++
++	traits->readDISPLAY();
++	if (traits->displayNum<0) traits->displayNum = 0;
++
+     traits->screenNum = screenNum;
+     traits->x = x;
+     traits->y = y;
+@@ -458,12 +477,22 @@
+     }
+ 
+     osg::DisplaySettings* ds = _displaySettings.valid() ? _displaySettings.get() : osg::DisplaySettings::instance();
+-
++
++	osg::GraphicsContext::ScreenIdentifier si;
++	si.readDISPLAY();
++
++	// displayNum has not been set so reset it to 0.
++	if (si.displayNum<0) si.displayNum = 0;
++
++	si.screenNum = screenNum;
++
+     unsigned int width, height;
+-    wsi->getScreenResolution(osg::GraphicsContext::ScreenIdentifier(screenNum), width, height);
++    wsi->getScreenResolution(si, width, height);
+ 
+     osg::ref_ptr<osg::GraphicsContext::Traits> traits = new osg::GraphicsContext::Traits;
+-    traits->screenNum = screenNum;
++	traits->hostName = si.hostName;
++	traits->displayNum = si.displayNum;
++	traits->screenNum = si.screenNum;
+     traits->x = 0;
+     traits->y = 0;
+     traits->width = width;

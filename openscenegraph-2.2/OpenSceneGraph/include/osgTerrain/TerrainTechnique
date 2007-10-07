@@ -1,0 +1,73 @@
+/* -*-c++-*- OpenSceneGraph - Copyright (C) 1998-2006 Robert Osfield 
+ *
+ * This library is open source and may be redistributed and/or modified under  
+ * the terms of the OpenSceneGraph Public License (OSGPL) version 0.0 or 
+ * (at your option) any later version.  The full license is in LICENSE file
+ * included with this distribution, and on the openscenegraph.org website.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
+ * OpenSceneGraph Public License for more details.
+*/
+
+#ifndef OSGTERRAIN_terrainTECHNIQUE
+#define OSGTERRAIN_terrainTECHNIQUE 1
+
+#include <osg/Object>
+
+#include <osgUtil/UpdateVisitor>
+#include <osgUtil/CullVisitor>
+
+#include <osgTerrain/Export>
+
+namespace osgTerrain {
+
+class Terrain;
+
+class OSGTERRAIN_EXPORT TerrainTechnique : public osg::Object
+{
+    public:
+
+        TerrainTechnique();
+
+        /** Copy constructor using CopyOp to manage deep vs shallow copy.*/
+        TerrainTechnique(const TerrainTechnique&,const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY);
+        
+        META_Object(osgTerrain, TerrainTechnique);
+
+        Terrain* getTerrain() { return _terrain; }
+        const Terrain* getTerrain() const { return _terrain; }
+
+        virtual void init();
+
+        virtual void update(osgUtil::UpdateVisitor* nv);
+
+        virtual void cull(osgUtil::CullVisitor* nv);
+
+        /** Clean scene graph from any terrain technique specific nodes.*/
+        virtual void cleanSceneGraph();
+
+        /** Traverse the terain subgraph.*/
+        virtual void traverse(osg::NodeVisitor& nv);
+
+        /** Dirty so that cached data structurese will be updated on next use.*/
+        virtual void dirty();
+
+        /** Return true if cached data structurese need updating.*/
+        virtual bool isDirty() const { return _dirty; }
+
+    protected:
+
+        virtual ~TerrainTechnique();
+        
+        friend class osgTerrain::Terrain;
+
+        Terrain*    _terrain;
+        bool            _dirty;
+
+};
+
+}
+
+#endif

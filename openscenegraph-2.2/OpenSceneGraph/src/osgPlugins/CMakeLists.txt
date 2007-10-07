@@ -1,0 +1,154 @@
+#---------------------------------------------------
+# OSG CMAKE SUPPORT 
+# (C) by Michael Wagner, mtw@shared-reality.com 2005
+# (C) Eric Wing, Luigi Calori and Robert Osfield 2006-2007
+#---------------------------------------------------
+
+PROJECT(OSG_PLUGINS_MASTER)
+
+
+IF(NOT MSVC)
+    SET(LIBRARY_OUTPUT_PATH "${LIBRARY_OUTPUT_PATH}/${OSG_PLUGINS}")
+ENDIF(NOT MSVC)
+
+SET(CMAKE_SHARED_MODULE_PREFIX ${OSG_PLUGIN_PREFIX})
+
+
+SET(TARGET_DEFAULT_PREFIX "osgdb_")
+SET(TARGET_DEFAULT_LABEL_PREFIX "Plugins")
+SET(TARGET_COMMON_LIBRARIES 
+    OpenThreads
+    osg 
+    osgDB 
+    osgUtil
+)
+
+############################################################
+#
+#  NodeKit/Psudo loader plugins
+#
+ADD_SUBDIRECTORY(osgFX)
+ADD_SUBDIRECTORY(osgParticle)
+ADD_SUBDIRECTORY(osgSim)
+ADD_SUBDIRECTORY(osgText)
+ADD_SUBDIRECTORY(osgViewer)
+ADD_SUBDIRECTORY(osgShadow)
+ADD_SUBDIRECTORY(osgTerrain)
+ADD_SUBDIRECTORY(osga)
+ADD_SUBDIRECTORY(rot)
+ADD_SUBDIRECTORY(scale)
+ADD_SUBDIRECTORY(trans)
+ADD_SUBDIRECTORY(normals)
+ADD_SUBDIRECTORY(net)
+
+############################################################
+#
+#  Main native plugins
+#
+ADD_SUBDIRECTORY(osg)
+ADD_SUBDIRECTORY(ive)
+
+
+############################################################
+#
+#  Image plugins
+#
+ADD_SUBDIRECTORY(rgb)
+ADD_SUBDIRECTORY(bmp)
+ADD_SUBDIRECTORY(pnm)
+ADD_SUBDIRECTORY(dds)
+ADD_SUBDIRECTORY(tga)
+ADD_SUBDIRECTORY(hdr)
+
+IF(JPEG_FOUND)
+    ADD_SUBDIRECTORY(jpeg)
+ENDIF(JPEG_FOUND)
+IF(JASPER_FOUND)
+    ADD_SUBDIRECTORY(jp2) 
+ENDIF(JASPER_FOUND)
+IF(GIFLIB_FOUND)
+    ADD_SUBDIRECTORY(gif) 
+ENDIF(GIFLIB_FOUND)
+IF(PNG_FOUND)
+    ADD_SUBDIRECTORY(png)
+ENDIF(PNG_FOUND)
+IF(TIFF_FOUND)
+    ADD_SUBDIRECTORY(tiff)
+ENDIF(TIFF_FOUND)
+IF(GDAL_FOUND)
+    ADD_SUBDIRECTORY(gdal)
+ENDIF(GDAL_FOUND)
+
+############################################################
+#
+#  3rd party 3d plugins
+#
+
+ADD_SUBDIRECTORY(3dc)
+
+IF(INVENTOR_FOUND)
+    ADD_SUBDIRECTORY(Inventor)
+ENDIF(INVENTOR_FOUND)
+
+IF(OPENVRML_FOUND)
+    ADD_SUBDIRECTORY(vrml)
+ENDIF(OPENVRML_FOUND)
+
+IF(COLLADA_FOUND)
+    ADD_SUBDIRECTORY(dae)
+ENDIF(COLLADA_FOUND)
+
+ADD_SUBDIRECTORY(lwo)
+ADD_SUBDIRECTORY(x)
+ADD_SUBDIRECTORY(dw)
+ADD_SUBDIRECTORY(dxf)
+ADD_SUBDIRECTORY(OpenFlight)
+ADD_SUBDIRECTORY(geo)
+ADD_SUBDIRECTORY(obj)
+
+IF(PERFORMER_FOUND)
+    ADD_SUBDIRECTORY(pfb)
+ENDIF(PERFORMER_FOUND)
+
+ADD_SUBDIRECTORY(pic)
+ADD_SUBDIRECTORY(stl)
+ADD_SUBDIRECTORY(3ds)
+ADD_SUBDIRECTORY(ac)
+
+ADD_SUBDIRECTORY(logo)
+ADD_SUBDIRECTORY(lws)
+ADD_SUBDIRECTORY(md2)
+ADD_SUBDIRECTORY(osgtgz)
+ADD_SUBDIRECTORY(tgz)
+
+ADD_SUBDIRECTORY(txp)
+ADD_SUBDIRECTORY(shp)
+ADD_SUBDIRECTORY(txf)
+
+IF(XINE_FOUND)
+    ADD_SUBDIRECTORY(xine)
+ENDIF(XINE_FOUND)
+
+IF(QUICKTIME_FOUND)
+    ADD_SUBDIRECTORY(quicktime)
+ENDIF(QUICKTIME_FOUND)
+
+IF(FREETYPE_FOUND)
+    ADD_SUBDIRECTORY(freetype) 
+ENDIF(FREETYPE_FOUND)
+IF(ZLIB_FOUND)
+    ADD_SUBDIRECTORY(zip)
+ENDIF(ZLIB_FOUND)
+
+
+
+
+##########to get all the variables of Cmake
+#GET_CMAKE_PROPERTY(MYVARS VARIABLES)
+#FOREACH(myvar ${MYVARS})
+#    FILE(APPEND ${CMAKE_CURRENT_BINARY_DIR}/AllVariables.txt
+#        "${myvar} -->${${myvar}}<-\n"
+#    )
+#ENDFOREACH(myvar)
+
+    

@@ -1,0 +1,299 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+# Sample debian/rules that uses debhelper.
+# GNU copyright 1997 to 1999 by Joey Hess.
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+include /usr/share/dpatch/dpatch.make
+
+ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
+	CFLAGS += -O0 -g
+else
+	CFLAGS += -O2
+endif
+ifeq (,$(findstring nostrip,$(DEB_BUILD_OPTIONS)))
+	INSTALL_PROGRAM += -s
+endif
+ifeq (ccache,$(findstring ccache,$(DEB_BUILD_OPTIONS)))
+	CCACHE = /usr/lib/ccache/g++
+else
+	CCACHE = /usr/bin/g++
+endif
+ifeq (smp,$(findstring smp,$(DEB_BUILD_OPTIONS)))
+	SMP = -j2
+endif
+
+# shared library versions, option 1
+# version=2.0.5
+# major=2
+# option 2, assuming the library is created as src/.libs/libfoo.so.2.0.5 or so
+#version=`ls src/.libs/lib*.so.* | \
+# awk '{if (match($$0,/[0-9]+\.[0-9]+\.[0-9]+$$/)) print substr($$0,RSTART)}'`
+#major=`ls src/.libs/lib*.so.* | \
+# awk '{if (match($$0,/\.so\.[0-9]+$$/)) print substr($$0,RSTART+4)}'`
+
+configure: configure-stamp
+configure-stamp:
+	dh_testdir
+	# Add here commands to configure the package.
+
+	touch configure-stamp
+
+define SETAFFINITY
+	grep 'sched_setaffinity.*cpusetsize' /usr/include/sched.h > /dev/null || export COMPILE_USING_TWO_PARAM_sched_setaffinity=-DCOMPILE_USING_TWO_PARAM_sched_setaffinity ; 
+endef
+
+OSG = OpenSceneGraph
+
+ifeq (i386,$(DEB_BUILD_ARCH))
+define INTROSPECTION
+        binutils_version=$$(perl -ne 'if((/^Package: binutils$$/ .. /^Version:/) && /^Version: (.*)/) { print "$$1\n"; }' < /var/lib/dpkg/available) ; \
+        if dpkg --compare-versions $${binutils_version} '>=' 2.17 ; then \
+                echo 'Compiling introspection' ; \
+                export COMPILE_INTROSPECTION=ON ; \
+        else \
+                export COMPILE_INTROSPECTION=OFF ; \
+                echo "Not compiling introspection because binutils version $${binutils_version} is below 2.17 which is known to be bugous" ; \
+                echo "  BFD 2.15 internal error, aborting at ../../bfd/elf32-i386.c line 2262 in elf_i386_relocate_section" ; \
+                echo "  See http://www.mail-archive.com/bug-binutils@gnu.org/msg01883.html for more information" ; \
+        fi ;
+endef
+endif
+
+#
+# Shared libraries version numbers
+#
+# OpenSceneGraph/OpenThreads/Producer 0.9.8
+#
+#CURRENT=0
+#
+# OpenSceneGraph/OpenThreads/Producer 0.9.9
+#
+#CURRENT=1
+#
+# OpenSceneGraph/OpenThreads/Producer 1.0
+#
+#CURRENT=2
+#
+# OpenSceneGraph/OpenThreads/Producer 1.1
+#
+#CURRENT=3
+#
+# OpenSceneGraph/OpenThreads/Producer 1.2
+#
+#CURRENT=4
+#
+# OpenSceneGraph-1.9.1/OpenThreads-1.9.3 overriden with
+# OpenSceneGraph-1.9.3, OpenSceneGraph-1.9.4, OpenSceneGraph-1.9.5, OpenSceneGraph-1.9.7 and
+# OpenSceneGraph-2.0.0
+#
+#CURRENT=5
+#
+# OpenSceneGraph-2.0.0 overriden with
+# OpenSceneGraph-2.1.9
+#
+
+CURRENT=6
+OSG_MAJOR=2
+
+build: patch build-stamp
+build-stamp: configure-stamp 
+	dh_testdir
+
+	mkdir -p build/osg ; cd build/osg ; ${SETAFFINITY} ${INTROSPECTION} cmake --debug-output \
+		-D OPENSCENEGRAPH_VERSION:STRING=${CURRENT}.0.0 -D OPENSCENEGRAPH_SOVERSION:STRING=${CURRENT} \
+		-D OPENTHREADS_VERSION:STRING=${CURRENT}.0.0 -D OPENTHREADS_SOVERSION:STRING=${CURRENT} \
+		-D OSG_PLUGINS:STRING=osgPlugins-${OSG_MAJOR}.0.0 \
+		-D CMAKE_INSTALL_PREFIX:PATH=/ -D CMAKE_CXX_COMPILER='${CCACHE}' -D BUILD_OSG_WRAPPERS:BOOL=$$COMPILE_INTROSPECTION -D BUILD_OSG_EXAMPLES:BOOL=ON ../../${OSG}
+	cd build/osg ; ${MAKE} ${SMP} VERBOSE=1
+	touch build-stamp
+
+clean: clean-patched unpatch
+clean-patched:
+	dh_testdir
+	dh_testroot
+	rm -f build-stamp configure-stamp
+
+	# Upstream has a +x source file
+	chmod a-x OpenSceneGraph/examples/osgpointsprite/osgpointsprite.cpp
+
+	# Add here commands to clean up after the build process.
+	rm -fr build
+	rm -f ${MANPAGES} 
+	rm -fr html
+
+	dh_clean 
+
+MANPAGES = \
+	${MANAPPLICATIONS} \
+	${MANEXAMPLES}
+
+MANAPPLICATIONS = \
+	osgviewer.1 \
+	osgconv.1 \
+	osgversion.1 \
+	osgarchive.1
+
+MANEXAMPLES = \
+	osganimate.1 \
+	osgautotransform.1 \
+	osgbillboard.1 \
+	osgblendequation.1 \
+	osgcallback.1 \
+	osgcamera.1 \
+	osgcatch.1 \
+	osgcegui.1 \
+	osgclip.1 \
+	osgcluster.1 \
+	osgcompositeviewer.1 \
+	osgcopy.1 \
+	osgcubemap.1 \
+	osgdelaunay.1 \
+	osgdepthpeeling.1 \
+	osgdepthpartition.1 \
+	osgdepthshadow.1 \
+	osgdistortion.1 \
+	osgfadetext.1 \
+	osgforest.1 \
+	osgfxbrowser.1 \
+	osggeodemo.1 \
+	osggeometry.1 \
+	osghangglide.1 \
+	osghud.1 \
+	osgimpostor.1 \
+	osgintersection.1 \
+	osgintrospection.1 \
+	osgkeyboard.1 \
+	osgkeyboardmouse.1 \
+	osglauncher.1 \
+	osglight.1 \
+	osglightpoint.1 \
+	osglogicop.1 \
+	osglogo.1 \
+	osgmanipulator.1 \
+	osgmotionblur.1 \
+	osgmovie.1 \
+	osgmultitexture.1 \
+	osgoccluder.1 \
+	osgpagedlod.1 \
+	osgparametric.1 \
+	osgparticle.1 \
+	osgparticleeffects.1 \
+	osgphotoalbum.1 \
+	osgpick.1 \
+	osgplanets.1 \
+	osgpoints.1 \
+	osgpointsprite.1 \
+	osgprecipitation.1 \
+	osgprerender.1 \
+	osgprerendercubemap.1 \
+	osgreflect.1 \
+	osgscalarbar.1 \
+	osgscribe.1 \
+	osgsequence.1 \
+	osgshaders.1 \
+	osgshaderterrain.1 \
+	osgshadow.1 \
+	osgshadowtexture.1 \
+	osgshape.1 \
+	osgsimplifier.1 \
+	osgsimulation.1 \
+	osgslice.1 \
+	osgspacewarp.1 \
+	osgspheresegment.1 \
+	osgspotlight.1 \
+	osgstaticviewer.1 \
+	osgstereoimage.1 \
+	osgteapot.1 \
+	osgterrain.1 \
+	osgtessellate.1 \
+	osgtext.1 \
+	osgtexture1D.1 \
+	osgtexture2D.1 \
+	osgtexture3D.1 \
+	osgtexturerectangle.1 \
+	osgunittests.1 \
+	osgvertexprogram.1 \
+	osgviewerCocoa.1 \
+	osgviewerFLTK.1 \
+	osgviewerGLUT.1 \
+	osgviewerMFC.1 \
+	osgviewerQT.1 \
+	osgviewerSDL.1 \
+	osgviewerWX.1 \
+	osgvolume.1 \
+	osgwindows.1
+
+install: build
+	dh_testdir
+	dh_testroot
+	dh_clean -k 
+	dh_installdirs
+
+	# Add here commands to install the package into debian/tmp
+	mkdir -p $(CURDIR)/debian/tmp/usr
+	$(MAKE) -C build/osg DESTDIR=$(CURDIR)/debian/tmp/usr install
+	mkdir -p $(CURDIR)/debian/tmp/usr/bin
+	-mv $(CURDIR)/debian/tmp/usr/share/OpenSceneGraph/bin/* $(CURDIR)/debian/tmp/usr/bin
+	install -m 444 -D debian/openthreads.pc $(CURDIR)/debian/tmp/usr/lib/pkgconfig/openthreads.pc
+	install -m 444 -D debian/openscenegraph.pc $(CURDIR)/debian/tmp/usr/lib/pkgconfig/openscenegraph.pc
+	mkdir -p $(CURDIR)/debian/tmp/usr/share/openscenegraph/
+	cp -r OpenSceneGraph/examples $(CURDIR)/debian/tmp/usr/share/openscenegraph
+	mkdir -p html
+	doxygen debian/Doxyfile-openscenegraph
+	for man in ${MANEXAMPLES} ; do rm -f $$man ; ln -s debian/osgexamples.1 $$man ; done
+	for man in ${MANAPPLICATIONS} ; do rm -f $$man ; ln -s debian/osgapplications.1 $$man ; done
+
+# Build architecture-independent files here.
+binary-indep: build install
+# We have nothing to do by default.
+
+# Build architecture-dependent files here.
+binary-arch: build install
+	dh_testdir
+	dh_testroot
+	dh_installchangelogs 
+	dh_installdocs
+	dh_installexamples
+#	dh_installmenu
+#	dh_installdebconf	
+#	dh_installlogrotate
+#	dh_installemacsen
+#	dh_installpam
+#	dh_installmime
+#	dh_installinit
+#	dh_installcron
+#	dh_installinfo
+	dh_installman -p openscenegraph ${MANPAGES}
+	# BEGIN: DIRTY hack for 64-bit arch's because cmake isn't easy to understand.
+	# 1. Ensure /usr/lib exists (should be, because of the .pc files)
+	# 2. Move lib64/* files to lib/, so that dh_movefiles find them there.
+	#    /usr/lib64 is a symlink to /usr/lib anyway, so...
+	if test -d $(CURDIR)/debian/tmp/usr/lib64 ; then \
+		mkdir -p $(CURDIR)/debian/tmp/usr/lib ; \
+		mv $(CURDIR)/debian/tmp/usr/lib64/* $(CURDIR)/debian/tmp/usr/lib ; \
+	fi
+	# END: DIRTY hack
+	dh_install --sourcedir=debian/tmp --fail-missing
+	# Still no dh_installoverrides… (#109642 et al.)
+	for override in debian/lintian/* ; do \
+		dh_install -p`basename $$override` \
+			$$override usr/share/lintian/overrides ; \
+	done
+	dh_link
+	dh_strip
+	dh_compress
+	dh_fixperms
+#	dh_perl
+#	dh_python
+	dh_makeshlibs -V
+	dh_installdeb
+	dh_shlibdeps
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+
+binary: binary-indep binary-arch
+.PHONY: build clean binary-indep binary-arch binary install configure

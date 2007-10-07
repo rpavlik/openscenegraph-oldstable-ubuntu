@@ -1,0 +1,171 @@
+/* -*-c++-*- OpenSceneGraph - Copyright (C) 1998-2006 Robert Osfield 
+ *
+ * This library is open source and may be redistributed and/or modified under  
+ * the terms of the OpenSceneGraph Public License (OSGPL) version 0.0 or 
+ * (at your option) any later version.  The full license is in LICENSE file
+ * included with this distribution, and on the openscenegraph.org website.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
+ * OpenSceneGraph Public License for more details.
+*/
+
+/* ParallelSplitShadowMap written by Adrian Egli */
+
+#ifndef OSGSHADOW_ParallelSplitShadowMap 
+#define OSGSHADOW_ParallelSplitShadowMap 1
+
+#include <osg/Camera>
+#include <osg/Material>
+
+#include <osgShadow/ShadowTechnique>
+
+namespace osgShadow {
+
+class OSGSHADOW_EXPORT ParallelSplitShadowMap :  public ShadowTechnique 
+{
+    public:
+        ParallelSplitShadowMap(osg::Geode** debugGroup=NULL, int icountplanes=3);
+
+        ParallelSplitShadowMap(const ParallelSplitShadowMap& es, const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY);
+        
+        META_Object(osgShadow, ParallelSplitShadowMap);
+
+
+        /** Initialize the ShadowedScene and local cached data structures.*/
+        virtual void init();
+
+        /** Run the update traversal of the ShadowedScene and update any loca chached data structures.*/
+        virtual void update(osg::NodeVisitor& nv);
+
+        /** Run the cull traversal of the ShadowedScene and set up the rendering for this ShadowTechnique.*/
+        virtual void cull(osgUtil::CullVisitor& cv);
+
+        /** Clean scene graph from any shadow technique specific nodes, state and drawables.*/
+        virtual void cleanSceneGraph();
+
+        /** Switch on the debug coloring in GLSL (only the first 3 texture/splits showed for visualisation */
+        inline void setDebugColorOn() { _debug_color_in_GLSL = true; }
+
+        /** Set the polygon offset osg::Vec2f(factor,unit) */
+        inline void setPolygonOffset(const osg::Vec2f& p) { _polgyonOffset = p;_user_polgyonOffset_set=true;}
+
+        /** Get the polygon offset osg::Vec2f(factor,unit) */
+        inline const osg::Vec2f& getPolygonOffset() { return _polgyonOffset;}
+
+        /** Set the texture resolution */
+        inline void setTextureResolution(unsigned int resolution) { _resolution = resolution; }
+
+        /** Set the max far distance */ 
+        inline void setMaxFarDistance(double farDist) { _setMaxFarDistance = farDist; _isSetMaxFarDistance = true; }
+
+        /** Set the factor for moving the virtual camera behind the real camera*/
+        inline void setMoveVCamBehindRCamFactor(double distFactor ) { _move_vcam_behind_rcam_factor = distFactor; }
+
+        /** Force to add a cull face front */
+        inline void forceFrontCullFace() { _useFrontCullFace = true; }
+
+        /** Set min near distance for splits */ 
+        inline void setMinNearDistanceForSplits(double nd){ _split_min_near_dist=nd; }
+
+        /** use linear split (default: linear) */
+        inline void useLinearSplit(bool flag) { _linearSplit = flag;}
+    
+    
+    /** 
+         light              /  | 
+           \             /     |
+     min near dist    /        |
+      for splits   /           |
+              \ /    ¦         |
+            ./ \     ¦         |
+            |   \    ¦         |
+            |    x   ¦         |
+            |        ¦         |
+            .        |         |
+               \       ¦         |
+                \    ¦         |
+                    \          |
+                        \      |
+                              \  |
+                              
+            .<- max far dist. ->.
+    */ 
+    protected :
+
+        virtual ~ParallelSplitShadowMap() {}
+
+        std::string generateGLSL_FragmentShader_BaseTex(bool debug, unsigned int splitCount);
+
+        struct PSSMShadowSplitTexture {
+            // RTT
+            osg::ref_ptr<osg::Camera>       _camera;
+            osg::ref_ptr<osg::TexGen>       _texgen;
+            osg::ref_ptr<osg::Texture2D>    _texture;
+            osg::ref_ptr<osg::StateSet>     _stateset;
+            unsigned int                    _textureUnit;
+            osg::Vec2d                      _ambientBias;
+
+
+            osg::ref_ptr<osg::Camera>       _debug_camera;
+            osg::ref_ptr<osg::Texture2D>    _debug_texture;
+            osg::ref_ptr<osg::StateSet>     _debug_stateset;
+            unsigned int                    _debug_textureUnit;
+
+
+
+            // Light (SUN)
+            osg::Vec3d                        _lightCameraSource;
+            osg::Vec3d                        _lightCameraTarget;
+            osg::Vec3d                        _frustumSplitCenter;
+            osg::Vec3d                        _lightDirection;
+            double                            _lightNear;
+            double                            _lightFar;
+
+            osg::Matrix                        _cameraView;
+            osg::Matrix                        _cameraProj;
+
+            unsigned int                    _splitID;
+            unsigned int                    _resolution;
+
+            osg::Uniform*                    _farDistanceSplit;
+
+        };
+        typedef std::map<unsigned int,PSSMShadowSplitTexture> PSSMShadowSplitTextureMap;
+        PSSMShadowSplitTextureMap _PSSMShadowSplitTextureMap;
+
+
+    private:
+        void calculateFrustumCorners(PSSMShadowSplitTexture &pssmShadowSplitTexture,osg::Vec3d *frustumCorners);
+        void calculateLightInitalPosition(PSSMShadowSplitTexture &pssmShadowSplitTexture,osg::Vec3d *frustumCorners);
+        void calculateLightNearFarFormFrustum(PSSMShadowSplitTexture &pssmShadowSplitTexture,osg::Vec3d *frustumCorners);
+        void calculateLightViewProjectionFormFrustum(PSSMShadowSplitTexture &pssmShadowSplitTexture,osg::Vec3d *frustumCorners);
+
+        osg::Geode** _displayTexturesGroupingNode;
+
+        unsigned int _textureUnitOffset;
+
+        unsigned int _number_of_splits;
+
+        bool _debug_color_in_GLSL;
+
+        osg::Vec2f _polgyonOffset;
+        bool _user_polgyonOffset_set;
+
+        unsigned int _resolution;
+
+        double _setMaxFarDistance;
+        bool _isSetMaxFarDistance;
+
+        bool _useFrontCullFace;
+
+        double _split_min_near_dist;
+
+        double _move_vcam_behind_rcam_factor;
+
+        bool _linearSplit;
+
+};
+}
+#endif

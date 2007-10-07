@@ -1,0 +1,399 @@
+openscenegraph (2.2-1) experimental; urgency=low
+
+  * New upstream release.
+  * Update debian/patches/openscenegraph.dpatch accordingly.
+  * Fix installation of .so according to the SONAME bump:
+     - debian/libopenscenegraph6.files still contained libosg*.so.6*
+       references, which are now bumped. That problem was introduced in
+       2.1.9-1.
+  * Move from dh_movefiles to dh_install:
+     - debian/*.files renamed as debian/*.install.
+     - use “dh_install --sourcedir=debian/tmp” instead of “dh_movefiles”.
+     - remove the previous “dh_install -p openscenegraph” call accordingly.
+     - modify debian/rules to copy OpenSceneGraph/examples under debian/tmp,
+       and update debian/openscenegraph.install accordingly.
+     - also use “--fail-missing” to catch files not installed anywhere, and
+       avoid the kind of errors mentioned above.
+  * Add lintian override:
+     - located under debian/lintian/, the only one being there is for
+       libopenscenegraph6, which holds multiple shared objects.
+     - adapted debian/rules a bit to install it (eventually them) easily.
+  * Adjust clean rule:
+     - upstream ships an executable C++ source file, which permission is
+       removed in the clean target.
+  * Adjust manpages (debian/*.1):
+     - use “\-\-help” instead of “--help” to fix hyphen-used-as-minus-sign
+       reported by lintian.
+     - add osgdepthpeeling.1 to MANEXAMPLES.
+
+ -- Cyril Brulebois <cyril.brulebois@enst-bretagne.fr>  Sat, 06 Oct 2007 11:47:50 +0200
+
+openscenegraph (2.1.9-1) experimental; urgency=low
+
+  * New upstream release.
+  * Bumped SONAME from 5 to 6:
+     - debian/rules: updated CURRENT accordingly.
+     - debian/control: updated to transition.
+     - debian/libopenthreads5.files: renamed; content updated.
+     - debian/libopenscenegraph5.files: renamed.
+  * Updated version (from 2.0.0 to 2.1.9) in debian/*.pc files.
+  * Disabled patch (merged upstream):
+     - display.dpatch
+  * Refreshed patch (context modified due to changed version numbers):
+     - openscenegraph.dpatch
+  * Cleanup:
+     - commented out unused "version" and "major" variable in debian/rules.
+     - replaced "Source-Version" with "binary:Version" in debian/control to
+       make the packages binNMU-safe.
+
+ -- Cyril Brulebois <cyril.brulebois@enst-bretagne.fr>  Thu, 20 Sep 2007 01:00:52 +0200
+
+openscenegraph (2.0.0-4) unstable; urgency=low
+
+  * AnimationPath protected is removed to cope with gcc-4.2 bug
+  
+  * libopenscenegraph-dev depends on GL dev packages
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Sun, 09 Sep 2007 02:17:22 +0200
+
+openscenegraph (2.0.0-3) unstable; urgency=low
+
+  * libopenscenegraph-dev does not depend on libproducer-dev
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Fri, 07 Sep 2007 11:50:49 +0200
+
+openscenegraph (2.0.0-2) unstable; urgency=low
+
+  [ Cyril Brulebois ]
+  * Added a 64 bit hack in debian/rules
+  * Added myself to the Uploaders.
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Mon, 30 Jul 2007 22:16:19 +0200
+
+openscenegraph (2.0.0-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Loic Dachary <loic@debian.org>  Tue, 19 Jun 2007 11:06:58 +0200
+
+openscenegraph (1.9.7-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Loic Dachary <loic@debian.org>  Tue,  5 Jun 2007 20:20:58 +0200
+
+openscenegraph (1.9.6-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Loic Dachary <loic@debian.org>  Mon, 28 May 2007 23:34:41 +0200
+
+openscenegraph (1.9.5-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Tue, 22 May 2007 10:07:00 +0200
+
+openscenegraph (1.9.4-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Tue, 15 May 2007 20:03:19 +0200
+
+openscenegraph (1.9.3-1) unstable; urgency=low
+
+  * New upstream release
+  
+ -- Loic Dachary (OuoU) <loic@debian.org>  Tue,  8 May 2007 10:45:32 +0200
+
+openscenegraph (1.9.1-1) unstable; urgency=low
+
+  * New upstream release
+  
+  * control: libglu1-mesa-dev added before virtual package
+  
+  * copyright: fix FSF address
+  
+  * osgapplications.1: manual page for osgviewer and other applications
+  
+  * rules: list and create applications manpages
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Sun, 29 Apr 2007 11:07:07 +0200
+
+openscenegraph (1.2.0-3) unstable; urgency=low
+
+  * libgl-dev dependency in edgy break build
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Tue,  7 Nov 2006 13:57:14 +0100
+
+openscenegraph (1.2.0-2) unstable; urgency=low
+
+  * control files for backports + ubuntu
+  
+  * s/peformance/performance/ (closes: #390239)
+  
+  * rules: AVI variable no longer needed
+  
+  * rules: set COMPILE_USING_TWO_PARAM_sched_setaffinity for OpenThreads when needed
+  
+  * rules: expand all _INSTALLED variables in the file for clarity
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Sat, 30 Sep 2006 08:48:57 +0200
+
+openscenegraph (1.2.0-1) experimental; urgency=low
+
+  * New upstream release (closes: #387931)
+  
+ -- Loic Dachary (OuoU) <loic@debian.org>  Sun, 17 Sep 2006 15:50:55 +0200
+
+openscenegraph (1.1.0-4) unstable; urgency=low
+
+  * edgy fixes
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Sat, 16 Sep 2006 15:55:17 +0200
+
+openscenegraph (1.1.0-3) unstable; urgency=low
+
+  * patch for mips
+  
+  * edgy & etch control files
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Fri,  8 Sep 2006 11:37:40 +0200
+
+openscenegraph (1.1.0-2) unstable; urgency=low
+
+  * version number for other debian distributions
+  
+  * rules checks binutils version >= 2.17 before trying
+    to compile introspection
+  
+  * add missing conflicts for dapper / breezy
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Sun, 27 Aug 2006 00:33:09 +0200
+
+openscenegraph (1.1.0-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Wed, 16 Aug 2006 12:41:57 +0200
+
+openscenegraph (1.0.0-9) unstable; urgency=low
+
+  * Depend on gdal 1.3.2 (closes: #383141)
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Tue, 15 Aug 2006 12:25:56 +0200
+
+openscenegraph (1.0.0-8) unstable; urgency=low
+
+  * add missing dependency to libproducer-dev package (libgl1-mesa-dev)
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Fri, 26 May 2006 12:58:22 +0200
+
+openscenegraph (1.0.0-7) unstable; urgency=low
+
+  * remove explicit references to mesa
+  
+  * kfreebsd patch applied (closes: #368786)
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Thu, 25 May 2006 10:14:30 +0200
+
+openscenegraph (1.0.0-6) unstable; urgency=low
+
+  * libxi
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Sun,  7 May 2006 01:01:13 +0200
+
+openscenegraph (1.0.0-5) unstable; urgency=low
+
+  * xlib/gl-dev depends for producer-dev
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Tue, 28 Feb 2006 14:24:53 +0100
+
+openscenegraph (1.0.0-4) unstable; urgency=low
+
+  * restore gdal + xine dependencies since the packages are fixed
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Sat, 18 Feb 2006 23:07:19 +0100
+
+openscenegraph (1.0.0-3) unstable; urgency=low
+
+  * depends on libgl-dev for -dev also (closes: #348735)
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Fri, 17 Feb 2006 10:37:21 +0100
+
+openscenegraph (1.0.0-2) unstable; urgency=low
+
+  * depends on libgl-dev (closes: #348735)
+  
+  * conflicts with lib{openscenegraph,producer,openthreads}
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Wed, 18 Jan 2006 20:20:52 +0100
+
+openscenegraph (1.0.0-1) unstable; urgency=low
+
+  * upstream sync
+
+  * switch to dpatch
+  
+  * find . -name GNUmakefile | xargs perl -pi -e 's/([^\s])\\$/\1 \\/' and in */Make/*
+    in order to conform to POSIX http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=343088
+  
+  * update API and library number (closes: #339243)
+
+  * changed dependencies (closes: #330723)
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Tue,  3 Jan 2006 18:05:26 +0100
+
+openscenegraph (0.9.9-7) unstable; urgency=low
+
+  * conflicts with libopenthreads, libopenscenegraph and libproducer (closes: #326425)
+  
+  * acknowledge old NMU (closes: #314201)
+
+  * fix libcoin40 dependency (closes: #322740)
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Thu,  8 Sep 2005 10:26:19 +0200
+
+openscenegraph (0.9.9-6) unstable; urgency=low
+
+  * gcc-4.0 package conformance
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Sun, 21 Aug 2005 16:57:24 +0000
+
+openscenegraph (0.9.9-5) unstable; urgency=low
+
+  * gcc-4.0 compilation fixes from Andreas Jochens <aj@andaco.de> (closes: #314763)
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Sat, 18 Jun 2005 16:17:38 +0200
+
+openscenegraph (0.9.9-4) unstable; urgency=low
+
+  * use X11R6/lib instead of X11R6/lib64 on amd64, depend on libungif (closes: #314510)
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Thu, 16 Jun 2005 22:41:30 +0200
+
+openscenegraph (0.9.9-3) unstable; urgency=low
+
+  * Restrict compilation of introspection and xine
+    plugin to i386 because Introspection breaks the compiler (gcc-3.3)
+    and xine contains i386 assembly that cannot be rewrote right
+    away.
+    http://openscenegraph.net/pipermail/osg-users/2005-June/054120.html
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Thu, 16 Jun 2005 20:29:57 +0200
+
+openscenegraph (0.9.9-2) unstable; urgency=low
+
+  * Removed avifile dependency (closes: #314201)
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Wed, 15 Jun 2005 10:01:31 +0200
+
+openscenegraph (0.9.9-1) unstable; urgency=low
+
+  * Incremented CURRENT shared lib version from 0 to 1 since upstream does not
+    maintain shared lib versions.
+  * Only activate CCACHE if the string ccache is in DEB_BUILD_OPTIONS 
+  * Fix harmless bug in OpenSceneGraph/Make/instexamplesrc that printed
+    error messages that may induce someone to think a real problem has 
+    occured
+  * New upstream release
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Mon, 13 Jun 2005 13:00:54 +0200
+
+openscenegraph (0.9.8-4.1) unstable; urgency=low
+
+  * NMU
+  * debian/rules: Do not use ccache to avoid problems with buildd with
+    invalid $HOME variable.
+  * debian/control: Do not Build-Depends on ccache.
+
+ -- Bill Allombert <ballombe@debian.org>  Wed, 11 May 2005 00:38:23 +0200
+
+openscenegraph (0.9.8-4) unstable; urgency=low
+
+  * rebuild package on new sid root (closes: #304537)
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Sat, 16 Apr 2005 16:45:08 +0200
+
+openscenegraph (0.9.8-3) unstable; urgency=low
+
+  * libjpegg is now libjpeg (closes: #303896)
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Mon, 11 Apr 2005 09:24:26 +0200
+
+openscenegraph (0.9.8-2) unstable; urgency=low
+
+  * Patch to fix FTBFS on amd64 (closes: #286674)
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Mon,  7 Feb 2005 18:34:41 +0100
+
+openscenegraph (0.9.8-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Mon,  6 Dec 2004 19:01:31 +0100
+
+openscenegraph (0.9.7-7) unstable; urgency=low
+
+  * Add ARCH='' in rules to avoid hierarchy handling problems. May also disable
+    some architecture dependent optimizations flags. (closes: #282816)
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Thu, 25 Nov 2004 12:00:57 +0100
+
+openscenegraph (0.9.7-6) unstable; urgency=low
+
+  * Fix asm for timer architecture compatibility issue, sent to 
+    upstream.
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Mon, 15 Nov 2004 13:40:20 +0100
+
+openscenegraph (0.9.7-5) unstable; urgency=low
+
+  * Add pointer to LGPL in copyright file as requested by Randall Donald <ftpmaster@debian.org> 
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Tue,  2 Nov 2004 10:38:25 +0100
+
+openscenegraph (0.9.7-4) unstable; urgency=low
+
+  * missing dependencies in .pc
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Fri, 22 Oct 2004 22:28:42 +0200
+
+openscenegraph (0.9.7-3) unstable; urgency=low
+
+  * missing usr/include/osgProducer
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Thu, 21 Oct 2004 17:33:31 +0200
+
+openscenegraph (0.9.7-2) unstable; urgency=low
+
+  * change more to cat in install process
+  
+  * fix conflicts mistakes
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Wed, 20 Oct 2004 14:29:27 +0200
+
+openscenegraph (0.9.7-1) unstable; urgency=low
+
+  * New upstream version (Closes: #172189)
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Mon, 18 Oct 2004 23:40:07 +0200
+
+openscenegraph (0.9.6-4) unstable; urgency=low
+
+  * billboard patch
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Thu, 11 Mar 2004 17:45:19 +0100
+
+openscenegraph (0.9.6-2) unstable; urgency=low
+
+  * binaries package
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Mon, 16 Feb 2004 12:12:56 +0100
+
+openscenegraph (0.9.6-1) unstable; urgency=low
+
+  * Initial Release.
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Thu, 29 Jan 2004 13:39:19 +0100
+
