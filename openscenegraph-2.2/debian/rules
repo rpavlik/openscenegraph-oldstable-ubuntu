@@ -95,7 +95,7 @@ endif
 #
 
 CURRENT=6
-OSG_MAJOR=2
+OSG_VERSION=2.2.0
 
 build: patch build-stamp
 build-stamp: configure-stamp 
@@ -104,7 +104,7 @@ build-stamp: configure-stamp
 	mkdir -p build/osg ; cd build/osg ; ${SETAFFINITY} ${INTROSPECTION} cmake --debug-output \
 		-D OPENSCENEGRAPH_VERSION:STRING=${CURRENT}.0.0 -D OPENSCENEGRAPH_SOVERSION:STRING=${CURRENT} \
 		-D OPENTHREADS_VERSION:STRING=${CURRENT}.0.0 -D OPENTHREADS_SOVERSION:STRING=${CURRENT} \
-		-D OSG_PLUGINS:STRING=osgPlugins-${OSG_MAJOR}.0.0 \
+		-D OSG_PLUGINS:STRING=osgPlugins-${OSG_VERSION} \
 		-D CMAKE_INSTALL_PREFIX:PATH=/ -D CMAKE_CXX_COMPILER='${CCACHE}' -D BUILD_OSG_WRAPPERS:BOOL=$$COMPILE_INTROSPECTION -D BUILD_OSG_EXAMPLES:BOOL=ON ../../${OSG}
 	cd build/osg ; ${MAKE} ${SMP} VERBOSE=1
 	touch build-stamp
