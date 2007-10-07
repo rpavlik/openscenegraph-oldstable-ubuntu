@@ -1,3 +1,17 @@
+openscenegraph (2.2.0-2) unstable; urgency=low
+
+  * Add gdal in Build-Depends
+  
+  * Remove conflicts with libopenthreads5 and libopenscenegraph5 (both can
+    peacefully coexist)
+  
+  * Add RELEASE as suggested by
+    "realKano@directbox.com" <realKano@directbox.com>
+  
+  * Add micro release number
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Sun, 07 Oct 2007 09:58:03 +0200
+
 openscenegraph (2.2-1) experimental; urgency=low
 
   * New upstream release.
