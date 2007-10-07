@@ -1,4 +1,6 @@
 openscenegraph (2.2.0-1) unstable; urgency=low
+  
+  * 64bit hack is supposed to fix the problem (closes: 425837)
 
   * Add gdal in Build-Depends
   
