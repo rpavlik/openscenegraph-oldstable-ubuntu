@@ -1,3 +1,11 @@
+openscenegraph (2.2.0-2) unstable; urgency=low
+
+  * Add optimization flags to compilation (closes: 446017). 
+  
+  * Add -mlong-calls when compiling on HPPA
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Wed, 10 Oct 2007 00:23:08 +0200
+
 openscenegraph (2.2.0-1) unstable; urgency=low
   
   * 64bit hack is supposed to fix the problem (closes: 425837)
@@ -6,9 +14,6 @@ openscenegraph (2.2.0-1) unstable; urgency=low
   
   * Remove conflicts with libopenthreads5 and libopenscenegraph5 (both can
     peacefully coexist)
-  
-  * Add RELEASE as suggested by
-    "realKano@directbox.com" <realKano@directbox.com>
   
   * Add micro release number
 
