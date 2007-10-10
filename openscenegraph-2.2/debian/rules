@@ -11,7 +11,7 @@ include /usr/share/dpatch/dpatch.make
 ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
 	CFLAGS += -O0 -g
 else
-	CFLAGS += -O2
+	CFLAGS += -O3 -g
 endif
 ifeq (,$(findstring nostrip,$(DEB_BUILD_OPTIONS)))
 	INSTALL_PROGRAM += -s
@@ -112,8 +112,8 @@ build-stamp: configure-stamp
 		-D OPENTHREADS_VERSION:STRING=${CURRENT}.0.0 \
 		-D OPENTHREADS_SOVERSION:STRING=${CURRENT} \
 		-D CMAKE_BUILD_TYPE:STRING=RelWithDebInfo \
-		-D CMAKE_CXX_FLAGS_RELWITHDEBINFO="-O3 -g ${ARCH_CXX_FLAGS}" \
-		-D CMAKE_C_FLAGS_RELWITHDEBINFO="-O3 -g ${ARCH_C_FLAGS}" \
+		-D CMAKE_CXX_FLAGS_RELWITHDEBINFO="${CFLAGS} ${ARCH_CXX_FLAGS}" \
+		-D CMAKE_C_FLAGS_RELWITHDEBINFO="${CFLAGS} ${ARCH_C_FLAGS}" \
 		-D OSG_PLUGINS:STRING=osgPlugins-${OSG_VERSION} \
 		-D CMAKE_INSTALL_PREFIX:PATH=/ \
 		-D CMAKE_CXX_COMPILER='${CCACHE}' \

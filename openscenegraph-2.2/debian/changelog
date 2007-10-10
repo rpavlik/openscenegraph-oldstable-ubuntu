@@ -1,8 +1,12 @@
 openscenegraph (2.2.0-2) unstable; urgency=low
 
-  * Add optimization flags to compilation (closes: 446017). 
+  * Add optimization flags to compilation (closes: 446017).
   
-  * Add -mlong-calls when compiling on HPPA
+  [ Cyril Brulebois ]
+  * Add -mlong-calls to C(XX)FLAGS when building with DEB_BUILD_HOST=hppa
+    to avoid FTBFS due to an error during the final link (closes: #425837).
+    Many thanks to the <http://www.parisc-linux.org/> folks for the access to
+    their cluster, which helped a lot!
 
  -- Loic Dachary (OuoU) <loic@debian.org>  Wed, 10 Oct 2007 00:23:08 +0200
 
