@@ -1,3 +1,21 @@
+openscenegraph (2.3.7-0) experimental; urgency=low
+
+  * New upstream release.
+  * Added libxine-dev build-dep.
+  * Bumped SONAME from 6 to 7.
+  * Updated version (from 2.1.0 to 2.2.0) in debian/*.pc files.
+  * SMP dynamically chosen in debian/rules.
+
+ -- Joerg Schirottke <master@kanotix.com>  Thu,  3 Apr 2008 12:57:42 +0200
+
+openscenegraph (2.2.0-2.1) unstable; urgency=medium
+
+  * Non-maintainer upload.
+  * Remove Cyril Brulebois from Uploaders on his request.
+  * Fix FTBFS with GCC 4.3 (Closes: #454854).
+
+ -- Luk Claes <luk@debian.org>  Sun, 16 Mar 2008 16:13:52 +0000
+
 openscenegraph (2.2.0-2) unstable; urgency=low
 
   * Add optimization flags to compilation (closes: 446017).

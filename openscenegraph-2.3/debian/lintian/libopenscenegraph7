@@ -1,0 +1,5 @@
+# Several shared objects in the same library package.
+
+libopenscenegraph7: several-sonames-in-same-package libosg.so.7 libosgDB.so.7 libosgFX.so.7 libosgGA.so.7 libosgIntrospection.so.7 libosgManipulator.so.7 libosgParticle.so.7 libosgShadow.so.7 libosgSim.so.7 libosgTerrain.so.7 libosgText.so.7 libosgUtil.so.7 libosgViewer.so.7
+
+package-name-doesnt-match-sonames libosg7 libosgDB7 libosgFX7 libosgGA7 libosgIntrospection7 libosgManipulator7 libosgParticle7 libosgShadow7 libosgSim7 libosgTerrain7 libosgText7 libosgUtil7 libosgViewer7

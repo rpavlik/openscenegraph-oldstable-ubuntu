@@ -16,14 +16,20 @@ endif
 ifeq (,$(findstring nostrip,$(DEB_BUILD_OPTIONS)))
 	INSTALL_PROGRAM += -s
 endif
+# Default to g++
+CXX ?= g++
 ifeq (ccache,$(findstring ccache,$(DEB_BUILD_OPTIONS)))
 	CCACHE = /usr/lib/ccache/g++
 else
-	CCACHE = /usr/bin/g++
+	# Full path to make ccache happy
+	CCACHE = $(shell which $(CXX))
 endif
-ifeq (smp,$(findstring smp,$(DEB_BUILD_OPTIONS)))
-	SMP = -j2
-endif
+#ifeq (smp,$(findstring smp,$(DEB_BUILD_OPTIONS)))
+#	SMP = -j2
+#endif
+SMP = -j$(shell if [ -f /proc/cpuinfo ]; \
+			then echo `cat /proc/cpuinfo | grep 'processor' | wc -l`; \
+			else echo 1; fi)
 
 # shared library versions, option 1
 # version=2.0.5
@@ -98,9 +104,13 @@ endif
 #
 # OpenSceneGraph 2.2.0
 #
-
-CURRENT=6
-OSG_VERSION=2.2.0
+#
+#CURRENT=6
+#
+# OpenSceneGraph 2.3.7
+#
+CURRENT=7
+OSG_VERSION=2.3.7
 
 build: patch build-stamp
 build-stamp: configure-stamp 
