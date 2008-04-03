@@ -228,7 +228,7 @@ int Thread::GetConcurrency() {
 
 //----------------------------------------------------------------------------
 //
-// Decription: Constructor
+// Description: Constructor
 //
 // Use: public.
 //
@@ -254,7 +254,7 @@ Thread::Thread() {
 
 //----------------------------------------------------------------------------
 //
-// Decription: Destructor
+// Description: Destructor
 //
 // Use: public.
 //
@@ -327,8 +327,8 @@ int Thread::start() {
     Win32ThreadPrivateData *pd = static_cast<Win32ThreadPrivateData *> (_prvData);
     //-------------------------------------------------------------------------
     // Prohibit the stack size from being changed.
-    // (bb 5/13/2005) it acctualy doesn't matter.
-    // 1) usually setStackSize()/start() sequence iz serialized. 
+    // (bb 5/13/2005) it actually doesn't matter.
+    // 1) usually setStackSize()/start() sequence is serialized. 
     // 2) if not than we're in trouble anyway - nothing is protected 
     // pd->stackSizeLocked = true;
     unsigned int ID;
@@ -468,7 +468,7 @@ int Thread::setCancelModeAsynchronous() {
 
 //-----------------------------------------------------------------------------
 //
-// Description: set the thread to cancel at the next convienent point.
+// Description: set the thread to cancel at the next convenient point.
 //
 // Use: public
 //
@@ -576,7 +576,7 @@ int Thread::setProcessorAffinity( unsigned int cpunum )
         );
 /*
     This one is funny.
-    This is "non-mandatory" affinity , winows will try to use dwIdealProcessor
+    This is "non-mandatory" affinity , windows will try to use dwIdealProcessor
     whenever possible ( when Bill's account is over 50B, maybe :-) ).
 
     DWORD SetThreadIdealProcessor(

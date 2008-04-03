@@ -25,6 +25,7 @@
 #include <osg/PositionAttitudeTransform>
 #include <osg/BlendFunc>
 #include <osg/ClearNode>
+#include <osg/Version>
 
 #include <osgUtil/Tessellator>
 #include <osgUtil/CullVisitor>
@@ -179,7 +180,7 @@ osg:: Node* createTextLeft(const osg::BoundingBox& bb, const std::string& label,
     text->setAxisAlignment(osgText::Text::XZ_PLANE);
     text->setCharacterSize((bb.zMax()-bb.zMin())*1.0f);
     text->setPosition(bb.center()-osg::Vec3((bb.xMax()-bb.xMin()),-(bb.yMax()-bb.yMin())*0.5f,(bb.zMax()-bb.zMin())*0.1f));
-    //text->setColor(osg::Vec4(0.37f,0.48f,0.67f,1.0f)); // Neil's orignal OSG colour
+    //text->setColor(osg::Vec4(0.37f,0.48f,0.67f,1.0f)); // Neil's original OSG colour
     text->setColor(osg::Vec4(0.20f,0.45f,0.60f,1.0f)); // OGL logo colour
     text->setText(label);
 
@@ -477,6 +478,14 @@ int main( int argc, char **argv )
     
     std::string label = "OpenSceneGraph";
     std::string subscript = "";
+
+    bool showVersion = false;
+    while (arguments.read("--version")) { showVersion = true; } 
+    if( showVersion )
+    {
+        label += " ";
+        label += osgGetVersion();
+    }
 
     while (arguments.read("--label", label)) {} 
     while (arguments.read("--subscript", subscript)) {} 

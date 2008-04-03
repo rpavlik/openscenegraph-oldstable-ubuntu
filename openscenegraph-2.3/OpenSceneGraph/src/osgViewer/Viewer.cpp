@@ -219,7 +219,7 @@ bool Viewer::readConfiguration(const std::string& filename)
     osg::ref_ptr<osg::Object> object = osgDB::readObjectFile(filename);
     if (!object) 
     {
-        osg::notify(osg::NOTICE)<<"Error: Unable to load configuration file \""<<filename<<"\""<<std::endl;
+        //osg::notify(osg::NOTICE)<<"Error: Unable to load configuration file \""<<filename<<"\""<<std::endl;
         return false;
     }
     
@@ -313,7 +313,7 @@ void Viewer::setSceneData(osg::Node* node)
 
     View::setSceneData(node);
 
-    if (_threadingModel!=SingleThreaded)
+    if (_threadingModel!=SingleThreaded && getSceneData())
     {
         // make sure that existing scene graph objects are allocated with thread safe ref/unref
         getSceneData()->setThreadSafeRefUnref(true);
@@ -430,7 +430,7 @@ void Viewer::realize()
     // initialize the global timer to be relative to the current time.
     osg::Timer::instance()->setStartTick();
 
-    // pass on the start tick to all the associated eventqueues
+    // pass on the start tick to all the associated event queues
     setStartTick(osg::Timer::instance()->getStartTick());
 
     setUpThreading();
@@ -776,7 +776,7 @@ void Viewer::eventTraversal()
         
     }
 
-    if (_eventVisitor.valid() && _scene.valid())
+    if (_eventVisitor.valid() && getSceneData())
     {
         _eventVisitor->setFrameStamp(getFrameStamp());
         _eventVisitor->setTraversalNumber(getFrameStamp()->getFrameNumber());
@@ -839,7 +839,7 @@ void Viewer::updateTraversal()
     
     if (_scene->getDatabasePager())
     {    
-        // syncronize changes required by the DatabasePager thread to the scene graph
+        // synchronize changes required by the DatabasePager thread to the scene graph
         _scene->getDatabasePager()->updateSceneGraph(_frameStamp->getReferenceTime());
     }
 

@@ -1,7 +1,20 @@
+/* -*-c++-*- OpenSceneGraph - Copyright (C) 1998-2006 Robert Osfield 
+ *
+ * This library is open source and may be redistributed and/or modified under  
+ * the terms of the OpenSceneGraph Public License (OSGPL) version 0.0 or 
+ * (at your option) any later version.  The full license is in LICENSE file
+ * included with this distribution, and on the openscenegraph.org website.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
+ * OpenSceneGraph Public License for more details.
+*/
+
 //
 // OpenFlight® loader for OpenSceneGraph
 //
-//  Copyright (C) 2005-2006  Brede Johansen
+//  Copyright (C) 2005-2007  Brede Johansen
 //
 
 #include <assert.h>
@@ -34,10 +47,15 @@ protected:
     virtual void readRecord(RecordInputStream& in, Document& document)
     {
         uint32 paletteSize = in.readUInt32();
-        in.moveToStartOfRecord();
+
+        // Enteries in vertex pool found by offset from start of this record.
+        const int RECORD_HEADER_SIZE = 4;
+        const int OFFSET = RECORD_HEADER_SIZE+sizeof(paletteSize);
 
         std::string buffer(paletteSize,'\0');
-        in.read(&(*buffer.begin()),paletteSize);
+        in.read(&buffer[OFFSET], paletteSize-OFFSET);
+
+        // Keep a copy of the vertex pool in memory for later reference.
         document.setVertexPool(new VertexPool(buffer));
     }
 };

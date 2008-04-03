@@ -29,7 +29,7 @@ Win32BarrierPrivateData::~Win32BarrierPrivateData()
 
 //----------------------------------------------------------------------------
 //
-// Decription: Constructor
+// Description: Constructor
 //
 // Use: public.
 //
@@ -43,7 +43,7 @@ Barrier::Barrier(int numThreads) {
 }
 //----------------------------------------------------------------------------
 //
-// Decription: Destructor
+// Description: Destructor
 //
 // Use: public.
 //
@@ -54,7 +54,7 @@ Barrier::~Barrier() {
 }
 //----------------------------------------------------------------------------
 //
-// Decription: Reset the barrier to its original state
+// Description: Reset the barrier to its original state
 //
 // Use: public.
 //
@@ -66,7 +66,7 @@ void Barrier::reset() {
 }
 //----------------------------------------------------------------------------
 //
-// Decription: Block until numThreads threads have entered the barrier.
+// Description: Block until numThreads threads have entered the barrier.
 //
 // Use: public.
 //
@@ -85,14 +85,14 @@ void Barrier::block(unsigned int numThreads) {
         ++pd->cnt;
 
         if (pd->cnt == pd->maxcnt) {             // I am the last one
-		    pd->cnt = 0;                         // reset for next use
-		    pd->phase = 1 - my_phase;            // toggle phase
-		    pd->cond.broadcast();
+            pd->cnt = 0;                         // reset for next use
+            pd->phase = 1 - my_phase;            // toggle phase
+            pd->cond.broadcast();
         }else{ 
-		    while (pd->phase == my_phase ) {
-			    pd->cond.wait(&pd->lock);
-		    }
-	    }
+            while (pd->phase == my_phase ) {
+                pd->cond.wait(&pd->lock);
+            }
+        }
     }
 }
 
@@ -101,10 +101,10 @@ void Barrier::invalidate()
     Win32BarrierPrivateData *pd =
             static_cast<Win32BarrierPrivateData*>(_prvData);
 
-	pd->lock.lock();
-	_valid = false;
-	pd->lock.unlock();
-	release();
+    pd->lock.lock();
+    _valid = false;
+    pd->lock.unlock();
+    release();
 }
 
 

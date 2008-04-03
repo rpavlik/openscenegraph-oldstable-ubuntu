@@ -11,9 +11,13 @@
  * OpenSceneGraph Public License for more details.
 */
 
+#include <stdio.h>
+#include <string.h>
+
 #include <osg/Notify>
 #include <osg/Object>
 #include <osg/Image>
+#include <osg/Shader>
 #include <osg/Node>
 #include <osg/Group>
 #include <osg/Geode>
@@ -25,8 +29,6 @@
 #include <osgDB/FileNameUtils>
 #include <osgDB/Archive>
 
-#include <stdio.h>
-
 #include <algorithm>
 #include <set>
 
@@ -35,7 +37,6 @@
 #elif defined(__GNUC__) || !defined(WIN32) || defined(__MWERKS__)
     #include <cctype>
     using std::tolower;
-    using std::strlen;    
 #endif
 
 
@@ -151,7 +152,7 @@ Registry* Registry::instance(bool erase)
 // definition of the Registry
 Registry::Registry()
 {
-    // comment out because it was causing problems under OSX - causing it to crash osgconv when constucting ostream in osg::notify().
+    // comment out because it was causing problems under OSX - causing it to crash osgconv when constructing ostream in osg::notify().
     // notify(INFO) << "Constructing osg::Registry"<<std::endl;
 
     _createNodeFromImage = false;
@@ -205,6 +206,7 @@ Registry::Registry()
     addFileExtensionAlias("mov",  "qt");
     addFileExtensionAlias("avi",  "qt");
     addFileExtensionAlias("mpg",  "qt");
+    addFileExtensionAlias("flv",  "qt");
     addFileExtensionAlias("mpv",  "qt");
     addFileExtensionAlias("dv",   "qt");
     addFileExtensionAlias("mp4",   "qt");
@@ -222,6 +224,7 @@ Registry::Registry()
         addFileExtensionAlias("dv",   "xine");
         addFileExtensionAlias("avi",  "xine");
         addFileExtensionAlias("wmv",  "xine");
+        addFileExtensionAlias("flv",  "xine");
     #endif
 
 #endif
@@ -248,7 +251,7 @@ Registry::Registry()
     addFileExtensionAlias("fon",   "freetype");  // Windows bitmap fonts
     addFileExtensionAlias("fnt",   "freetype");    // Windows bitmap fonts
     
-    // wont't add type1 and type2 until resolve extension collision with Peformer binary and ascii files.
+    // wont't add type1 and type2 until resolve extension collision with Performer binary and ascii files.
     // addFileExtensionAlias("pfb",   "freetype");  // type1 binary
     // addFileExtensionAlias("pfa",   "freetype");  // type2 ascii
 
@@ -279,9 +282,9 @@ void Registry::destruct()
     // object cache clear needed here to prevent crash in unref() of
     // the objects it contains when running the TXP plugin.
     // Not sure why, but perhaps there is is something in a TXP plugin
-    // which is deleted the data before its ref count hits zero, perhaps
+    // which deletes the data before its ref count hits zero, perhaps
     // even some issue with objects be allocated by a plugin that is
-    // mainted after that plugin is deleted...  Robert Osfield, Jan 2004.
+    // maintained after that plugin is deleted...  Robert Osfield, Jan 2004.
     clearObjectCache();
     clearArchiveCache();
     
@@ -429,6 +432,11 @@ void Registry::addDotOsgWrapper(DotOsgWrapper* wrapper)
             _nodeWrapperMap[name] = wrapper;
             _nodeWrapperMap[compositeName] = wrapper;
         }
+        if (dynamic_cast<const Shader*>(proto))
+        {
+            _shaderWrapperMap[name] = wrapper;
+            _shaderWrapperMap[compositeName] = wrapper;
+        }
 
 
     }
@@ -466,6 +474,7 @@ void Registry::removeDotOsgWrapper(DotOsgWrapper* wrapper)
     eraseWrapper(_uniformWrapperMap,wrapper);
     eraseWrapper(_stateAttrWrapperMap,wrapper);
     eraseWrapper(_nodeWrapperMap,wrapper);
+    eraseWrapper(_shaderWrapperMap,wrapper);
 }
 
 void Registry::addReaderWriter(ReaderWriter* rw)
@@ -754,7 +763,7 @@ osg::Object* Registry::readObjectOfType(const basic_type_wrapper &btw,Input& fr)
         {
             // we have a composite name so now strip off the library name
             // are try to load it, and then retry the readObject to see
-            // if we can recongise the objects.
+            // if we can recognize the objects.
         
             std::string libraryName = std::string(token,0,posDoubleColon);
 
@@ -819,7 +828,7 @@ osg::Object* Registry::readObjectOfType(const basic_type_wrapper &btw,Input& fr)
 
                         // we have a composite name so now strip off the library name
                         // are try to load it, and then retry the find to see
-                        // if we can recongise the objects.
+                        // if we can recognize the objects.
 
                         std::string libraryName = std::string(token,0,posDoubleColon);
 
@@ -881,7 +890,7 @@ osg::Object* Registry::readObject(DotOsgWrapperMap& dowMap,Input& fr)
         {
             // we have a composite name so now strip off the library name
             // are try to load it, and then retry the readObject to see
-            // if we can recongise the objects.
+            // if we can recognize the objects.
         
             std::string libraryName = std::string(token,0,posDoubleColon);
 
@@ -941,7 +950,7 @@ osg::Object* Registry::readObject(DotOsgWrapperMap& dowMap,Input& fr)
 
                         // we have a composite name so now strip off the library name
                         // are try to load it, and then retry the find to see
-                        // if we can recongise the objects.
+                        // if we can recognize the objects.
 
                         std::string libraryName = std::string(token,0,posDoubleColon);
 
@@ -1125,6 +1134,31 @@ Node* Registry::readNode(Input& fr)
 }
 
 //
+// read image from input iterator.
+//
+Shader* Registry::readShader(Input& fr)
+{
+    if (fr[0].matchWord("Use"))
+    {
+        if (fr[1].isString())
+        {
+            Shader* shader = dynamic_cast<Shader*>(fr.getObjectForUniqueID(fr[1].getStr()));
+            if (shader) fr+=2;
+            return shader;
+        }
+        else return NULL;
+
+    }
+
+    osg::Object* obj = readObject(_shaderWrapperMap,fr);
+    osg::Shader* shader = dynamic_cast<Shader*>(obj);
+    if (shader) return shader;
+    else if (obj) obj->unref();
+    
+    return NULL;
+}
+
+//
 // Write object to output 
 //
 bool Registry::writeObject(const osg::Object& obj,Output& fw)
@@ -1215,7 +1249,7 @@ bool Registry::writeObject(const osg::Object& obj,Output& fw)
 
                     // we have a composite name so now strip off the library name
                     // are try to load it, and then retry the find to see
-                    // if we can recongise the objects.
+                    // if we can recognize the objects.
 
                     std::string libraryName = std::string(token,0,posDoubleColon);
 
@@ -1311,6 +1345,15 @@ struct Registry::ReadArchiveFunctor : public Registry::ReadFunctor
 
 };
 
+struct Registry::ReadShaderFunctor : public Registry::ReadFunctor
+{
+    ReadShaderFunctor(const std::string& filename, const ReaderWriter::Options* options):ReadFunctor(filename,options) {}
+
+    virtual ReaderWriter::ReadResult doRead(ReaderWriter& rw)const  { return rw.readShader(_filename, _options); }    
+    virtual bool isValid(ReaderWriter::ReadResult& readResult) const { return readResult.validShader(); }
+    virtual bool isValid(osg::Object* object) const { return dynamic_cast<osg::Shader*>(object)!=0;  }
+};
+
 void Registry::addArchiveExtension(const std::string ext)
 {
     for(ArchiveExtensionList::iterator aitr=_archiveExtList.begin();
@@ -1329,14 +1372,15 @@ ReaderWriter::ReadResult Registry::read(const ReadFunctor& readFunctor)
         aitr!=_archiveExtList.end();
         ++aitr)
     {
-        std::string archiveName = "." + (*aitr);
+        std::string archiveExtension = "." + (*aitr);
 
-        std::string::size_type positionArchive = readFunctor._filename.find(archiveName+'/');
-        if (positionArchive==std::string::npos) positionArchive = readFunctor._filename.find(archiveName+'\\');
+        std::string::size_type positionArchive = readFunctor._filename.find(archiveExtension+'/');
+        if (positionArchive==std::string::npos) positionArchive = readFunctor._filename.find(archiveExtension+'\\');
         if (positionArchive!=std::string::npos)
         {
-            std::string archiveName(readFunctor._filename.substr(0,positionArchive+5));
-            std::string fileName(readFunctor._filename.substr(positionArchive+6,std::string::npos));
+            std::string::size_type endArchive = positionArchive + archiveExtension.length();
+            std::string archiveName( readFunctor._filename.substr(0,endArchive));
+            std::string fileName(readFunctor._filename.substr(endArchive+1,std::string::npos));
             osg::notify(osg::INFO)<<"Contains archive : "<<readFunctor._filename<<std::endl;
             osg::notify(osg::INFO)<<"         archive : "<<archiveName<<std::endl;
             osg::notify(osg::INFO)<<"         filename : "<<fileName<<std::endl;
@@ -1362,31 +1406,40 @@ ReaderWriter::ReadResult Registry::read(const ReadFunctor& readFunctor)
 
     if (containsServerAddress(readFunctor._filename))
     {
-        std::string serverName = getServerAddress(readFunctor._filename);
-        std::string serverFile = getServerFileName(readFunctor._filename);
-        osg::notify(osg::INFO)<<"Contains sever address : "<<serverName<<std::endl;
-        osg::notify(osg::INFO)<<"         file name on server : "<<serverFile<<std::endl;
-
-        if (serverName.empty())
-        {
-            return ReaderWriter::ReadResult("Warning: Server address invalid.");
-        }
-        
-        if (serverFile.empty())
-        {
-            return ReaderWriter::ReadResult("Warning: Server file name invalid.");
-        }
-
-        ReaderWriter* rw = getReaderWriterForExtension("net");
+        ReaderWriter* rw = getReaderWriterForExtension("curl");
         if (rw)
         {
-            std::string& filename = const_cast<std::string&>(readFunctor._filename);
-            filename = serverName+':'+serverFile;
             return readFunctor.doRead(*rw);
         }
         else
         {
-            return  ReaderWriter::ReadResult("Warning: Could not find the .net plugin to read from server.");
+            ReaderWriter* rw = getReaderWriterForExtension("net");
+            if (rw)
+            {
+                std::string serverName = getServerAddress(readFunctor._filename);
+                std::string serverFile = getServerFileName(readFunctor._filename);
+                osg::notify(osg::INFO)<<"Contains sever address : "<<serverName<<std::endl;
+                osg::notify(osg::INFO)<<"         file name on server : "<<serverFile<<std::endl;
+
+                if (serverName.empty())
+                {
+                    return ReaderWriter::ReadResult("Warning: Server address invalid.");
+                }
+
+                if (serverFile.empty())
+                {
+                    return ReaderWriter::ReadResult("Warning: Server file name invalid.");
+                }
+
+                std::string& filename = const_cast<std::string&>(readFunctor._filename);
+                filename = serverName+':'+serverFile;
+                return readFunctor.doRead(*rw);
+            }
+            else
+            {
+                return  ReaderWriter::ReadResult("Warning: Could not find the .net plugin to read from server.");
+            }
+            return  ReaderWriter::ReadResult("Warning: Could not find the .curl plugin to read from server.");
         }
     }
     
@@ -1425,7 +1478,7 @@ ReaderWriter::ReadResult Registry::read(const ReadFunctor& readFunctor)
             {
                 if (ritr->status()==ReaderWriter::ReadResult::ERROR_IN_READING_FILE)
                 {
-                    osg::notify(osg::NOTICE)<<"Warning: error reading file \""<<readFunctor._filename<<"\""<<std::endl;
+                    // osg::notify(osg::NOTICE)<<"Warning: error reading file \""<<readFunctor._filename<<"\""<<std::endl;
                     return *ritr;
                 }
             }
@@ -1434,7 +1487,7 @@ ReaderWriter::ReadResult Registry::read(const ReadFunctor& readFunctor)
             {
                 if (ritr->status()==ReaderWriter::ReadResult::FILE_NOT_FOUND)
                 {
-                    osg::notify(osg::NOTICE)<<"Warning: could not find file \""<<readFunctor._filename<<"\""<<std::endl;
+                    // osg::notify(osg::NOTICE)<<"Warning: could not find file \""<<readFunctor._filename<<"\""<<std::endl;
                     return *ritr;
                 }
             }
@@ -1477,7 +1530,7 @@ ReaderWriter::ReadResult Registry::read(const ReadFunctor& readFunctor)
             {
                 if (ritr->status()==ReaderWriter::ReadResult::ERROR_IN_READING_FILE)
                 {
-                    osg::notify(osg::NOTICE)<<"Warning: error reading file \""<<readFunctor._filename<<"\""<<std::endl;
+                    // osg::notify(osg::NOTICE)<<"Warning: error reading file \""<<readFunctor._filename<<"\""<<std::endl;
                     return *ritr;
                 }
             }
@@ -1486,7 +1539,7 @@ ReaderWriter::ReadResult Registry::read(const ReadFunctor& readFunctor)
             {
                 if (ritr->status()==ReaderWriter::ReadResult::FILE_NOT_FOUND)
                 {
-                    osg::notify(osg::NOTICE)<<"Warning: could not find file \""<<readFunctor._filename<<"\""<<std::endl;
+                    // osg::notify(osg::NOTICE)<<"Warning: could not find file \""<<readFunctor._filename<<"\""<<std::endl;
                     return *ritr;
                 }
             }
@@ -1561,7 +1614,7 @@ ReaderWriter::ReadResult Registry::openArchiveImplementation(const std::string& 
 
     ReaderWriter::ReadResult result = readImplementation(ReadArchiveFunctor(fileName, status, indexBlockSizeHint, options),false);
 
-    // default to using chaching archive if no options structure provided, but if options are provided use archives
+    // default to using caching archive if no options structure provided, but if options are provided use archives
     // only if supplied.
     if (result.validArchive() &&
         (!options || (options->getObjectCacheHint() & ReaderWriter::Options::CACHE_ARCHIVES)) )
@@ -1789,6 +1842,58 @@ ReaderWriter::WriteResult Registry::writeNodeImplementation(const Node& node,con
     return results.front();
 }
 
+ReaderWriter::ReadResult Registry::readShaderImplementation(const std::string& fileName,const ReaderWriter::Options* options)
+{
+    return readImplementation(ReadShaderFunctor(fileName, options),
+                              options ? (options->getObjectCacheHint()&ReaderWriter::Options::CACHE_SHADERS)!=0: false);
+}
+
+ReaderWriter::WriteResult Registry::writeShaderImplementation(const Shader& shader,const std::string& fileName,const ReaderWriter::Options* options)
+{
+    // record the errors reported by readerwriters.
+    typedef std::vector<ReaderWriter::WriteResult> Results;
+    Results results;
+
+    // first attempt to load the file from existing ReaderWriter's
+    AvailableReaderWriterIterator itr(_rwList);
+    for(;itr.valid();++itr)
+    {
+        ReaderWriter::WriteResult rr = itr->writeShader(shader,fileName,options);
+        if (rr.success()) return rr;
+        else results.push_back(rr);
+    }
+
+    results.clear();
+
+    // now look for a plug-in to save the file.
+    std::string libraryName = createLibraryNameForFile(fileName);
+    if (loadLibrary(libraryName))
+    {
+        for(;itr.valid();++itr)
+        {
+            ReaderWriter::WriteResult rr = itr->writeShader(shader,fileName,options);
+            if (rr.success()) return rr;
+            else results.push_back(rr);
+        }
+    }
+
+    if (results.empty())
+    {
+        return ReaderWriter::WriteResult("Warning: Could not find plugin to write shader to file \""+fileName+"\".");
+    }
+    
+    if (results.front().message().empty())
+    {
+        switch(results.front().status())
+        {
+            case(ReaderWriter::WriteResult::FILE_NOT_HANDLED): results.front().message() = "Warning: Write to \""+fileName+"\" not supported."; break;
+            case(ReaderWriter::WriteResult::ERROR_IN_WRITING_FILE): results.front().message() = "Warning: Error in writing to \""+fileName+"\"."; break;
+            default: break;
+        }
+    }
+
+    return results.front();
+}
 
 void Registry::addEntryToObjectCache(const std::string& filename, osg::Object* object, double timestamp)
 {
@@ -1828,7 +1933,7 @@ void Registry::removeExpiredObjectsInCache(double expiryTime)
     typedef std::vector<std::string> ObjectsToRemove;
     ObjectsToRemove objectsToRemove;
 
-    // first collect all the exprired entries in the ObjectToRemove list.
+    // first collect all the expired entries in the ObjectToRemove list.
     for(ObjectCache::iterator oitr=_objectCache.begin();
         oitr!=_objectCache.end();
         ++oitr)

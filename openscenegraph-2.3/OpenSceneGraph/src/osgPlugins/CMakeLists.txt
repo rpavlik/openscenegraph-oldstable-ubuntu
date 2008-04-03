@@ -13,6 +13,11 @@ ENDIF(NOT MSVC)
 
 SET(CMAKE_SHARED_MODULE_PREFIX ${OSG_PLUGIN_PREFIX})
 
+IF(MSVC80)
+  IF(NOT OSG_MSVC_GENERATE_PLUGINS_AND_WRAPPERS_MANIFESTS)
+    SET(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} /MANIFEST:NO")
+  ENDIF(NOT OSG_MSVC_GENERATE_PLUGINS_AND_WRAPPERS_MANIFESTS)
+ENDIF(MSVC80)
 
 SET(TARGET_DEFAULT_PREFIX "osgdb_")
 SET(TARGET_DEFAULT_LABEL_PREFIX "Plugins")
@@ -48,6 +53,17 @@ ADD_SUBDIRECTORY(net)
 ADD_SUBDIRECTORY(osg)
 ADD_SUBDIRECTORY(ive)
 
+############################################################
+#
+#  Viewer plugins
+#
+ADD_SUBDIRECTORY(cfg)
+
+############################################################
+#
+#  Shader plugins
+#
+ADD_SUBDIRECTORY(glsl)
 
 ############################################################
 #
@@ -77,7 +93,12 @@ IF(TIFF_FOUND)
 ENDIF(TIFF_FOUND)
 IF(GDAL_FOUND)
     ADD_SUBDIRECTORY(gdal)
+    ADD_SUBDIRECTORY(ogr)
 ENDIF(GDAL_FOUND)
+
+IF(CURL_FOUND)
+    ADD_SUBDIRECTORY(curl)
+ENDIF(CURL_FOUND)
 
 ############################################################
 #

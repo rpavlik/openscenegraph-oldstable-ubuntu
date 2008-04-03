@@ -42,12 +42,12 @@ class OSGTERRAIN_EXPORT Locator : public osg::Object
             /** GEOGRAPHIC coordinate systems are ones mapped to latitude and longitude.*/
             GEOGRAPHIC,
 
-            /** PROJECTED coordinate systems are ones projected to a local projected coordindate system i.e. UTMs.*/
+            /** PROJECTED coordinate systems are ones projected to a local projected coordinate system i.e. UTMs.*/
             PROJECTED
         };
 
         /** Set the CoordinatesSyetemType.
-          * Note, the user must keep the CoordinateSystemString consistent with the type of the CoordindateSystem.*/
+          * Note, the user must keep the CoordinateSystemString consistent with the type of the CoordinateSystem.*/
         void setCoordinateSystemType(CoordinateSystemType type) { _coordinateSystemType = type; }
 
         /** Get the CoordinatesSyetemType.*/
@@ -105,6 +105,9 @@ class OSGTERRAIN_EXPORT Locator : public osg::Object
         
         void setDefinedInFile(bool flag) { _definedInFile = flag; }
         bool getDefinedInFile() const { return _definedInFile; }
+        
+        void setTransformScaledByResolution(bool scaledByResolution) { _transformScaledByResolution = scaledByResolution; }
+        bool getTransformScaledByResolution() const { return _transformScaledByResolution; }
 
     protected:
 
@@ -120,6 +123,7 @@ class OSGTERRAIN_EXPORT Locator : public osg::Object
         osg::Matrixd                        _inverse;
         
         bool                                _definedInFile;
+        bool                                _transformScaledByResolution;
 
 };
 

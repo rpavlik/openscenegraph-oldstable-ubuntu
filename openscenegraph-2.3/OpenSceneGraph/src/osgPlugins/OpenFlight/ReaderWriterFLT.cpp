@@ -1,7 +1,20 @@
+/* -*-c++-*- OpenSceneGraph - Copyright (C) 1998-2006 Robert Osfield 
+ *
+ * This library is open source and may be redistributed and/or modified under  
+ * the terms of the OpenSceneGraph Public License (OSGPL) version 0.0 or 
+ * (at your option) any later version.  The full license is in LICENSE file
+ * included with this distribution, and on the openscenegraph.org website.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
+ * OpenSceneGraph Public License for more details.
+*/
+
 //
-// OpenFlight loader for OpenSceneGraph
+// OpenFlight® loader for OpenSceneGraph
 //
-//  Copyright (C) 2005-2006  Brede Johansen
+//  Copyright (C) 2005-2007  Brede Johansen
 //
 
 #include <stdexcept>
@@ -17,6 +30,9 @@
 #include "Registry.h"
 #include "Document.h"
 #include "RecordInputStream.h"
+#include "DataOutputStream.h"
+#include "FltExportVisitor.h"
+#include "ExportOptions.h"
 
 #define SERIALIZER() OpenThreads::ScopedLock<OpenThreads::ReentrantMutex> lock(_serializerMutex)  
 
@@ -68,9 +84,44 @@ public:
 
 
 
+/*!
+
+FLTReaderWriter supports importing and exporting OSG scene grqphs
+from/to OpenFlight files.
+
+<table>
+  <tr>
+    <th></th>
+    <th align="center">Node</th>
+    <th align="center">Object</th>
+    <th align="center">Image</th>
+    <th align="center">HeightField</th>
+  </tr>
+  <tr>
+    <td align="right">Read</td>
+    <td align="center"><strong>X</strong></td>
+    <td></td>
+    <td></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td align="right">Write</td>
+    <td align="center"><strong>X</strong></td>
+    <td></td>
+    <td></td>
+    <td></td>
+  </tr>
+</table>
+
+*/
+
 class FLTReaderWriter : public ReaderWriter
 {
     public:
+        FLTReaderWriter()
+          : _implicitPath( "." )
+        {}
+
         virtual const char* className() const { return "FLT Reader/Writer"; }
 
         virtual bool acceptsExtension(const std::string& extension) const
@@ -190,6 +241,9 @@ class FLTReaderWriter : public ReaderWriter
                 document.setUseTextureAlphaForTransparancyBinning(options->getOptionString().find("noTextureAlphaForTransparancyBinning")==std::string::npos);
                 osg::notify(osg::DEBUG_INFO) << readerMsg << "noTextureAlphaForTransparancyBinning=" << !document.getUseTextureAlphaForTransparancyBinning() << std::endl;
 
+                document.setReadObjectRecordData(options->getOptionString().find("readObjectRecordData")==std::string::npos);
+                osg::notify(osg::DEBUG_INFO) << readerMsg << "readObjectRecordData=" << !document.getReadObjectRecordData() << std::endl;
+
                 document.setDoUnitsConversion((options->getOptionString().find("noUnitsConversion")==std::string::npos)); // default to true, unless noUnitsConversion is specified.
                 osg::notify(osg::DEBUG_INFO) << readerMsg << "noUnitsConversion=" << !document.getDoUnitsConversion() << std::endl;
 
@@ -229,12 +283,81 @@ class FLTReaderWriter : public ReaderWriter
                 }
             }
 
+            const int RECORD_HEADER_SIZE = 4;
+            opcode_type continuationOpcode = -1;
+            std::string continuationBuffer;
+
+            while (fin.good() && !document.done())
             {
-                // read records
-                flt::RecordInputStream recordStream(fin.rdbuf());
-                while (recordStream.good() && !document.done())
+                // The continuation record complicates things a bit.
+
+                // Get current read position in stream.
+                std::istream::pos_type pos = fin.tellg();
+
+                // get opcode and size
+                flt::DataInputStream dataStream(fin.rdbuf());
+                opcode_type opcode = (opcode_type)dataStream.readUInt16();
+                size_type   size   = (size_type)dataStream.readUInt16();
+
+                // variable length record complete?
+                if (!continuationBuffer.empty() && opcode!=CONTINUATION_OP)
                 {
-                    recordStream.readRecord(document);
+                    // parse variable length record
+                    std::stringbuf sb(continuationBuffer);
+                    flt::RecordInputStream recordStream(&sb);
+                    recordStream.readRecordBody(continuationOpcode, continuationBuffer.length(), document);
+
+                    continuationOpcode = -1;
+                    continuationBuffer.clear();
+                }
+
+                // variable length record use continuation buffer in case next
+                // record is a continuation record.
+                if (opcode==EXTENSION_OP ||
+                    opcode==NAME_TABLE_OP ||
+                    opcode==LOCAL_VERTEX_POOL_OP ||
+                    opcode==MESH_PRIMITIVE_OP)
+                {
+                    continuationOpcode = opcode;
+
+                    if (size > RECORD_HEADER_SIZE)
+                    {
+                        // Put record in buffer.
+                        std::string buffer((std::string::size_type)size-RECORD_HEADER_SIZE,'\0');
+                        fin.read(&buffer[0], size-RECORD_HEADER_SIZE);
+
+                        // Can't parse it until we know we have the complete record.
+                        continuationBuffer = buffer;
+                    }
+                }
+                else if (opcode==CONTINUATION_OP)
+                {
+                    if (size > RECORD_HEADER_SIZE)
+                    {
+                        std::string buffer((std::string::size_type)size-RECORD_HEADER_SIZE,'\0');
+                        fin.read(&buffer[0], size-RECORD_HEADER_SIZE);
+
+                        // The record continues.
+                        continuationBuffer.append(buffer);
+                    }
+                }
+                else if (opcode==VERTEX_PALETTE_OP)
+                {
+                    // Vertex Palette needs the file stream as it reads beyond the current record.
+                    flt::RecordInputStream recordStream(fin.rdbuf());
+                    recordStream.readRecordBody(opcode, size, document);
+                }
+                else // normal (fixed size) record.
+                {
+                    // Put record in buffer.
+                    std::string buffer((std::string::size_type)size,'\0');
+                    if (size > RECORD_HEADER_SIZE)
+                        fin.read(&buffer[0], size-RECORD_HEADER_SIZE);
+
+                    // Parse buffer.
+                    std::stringbuf sb(buffer);
+                    flt::RecordInputStream recordStream(&sb);
+                    recordStream.readRecordBody(opcode, size, document);
                 }
             }
 
@@ -262,11 +385,38 @@ class FLTReaderWriter : public ReaderWriter
             return WriteResult::FILE_NOT_HANDLED;
         }
 
-        virtual WriteResult writeNode(const Node& /*node*/,const std::string& /*fileName*/, const osgDB::ReaderWriter::Options* /*options*/) const
+        virtual WriteResult writeNode( const osg::Node& node, const std::string& fileName, const Options* options ) const
         {
-            return WriteResult::FILE_NOT_HANDLED;
+            if ( fileName.empty() )
+            {
+                osg::notify( osg::FATAL ) << "fltexp: writeNode: empty file name" << std::endl;
+                return WriteResult::FILE_NOT_HANDLED;
+            }
+            std::string ext = osgDB::getLowerCaseFileExtension( fileName );
+            if ( !acceptsExtension(ext) )
+                return WriteResult::FILE_NOT_HANDLED;
+
+            // Get and save the implicit path name (in case a path wasn't specified in Options).
+            std::string filePath = osgDB::getFilePath( fileName );
+            if (!filePath.empty())
+                _implicitPath = filePath;
+
+            std::ofstream fOut;
+            fOut.open( fileName.c_str(), std::ios::out | std::ios::binary );
+            if ( fOut.fail())
+            {
+                osg::notify( osg::FATAL ) << "fltexp: Failed to open output stream." << std::endl;
+                return WriteResult::ERROR_IN_WRITING_FILE;
+            }
+
+            WriteResult wr = WriteResult::FILE_NOT_HANDLED;
+            wr = writeNode( node, fOut, options );
+            fOut.close();
+
+            return wr;
         }
-        
+
+
         virtual WriteResult writeObject(const Object& object,std::ostream& fout, const osgDB::ReaderWriter::Options* options) const
         {
             const Node* node = dynamic_cast<const Node*>(&object);
@@ -274,12 +424,43 @@ class FLTReaderWriter : public ReaderWriter
             return WriteResult::FILE_NOT_HANDLED;
         }
 
-        virtual WriteResult writeNode(const Node& /*node*/,std::ostream& /*fout*/, const osgDB::ReaderWriter::Options* /*options*/) const
+        virtual WriteResult writeNode( const osg::Node& node, std::ostream& fOut, const Options* options ) const
         {
-            return WriteResult::FILE_NOT_HANDLED;
+            // Convert Options to FltOptions.
+            ExportOptions* fltOpt = new ExportOptions( options );
+            fltOpt->parseOptionsString();
+
+            // If user didn't specify a temp dir, use the output directory
+            //   that was implicit in the output file name.
+            if (fltOpt->getTempDir().empty())
+                fltOpt->setTempDir( _implicitPath );
+            if (!fltOpt->getTempDir().empty())
+            {
+                // If the temp directory doesn't already exist, make it.
+                if ( !osgDB::makeDirectory( fltOpt->getTempDir() ) )
+                {
+                    osg::notify( osg::FATAL ) << "fltexp: Error creating temp dir: " << fltOpt->getTempDir() << std::endl;
+                    return WriteResult::ERROR_IN_WRITING_FILE;
+                }
+            }
+
+            flt::DataOutputStream dos( fOut.rdbuf(), fltOpt->getValidateOnly() );
+            flt::FltExportVisitor fnv( &dos, fltOpt );
+
+            // Hm. 'node' is const, but in order to write out this scene graph,
+            //   must use Node::accept() which requires 'node' to be non-const.
+            //   Pretty much requires casting away const.
+            osg::Node* nodeNonConst = const_cast<osg::Node*>( &node );
+            if (!nodeNonConst)
+                return WriteResult::ERROR_IN_WRITING_FILE;
+            nodeNonConst->accept( fnv );
+            fnv.complete( node );
+
+            return fltOpt->getWriteResult();
         }
 
     protected:
+        mutable std::string _implicitPath;
 
         mutable OpenThreads::ReentrantMutex _serializerMutex;
 };
@@ -287,16 +468,3 @@ class FLTReaderWriter : public ReaderWriter
 // now register with Registry to instantiate the above
 // reader/writer.
 REGISTER_OSGPLUGIN(OpenFlight, FLTReaderWriter)
-
-
-
-
-
-
-
-
-
-
-
-
-

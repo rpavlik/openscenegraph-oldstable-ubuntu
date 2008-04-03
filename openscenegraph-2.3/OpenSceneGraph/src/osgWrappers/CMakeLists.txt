@@ -4,6 +4,11 @@ SET(LIBRARY_OUTPUT_PATH "${LIBRARY_OUTPUT_PATH}/${OSG_PLUGINS}")
 
 SET(CMAKE_SHARED_MODULE_PREFIX ${OSG_PLUGIN_PREFIX})
 
+IF(MSVC80)
+  IF(NOT OSG_MSVC_GENERATE_PLUGINS_AND_WRAPPERS_MANIFESTS)
+    SET(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} /MANIFEST:NO")
+  ENDIF(NOT OSG_MSVC_GENERATE_PLUGINS_AND_WRAPPERS_MANIFESTS)
+ENDIF(MSVC80)
 
 MACRO(ADD_WRAPPER_LIB SUBDIR EXPORTDEF)
     SET(TARGET_NAME "osgwrapper_${SUBDIR}")
@@ -73,8 +78,13 @@ MACRO(ADD_WRAPPER_LIB SUBDIR EXPORTDEF)
                 #changing bin to something else breaks this hack
                 #the dll are placed in bin/${OSG_PLUGINS} 
                 
-            SET_TARGET_PROPERTIES(${TARGET_NAME} PROPERTIES PREFIX "../../bin/${OSG_PLUGINS}/")
-                 SET_TARGET_PROPERTIES(${TARGET_NAME} PROPERTIES IMPORT_PREFIX "../")
+                IF(NOT MSVC_IDE)
+                    SET_TARGET_PROPERTIES(${TARGET_NAME} PROPERTIES PREFIX "../bin/${OSG_PLUGINS}/")
+                ELSE(NOT MSVC_IDE)
+                    SET_TARGET_PROPERTIES(${TARGET_NAME} PROPERTIES PREFIX "../../bin/${OSG_PLUGINS}/" IMPORT_PREFIX "../")
+                ENDIF(NOT MSVC_IDE)
+                
+                
         ELSE(OSG_MSVC_VERSIONED_DLL)
             
             #in standard mode (unversioned) the .lib and .dll are placed in lib/<debug or release>/${OSG_PLUGINS}.

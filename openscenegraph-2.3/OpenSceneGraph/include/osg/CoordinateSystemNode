@@ -29,8 +29,7 @@ class EllipsoidModel : public Object
 {
     public:
 
-   /** WGS_84 is a common representation of the earth's spheroid
-     */
+        /** WGS_84 is a common representation of the earth's spheroid */
         EllipsoidModel(double radiusEquator = WGS_84_RADIUS_EQUATOR,
                        double radiusPolar = WGS_84_RADIUS_POLAR):
             _radiusEquator(radiusEquator),
@@ -219,7 +218,7 @@ inline void EllipsoidModel::computeLocalToWorldTransformFromXYZ(double X, double
 
 inline osg::Vec3d EllipsoidModel::computeLocalUpVector(double X, double Y, double Z) const
 {
-    osg::Vec3 normal(X,Y,Z);
+    osg::Vec3d normal(X,Y,Z);
     normal.normalize();
     return normal;
 }

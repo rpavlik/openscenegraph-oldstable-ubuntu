@@ -19,6 +19,7 @@
 #include <osg/ClipNode>
 #include <osg/TexGenNode>
 #include <osg/OccluderNode>
+#include <osg/OcclusionQueryNode>
 #include <osg/Notify>
 #include <osg/TexEnv>
 #include <osg/AlphaFunc>
@@ -1090,7 +1091,17 @@ void CullVisitor::apply(LOD& node)
 void CullVisitor::apply(osg::ClearNode& node)
 {
     // simply override the current earth sky.
-    setClearNode(&node);
+    if (node.getRequiresClear())
+    {
+      getCurrentRenderBin()->getStage()->setClearColor(node.getClearColor());
+      getCurrentRenderBin()->getStage()->setClearMask(node.getClearMask());
+    }
+    else
+    {
+      // we have an earth sky implementation to do the work for use
+      // so we don't need to clear.
+      getCurrentRenderBin()->getStage()->setClearMask(0);
+    }
 
     // push the node's state.
     StateSet* node_state = node.getStateSet();
@@ -1144,8 +1155,16 @@ void CullVisitor::apply(osg::Camera& camera)
     // Save current cull settings
     CullSettings saved_cull_settings(*this);
 
+#if 1
+    // set cull settings from this Camera
+    setCullSettings(camera);
+
+    // inherit the settings from above
+    inheritCullSettings(saved_cull_settings, camera.getInheritanceMask());
+#else
     // activate all active cull settings from this Camera
     inheritCullSettings(camera);
+#endif
 
     // set the cull mask.
     unsigned int savedTraversalMask = getTraversalMask();
@@ -1382,5 +1401,34 @@ void CullVisitor::apply(osg::OccluderNode& node)
     popOccludersCurrentMask(_nodePath);
 }
 
+void CullVisitor::apply(osg::OcclusionQueryNode& node)
+{
+    if (isCulled(node)) return;
 
+    // push the culling mode.
+    pushCurrentMask();
+
+    // push the node's state.
+    StateSet* node_state = node.getStateSet();
+    if (node_state) pushStateSet(node_state);
+
+
+    osg::Camera* camera = getRenderStage()->getCamera();
+    // If previous query indicates visible, then traverse as usual.
+    if (node.getPassed( camera, getDistanceToEyePoint( node.getBound()._center, false ) ))
+        handle_cull_callbacks_and_traverse(node);
+
+    // Traverse the query subtree if OcclusionQueryNode needs to issue another query.
+    node.traverseQuery( camera, *this );
+
+    // Traverse the debug bounding geometry, if enabled.
+    node.traverseDebug( *this );
+
+
+    // pop the node's state off the render graph stack.    
+    if (node_state) popStateSet();
+
+    // pop the culling mode.
+    popCurrentMask();
+}
 

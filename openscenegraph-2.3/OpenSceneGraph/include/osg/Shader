@@ -1,6 +1,7 @@
 /* -*-c++-*- OpenSceneGraph - Copyright (C) 1998-2006 Robert Osfield 
  * Copyright (C) 2003-2005 3Dlabs Inc. Ltd.
  * Copyright (C) 2004-2005 Nathan Cournia
+ * Copyright (C) 2008 Zebra Imaging
  *
  * This application is open source and may be redistributed and/or modified   
  * freely and without restriction, both in commericial and non commericial
@@ -12,7 +13,7 @@
 */
 
 /* file:   include/osg/Shader
- * author: Mike Weiblen 2005-06-15
+ * author: Mike Weiblen 2008-01-02
 */
 
 #ifndef OSG_SHADER
@@ -46,6 +47,7 @@ class OSG_EXPORT Shader : public osg::Object
         enum Type {
             VERTEX = GL_VERTEX_SHADER,
             FRAGMENT = GL_FRAGMENT_SHADER,
+            GEOMETRY = GL_GEOMETRY_SHADER_EXT,
             UNDEFINED = -1
         };
 
@@ -81,6 +83,12 @@ class OSG_EXPORT Shader : public osg::Object
         /** Get the Shader type as a descriptive string. */
         const char* getTypename() const;
 
+        /** Set file name for the shader source code. */
+        inline void setFileName(const std::string& fileName) { _shaderFileName = fileName; }
+
+        /** Get filename to which the shader source code belongs. */
+        inline const std::string& getFileName() const { return _shaderFileName; }
+
         /** Resize any per context GLObject buffers to specified size. */
         virtual void resizeGLObjectBuffers(unsigned int maxSize);
 
@@ -99,17 +107,25 @@ class OSG_EXPORT Shader : public osg::Object
         /** For a given GL context, attach a glShader to a glProgram */
         void attachShader(unsigned int contextID, GLuint program) const;
 
+        /** For a given GL context, detach a glShader to a glProgram */
+        void detachShader(unsigned int contextID, GLuint program) const;
+
         /** Query InfoLog from a glShader */
         bool getGlShaderInfoLog(unsigned int contextID, std::string& log) const;
 
         /** Mark internal glShader for deletion.
-          * Deletion requests are queued tuntil they can be executed
+          * Deletion requests are queued until they can be executed
           * in the proper GL context. */
         static void deleteGlShader(unsigned int contextID, GLuint shader);
 
         /** flush all the cached glShaders which need to be deleted
           * in the OpenGL context related to contextID.*/
         static void flushDeletedGlShaders(unsigned int contextID,double currentTime, double& availableTime);
+
+        /** discard all the cached glShaders which need to be deleted in the OpenGL context related to contextID.
+          * Note, unlike flush no OpenGL calls are made, instead the handles are all removed.
+          * this call is useful for when an OpenGL context has been destroyed. */
+        static void discardDeletedGlShaders(unsigned int contextID);
 
         static Shader::Type getTypeId( const std::string& tname );
 
@@ -168,6 +184,7 @@ class OSG_EXPORT Shader : public osg::Object
     protected:        /*data*/
         Type _type;
         std::string _shaderSource;
+        std::string _shaderFileName;
         /** osg::Programs that this osg::Shader is attached to */
         typedef std::set< osg::Program* > ProgramSet;
         ProgramSet _programSet;
@@ -180,5 +197,3 @@ class OSG_EXPORT Shader : public osg::Object
 }
 
 #endif
-
-/*EOF*/

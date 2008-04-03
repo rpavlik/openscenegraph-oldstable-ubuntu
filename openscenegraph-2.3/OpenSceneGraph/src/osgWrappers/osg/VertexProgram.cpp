@@ -163,7 +163,7 @@ BEGIN_OBJECT_REFLECTOR(osg::VertexProgram)
 	I_MethodWithDefaults1(void, releaseGLObjects, IN, osg::State *, state, 0,
 	                      Properties::VIRTUAL,
 	                      __void__releaseGLObjects__State_P1,
-	                      "Release any OpenGL objects in specified graphics context if State object is passed, otherwise release OpenGL objexts for all graphics contexts if State object pointer is NULL. ",
+	                      "Release any OpenGL objects in specified graphics context if State object is passed, otherwise release OpenGL objects for all graphics contexts if State object pointer is NULL. ",
 	                      "");
 	I_StaticMethod2(void, deleteVertexProgramObject, IN, unsigned int, contextID, IN, GLuint, handle,
 	                __void__deleteVertexProgramObject__unsigned_int__GLuint_S,
@@ -173,10 +173,14 @@ BEGIN_OBJECT_REFLECTOR(osg::VertexProgram)
 	                __void__flushDeletedVertexProgramObjects__unsigned_int__double__double_R1_S,
 	                "Flush all the cached vertex programs which need to be deleted in the OpenGL context related to contextID. ",
 	                "");
+	I_StaticMethod1(void, discardDeletedVertexProgramObjects, IN, unsigned int, contextID,
+	                __void__discardDeletedVertexProgramObjects__unsigned_int_S,
+	                "discard all the cached vertex programs which need to be deleted in the OpenGL context related to contextID. ",
+	                "Note, unlike flush no OpenGL calls are made, instead the handles are all removed. this call is useful for when an OpenGL context has been destroyed. ");
 	I_StaticMethod2(osg::VertexProgram::Extensions *, getExtensions, IN, unsigned int, contextID, IN, bool, createIfNotInitalized,
 	                __Extensions_P1__getExtensions__unsigned_int__bool_S,
 	                "Function to call to get the extension of a specified context. ",
-	                "If the Exentsion object for that context has not yet been created and the 'createIfNotInitalized' flag been set to false then returns NULL. If 'createIfNotInitalized' is true then the Extensions object is automatically created. However, in this case the extension object will only be created with the graphics context associated with ContextID. ");
+	                "If the Extension object for that context has not yet been created and the 'createIfNotInitalized' flag been set to false then returns NULL. If 'createIfNotInitalized' is true then the Extensions object is automatically created. However, in this case the extension object will only be created with the graphics context associated with ContextID. ");
 	I_StaticMethod2(void, setExtensions, IN, unsigned int, contextID, IN, osg::VertexProgram::Extensions *, extensions,
 	                __void__setExtensions__unsigned_int__Extensions_P1_S,
 	                "The setExtensions method allows users to override the extensions across graphics contexts. ",

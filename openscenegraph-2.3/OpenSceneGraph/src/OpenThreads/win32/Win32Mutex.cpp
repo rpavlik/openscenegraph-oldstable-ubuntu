@@ -77,7 +77,7 @@ static void _S_nsec_sleep(int __log_nsec) {
 
 //----------------------------------------------------------------------------
 //
-// Decription: Constructor
+// Description: Constructor
 //
 // Use: public.
 //
@@ -88,7 +88,7 @@ Mutex::Mutex() {
 
 //----------------------------------------------------------------------------
 //
-// Decription: Destructor
+// Description: Destructor
 //
 // Use: public.
 //
@@ -98,7 +98,7 @@ Mutex::~Mutex() {
 }
 //----------------------------------------------------------------------------
 //
-// Decription: lock the mutex
+// Description: lock the mutex
 //
 // Use: public.
 //
@@ -161,7 +161,7 @@ int Mutex::lock() {
 
 //----------------------------------------------------------------------------
 //
-// Decription: unlock the mutex
+// Description: unlock the mutex
 //
 // Use: public.
 //
@@ -190,7 +190,7 @@ int Mutex::unlock() {
 
 //----------------------------------------------------------------------------
 //
-// Decription: test if the mutex may be locked
+// Description: test if the mutex may be locked
 //
 // Use: public.
 //

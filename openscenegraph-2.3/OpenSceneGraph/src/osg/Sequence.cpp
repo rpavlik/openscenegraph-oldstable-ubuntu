@@ -32,6 +32,7 @@ Sequence::Sequence() :
     _speed(0),
     _nreps(-1),
     _nrepsRemain(0),
+    _step(0),
     _defaultTime(1.),
     _lastFrameTime(0.),
     _saveRealLastFrameTime(-1.),
@@ -57,6 +58,7 @@ Sequence::Sequence(const Sequence& seq, const CopyOp& copyop) :
     _speed(seq._speed),
     _nreps(seq._nreps),
     _nrepsRemain(seq._nrepsRemain),
+    _step(seq._step),
     _defaultTime(seq._defaultTime),
     _lastFrameTime(seq._lastFrameTime),
     _saveRealLastFrameTime(seq._saveRealLastFrameTime),
@@ -174,11 +176,19 @@ void Sequence::setDuration(float speed, int nreps)
 
 void Sequence::setMode(SequenceMode mode)
 {
+    int ubegin, uend;
+
     switch (mode) 
     {
     case START:
         // restarts sequence from beginning
         _value = -1;
+
+        // Figure out which direction to start stepping the sequence
+        ubegin = (_begin < 0 ?  (int)_frameTime.size()-1: _begin);
+        uend = (_end < 0 ? (int)_frameTime.size()-1: _end);
+        _step = (ubegin > uend ? -1 : 1);
+
         _start = _now;
         _mode = mode;
         if (_saveRealLastFrameTime>=0.)
@@ -205,6 +215,13 @@ void Sequence::traverse(NodeVisitor& nv)
 {
     if (getNumChildren()==0) return;
 
+    const FrameStamp* framestamp = nv.getFrameStamp();
+    if (framestamp)
+    {
+        _now = framestamp->getSimulationTime();
+    }
+
+
     if (nv.getVisitorType()==NodeVisitor::UPDATE_VISITOR && 
         _mode == START &&
         !_frameTime.empty() && getNumChildren()!=0)
@@ -214,20 +231,11 @@ void Sequence::traverse(NodeVisitor& nv)
         int _ubegin = (_begin < 0 ?  (int)_frameTime.size()-1: _begin);
         int _uend = (_end < 0 ? (int)_frameTime.size()-1: _end);
 
-        // are we stepping forward or backward?
-        int _step;
-        _step = (_ubegin < _uend ? 1 : -1);
-        _step = (_speed <0. ? -_step : _step);
-
         int _sbegin = osg::minimum(_ubegin,_uend);
         int _send = osg::maximum(_ubegin,_uend);
 
-        const FrameStamp* framestamp = nv.getFrameStamp();
         if (framestamp)
         {
-          
-            _now = framestamp->getSimulationTime();
-
             // hack for last frame time
             if (_lastFrameTime>0. && _nrepsRemain==1 && _saveRealLastFrameTime<0.)
             {
@@ -301,7 +309,7 @@ void Sequence::traverse(NodeVisitor& nv)
                 if (!_sync || 
                     ((_now - _start) <= (_frameTime[_value]+_frameTime[nextValue])*osg::absolute(_speed)) )
                 {
-                    _start += _frameTime[_value];
+                    _start += _frameTime[_value]*osg::absolute(_speed);
                     // repeat or change directions?
                     if ( (_step>0 && nextValue==_send) || 
                          (_step<0 && nextValue==_sbegin))
@@ -390,11 +398,6 @@ int Sequence::_getNextValue()
     // if begin or end < 0, make it last frame
     int _ubegin = (_begin < 0 ?  (int)_frameTime.size()-1: _begin);
     int _uend = (_end < 0 ? (int)_frameTime.size()-1: _end);
-    
-    // are we stepping forward or backward?
-    int _step;
-    _step = (_ubegin < _uend ? 1 : -1);
-    _step = (_speed <0. ? -_step : _step);
     
     int _sbegin = osg::minimum(_ubegin,_uend);
     int _send = osg::maximum(_ubegin,_uend);

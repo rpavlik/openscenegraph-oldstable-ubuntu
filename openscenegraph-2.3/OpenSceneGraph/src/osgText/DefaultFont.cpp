@@ -14,6 +14,7 @@
  * OpenSceneGraph Public License for more details.
 */
 
+#include <stdlib.h>
 #include "DefaultFont.h"
 
 #include <osg/Notify>
@@ -48,25 +49,25 @@ void DefaultFont::setSize(unsigned int, unsigned int)
 
 
 
-Font::Glyph* DefaultFont::getGlyph(unsigned int charcode)
+Font::Glyph* DefaultFont::getGlyph(const FontResolution& fontRes, unsigned int charcode)
 {
     if (_sizeGlyphMap.empty()) return 0;
 
-    SizeGlyphMap::iterator itr = _sizeGlyphMap.find(SizePair(_width,_height));
+    FontSizeGlyphMap::iterator itr = _sizeGlyphMap.find(fontRes);
     if (itr==_sizeGlyphMap.end())
     {
         // no font found of correct size, will need to find the nearest.
         itr = _sizeGlyphMap.begin();
-        int mindeviation = abs((int)_width-(int)itr->first.first)+
-                           abs((int)_height-(int)itr->first.second);
-        SizeGlyphMap::iterator sitr=itr;
+        int mindeviation = abs((int)fontRes.first-(int)itr->first.first)+
+                           abs((int)fontRes.second-(int)itr->first.second);
+        FontSizeGlyphMap::iterator sitr=itr;
         ++sitr;
         for(;
             sitr!=_sizeGlyphMap.end();
             ++sitr)
         {
-            int deviation = abs((int)_width-(int)sitr->first.first)+
-                            abs((int)_height-(int)sitr->first.second);
+            int deviation = abs((int)fontRes.first-(int)sitr->first.first)+
+                            abs((int)fontRes.second-(int)sitr->first.second);
             if (deviation<mindeviation)
             {
                 mindeviation = deviation;
@@ -84,7 +85,7 @@ Font::Glyph* DefaultFont::getGlyph(unsigned int charcode)
 }
 
 
-osg::Vec2 DefaultFont::getKerning(unsigned int,unsigned int, KerningType)
+osg::Vec2 DefaultFont::getKerning(const FontResolution&, unsigned int,unsigned int, KerningType)
 {
     // no kerning on default font.
     return osg::Vec2(0.0f,0.0f);
@@ -199,21 +200,20 @@ void DefaultFont::constructGlyphs()
     unsigned int sourceWidth = 8;
     unsigned int sourceHeight = 12;
     
-    _width = sourceWidth;
-    _height = sourceHeight;
+    FontResolution fontRes(sourceWidth,sourceHeight);
 
     // populate the glyph mp
     for(unsigned int i=32;i<127;i++)
     {
         osg::ref_ptr<Glyph> glyph = new Glyph;
         
-        unsigned int dataSize = _width*_height;
+        unsigned int dataSize = sourceWidth*sourceHeight;
         unsigned char* data = new unsigned char[dataSize];
 
         // clear the image to zeros.
         for(unsigned char* p=data;p<data+dataSize;) { *p++ = 0; }
         
-        glyph->setImage(_width,_height,1,
+        glyph->setImage(sourceWidth,sourceHeight,1,
                         GL_ALPHA,
                         GL_ALPHA,GL_UNSIGNED_BYTE,
                         data,
@@ -222,7 +222,7 @@ void DefaultFont::constructGlyphs()
 
         glyph->setInternalTextureFormat(GL_ALPHA);
 
-        // now populate data arry by converting bitmap into a luminance_alpha map.
+        // now populate data array by converting bitmap into a luminance_alpha map.
         unsigned char* ptr = rasters[i-32];
         unsigned char value_on = 255;
         unsigned char value_off = 0;
@@ -240,11 +240,11 @@ void DefaultFont::constructGlyphs()
         }
                         
         glyph->setHorizontalBearing(osg::Vec2(0.0f,0.0f)); // bottom left.
-        glyph->setHorizontalAdvance((float)_width);
-        glyph->setVerticalBearing(osg::Vec2((float)_width*0.5f,(float)_height)); // top middle.
-        glyph->setVerticalAdvance((float)_height);
+        glyph->setHorizontalAdvance((float)sourceWidth);
+        glyph->setVerticalBearing(osg::Vec2((float)sourceWidth*0.5f,(float)sourceHeight)); // top middle.
+        glyph->setVerticalAdvance((float)sourceHeight);
         
-        addGlyph(_width,_height,i,glyph.get());
+        addGlyph(fontRes,i,glyph.get());
     }
 }
 

@@ -31,6 +31,11 @@ BEGIN_OBJECT_REFLECTOR(osg::Point)
 	I_Constructor0(____Point,
 	               "",
 	               "");
+	I_Constructor1(IN, float, size,
+	               Properties::NON_EXPLICIT,
+	               ____Point__float,
+	               "",
+	               "");
 	I_ConstructorWithDefaults2(IN, const osg::Point &, point, , IN, const osg::CopyOp &, copyop, osg::CopyOp::SHALLOW_COPY,
 	                           ____Point__C5_Point_R1__C5_CopyOp_R1,
 	                           "Copy constructor using CopyOp to manage deep vs shallow copy. ",
@@ -133,7 +138,7 @@ BEGIN_OBJECT_REFLECTOR(osg::Point)
 	I_StaticMethod2(osg::Point::Extensions *, getExtensions, IN, unsigned int, contextID, IN, bool, createIfNotInitalized,
 	                __Extensions_P1__getExtensions__unsigned_int__bool_S,
 	                "Returns the Extensions object for the given context. ",
-	                "If createIfNotInitalized is true and the Exentsions object doesn't exist, getExtensions() creates it on the given context. Returns NULL if createIfNotInitalized is false and the Extensions object doesn't exist. ");
+	                "If createIfNotInitalized is true and the Extensions object doesn't exist, getExtensions() creates it on the given context. Returns NULL if createIfNotInitalized is false and the Extensions object doesn't exist. ");
 	I_StaticMethod2(void, setExtensions, IN, unsigned int, contextID, IN, osg::Point::Extensions *, extensions,
 	                __void__setExtensions__unsigned_int__Extensions_P1_S,
 	                "setExtensions() allows users to override the extensions across graphics contexts. ",

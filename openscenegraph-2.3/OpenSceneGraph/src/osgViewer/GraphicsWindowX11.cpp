@@ -12,8 +12,8 @@
 */
 
 /* Note, elements of GraphicsWindowX11 have used Prodcer/RenderSurface_X11.cpp as both
- * a guide to use of X11/GLX and copiying directly in the case of setBorder().
- * These elements are license under OSGPL as above, with Copyright (C) 2001-2004  Don Burns.
+ * a guide to use of X11/GLX and copying directly in the case of setBorder().
+ * These elements are licensed under OSGPL as above, with Copyright (C) 2001-2004  Don Burns.
  */
 
 #include <osgViewer/api/X11/GraphicsWindowX11>
@@ -27,9 +27,12 @@
 #include <X11/Xmd.h>
 #include <X11/keysym.h>
 #include <X11/cursorfont.h>
-#include <X11/Intrinsic.h>
 
 #include <X11/Xmd.h>        /* For CARD16 */
+
+#ifdef OSGVIEWER_USE_XRANDR
+#include <X11/extensions/Xrandr.h>
+#endif
 
 #include <unistd.h>
 
@@ -170,6 +173,23 @@ static int remapX11Key(int key)
     return s_x11KeyboardMap.remapKey(key);
 }
 
+// Functions to handle key maps of type char[32] as contained in
+// an XKeymapEvent or returned by XQueryKeymap().
+static inline bool keyMapGetKey(const char* map, unsigned int key)
+{
+    return (map[(key & 0xff) / 8] & (1 << (key & 7))) != 0;
+}
+
+static inline void keyMapSetKey(char* map, unsigned int key)
+{
+    map[(key & 0xff) / 8] |= (1 << (key & 7));
+}
+
+static inline void keyMapClearKey(char* map, unsigned int key)
+{
+    map[(key & 0xff) / 8] &= ~(1 << (key & 7));
+}
+
 GraphicsWindowX11::~GraphicsWindowX11()
 {
     close(true);
@@ -267,22 +287,63 @@ bool GraphicsWindowX11::createVisualInfo()
 #define MWM_FUNC_CLOSE        (1L<<5)
 
 
+bool GraphicsWindowX11::checkAndSendEventFullScreenIfNeeded(Display* display, int x, int y, int width, int height, bool windowDecoration)
+{
+  osg::GraphicsContext::WindowingSystemInterface *wsi = osg::GraphicsContext::getWindowingSystemInterface();
+  if (wsi == NULL) {
+    osg::notify(osg::NOTICE) << "Error, no WindowSystemInterface available, cannot toggle window fullscreen." << std::endl;
+    return false;
+  }
+
+  unsigned int    screenWidth;
+  unsigned int    screenHeight;
+
+  wsi->getScreenResolution(*_traits, screenWidth, screenHeight);
+  bool isFullScreen = x == 0 && y == 0 && width == (int)screenWidth && height == (int)screenHeight && !windowDecoration;
+
+  Atom netWMStateAtom = XInternAtom(display, "_NET_WM_STATE", True);
+  Atom netWMStateFullscreenAtom = XInternAtom(display,
+                                              "_NET_WM_STATE_FULLSCREEN", True);
+
+  if (netWMStateAtom != None && netWMStateFullscreenAtom != None) {
+    XEvent xev;
+    xev.xclient.type = ClientMessage;
+    xev.xclient.serial = 0;
+    xev.xclient.send_event = True;
+    xev.xclient.window = _window;
+    xev.xclient.message_type = netWMStateAtom;
+    xev.xclient.format = 32;
+    xev.xclient.data.l[0] = isFullScreen ? 1 : 0;
+    xev.xclient.data.l[1] = netWMStateFullscreenAtom;
+    xev.xclient.data.l[2] = 0;
+
+    XSendEvent(display, RootWindow(display, DefaultScreen(display)),
+               False,  SubstructureRedirectMask | SubstructureNotifyMask, &xev);
+    return true;
+  }
+  return false;
+}
+
 bool GraphicsWindowX11::setWindowDecorationImplementation(bool flag)
 {
     Display* display = getDisplayToUse();
-    
+
+    XMapWindow(display, _window );
+
+    checkAndSendEventFullScreenIfNeeded(display, _traits->x, _traits->y, _traits->width, _traits->height, flag);
+    struct
+    {
+        unsigned long flags;
+        unsigned long functions;
+        unsigned long decorations;
+        long          inputMode;
+        unsigned long status;
+    } wmHints;
+
     Atom atom;
+    bool result = false;
     if( (atom = XInternAtom( display, "_MOTIF_WM_HINTS", 0 )) != None )
     {
-    
-        struct
-        {
-            unsigned long flags;
-            unsigned long functions;
-            unsigned long decorations;
-            long          inputMode;
-            unsigned long status;
-        } wmHints;
         
         wmHints.flags = 0;
         wmHints.functions = MWM_FUNC_ALL;
@@ -300,35 +361,22 @@ bool GraphicsWindowX11::setWindowDecorationImplementation(bool flag)
             wmHints.flags |= MWM_HINTS_FUNCTIONS;
             if (_traits.valid() && !_traits->supportsResize) wmHints.functions |= MWM_FUNC_RESIZE;
         }
-
-        XMapWindow(display, _window );
         XChangeProperty( display, _window, atom, atom, 32, PropModeReplace, (unsigned char *)&wmHints,  5 );
-
-        XFlush(display);
-        XSync(display,0);
-
-#if 0
-        // now update the window dimensions to account for any size changes made by the window manager,
-        XGetWindowAttributes( display, _window, &watt );
-        _traits->width = watt.width;
-        _traits->height = watt.height;
-#endif
-
-        // add usleep here to give window manager a chance to handle the request, if
-        // we don't add this sleep then any X11 calls right afterwards can produce
-        // X11 errors.
-        usleep(100000);
-        
-        return true;
-
+        result = true;
     }
     else
     {
         osg::notify(osg::NOTICE)<<"Error: GraphicsWindowX11::setBorder(" << flag << ") - couldn't change decorations." << std::endl;
-        return false;
+        result = false;
     }
 
-    
+    XFlush(display);
+    XSync(display,0);
+    // add usleep here to give window manager a chance to handle the request, if
+    // we don't add this sleep then any X11 calls right afterwards can produce
+    // X11 errors.
+    usleep(100000);
+    return result;
 }
 
 bool GraphicsWindowX11::setWindowRectangleImplementation(int x, int y, int width, int height)
@@ -342,10 +390,13 @@ bool GraphicsWindowX11::setWindowRectangleImplementation(int x, int y, int width
     XFlush(display);
     XSync(display, 0);
 
+    checkAndSendEventFullScreenIfNeeded(display, x, y, width, height, _traits->windowDecoration);
+
     // add usleep here to give window manager a chance to handle the request, if
     // we don't add this sleep then any X11 calls right afterwards can produce
     // X11 errors.
     usleep(100000);
+
     
     return true;
 }
@@ -659,10 +710,12 @@ bool GraphicsWindowX11::createWindow()
 
     XSelectInput( _eventDisplay, _window, ExposureMask | StructureNotifyMask | 
                                      KeyPressMask | KeyReleaseMask |
-                                     PointerMotionMask  | ButtonPressMask | ButtonReleaseMask);
+                                     PointerMotionMask | ButtonPressMask | ButtonReleaseMask |
+                                     KeymapStateMask | FocusChangeMask | EnterWindowMask );
 
     XFlush( _eventDisplay );
     XSync( _eventDisplay, 0 );
+    rescanModifierMapping();
 
     return true;
 }
@@ -828,7 +881,7 @@ void GraphicsWindowX11::swapBuffersImplementation()
             {
                 if (static_cast<Atom>(ev.xclient.data.l[0]) == _deleteWindow)
                 {
-                    osg::notify(osg::INFO)<<"DeleteWindow event recieved"<<std::endl;
+                    osg::notify(osg::INFO)<<"DeleteWindow event received"<<std::endl;
                     getEventQueue()->closeWindow();
                 }
             }
@@ -866,10 +919,10 @@ void GraphicsWindowX11::checkEvents()
         {
             case ClientMessage:
             {
-                osg::notify(osg::NOTICE)<<"ClientMessage event recieved"<<std::endl;
+                osg::notify(osg::NOTICE)<<"ClientMessage event received"<<std::endl;
                 if (static_cast<Atom>(ev.xclient.data.l[0]) == _deleteWindow)
                 {
-                    osg::notify(osg::NOTICE)<<"DeleteWindow event recieved"<<std::endl;
+                    osg::notify(osg::NOTICE)<<"DeleteWindow event received"<<std::endl;
                     // FIXME only do if _ownsWindow ?
                     destroyWindowRequested = true;
                     getEventQueue()->closeWindow(eventTime);
@@ -880,19 +933,15 @@ void GraphicsWindowX11::checkEvents()
                 break;
 
             case GravityNotify :
-                osg::notify(osg::INFO)<<"GravityNotify event recieved"<<std::endl;
-                break;
-
-            case UnmapNotify :
-                osg::notify(osg::INFO)<<"UnmapNotify event recieved"<<std::endl;
+                osg::notify(osg::INFO)<<"GravityNotify event received"<<std::endl;
                 break;
 
             case ReparentNotify:
-                osg::notify(osg::INFO)<<"ReparentNotify event recieved"<<std::endl;
+                osg::notify(osg::INFO)<<"ReparentNotify event received"<<std::endl;
                 break;
 
             case DestroyNotify :
-                osg::notify(osg::NOTICE)<<"DestroyNotify event recieved"<<std::endl;
+                osg::notify(osg::NOTICE)<<"DestroyNotify event received"<<std::endl;
                 _realized =  false;
                 _valid = false;
                 break;
@@ -938,8 +987,89 @@ void GraphicsWindowX11::checkEvents()
                 break;
             }
 
-           case MotionNotify :
-           {
+            case FocusIn :
+                osg::notify(osg::INFO)<<"FocusIn event received"<<std::endl;
+                break;
+
+            case UnmapNotify :
+            case FocusOut :
+            {
+                osg::notify(osg::INFO)<<"FocusOut/UnmapNotify event received"<<std::endl;
+                if (ev.type == FocusOut && ev.xfocus.mode != NotifyNormal) break;
+
+                char modMap[32];
+                getModifierMap(modMap);
+
+                // release normal (non-modifier) keys
+                for (unsigned int key = 8; key < 256; key++)
+                {
+                    bool isModifier = keyMapGetKey(modMap, key);
+                    if (!isModifier) forceKey(key, eventTime, false);
+                }
+
+                // release modifier keys
+                for (unsigned int key = 8; key < 256; key++)
+                {
+                    bool isModifier = keyMapGetKey(modMap, key);
+                    if (isModifier) forceKey(key, eventTime, false);
+                }
+                break;
+            }
+
+            case EnterNotify :
+                osg::notify(osg::INFO)<<"EnterNotify event received"<<std::endl;
+                _modifierState = ev.xcrossing.state;
+                syncLocks();
+                break;
+
+            case KeymapNotify :
+            {
+                osg::notify(osg::INFO)<<"KeymapNotify event received"<<std::endl;
+
+                // KeymapNotify is guaranteed to directly follow either a FocusIn or
+                // an EnterNotify event. We are only interested in the FocusIn case.
+                if (_lastEventType != FocusIn) break;
+
+                char modMap[32];
+                getModifierMap(modMap);
+                syncLocks();
+
+                // release normal (non-modifier) keys
+                for (unsigned int key = 8; key < 256; key++)
+                {
+                    bool isModifier = keyMapGetKey(modMap, key);
+                    if (isModifier) continue;
+                    bool isPressed = keyMapGetKey(ev.xkeymap.key_vector, key);
+                    if (!isPressed) forceKey(key, eventTime, false);
+                }
+
+                // press/release modifier keys
+                for (unsigned int key = 8; key < 256; key++)
+                {
+                    bool isModifier = keyMapGetKey(modMap, key);
+                    if (!isModifier) continue;
+                    bool isPressed = keyMapGetKey(ev.xkeymap.key_vector, key);
+                    forceKey(key, eventTime, isPressed);
+                }
+
+                // press normal keys
+                for (unsigned int key = 8; key < 256; key++)
+                {
+                    bool isModifier = keyMapGetKey(modMap, key);
+                    if (isModifier) continue;
+                    bool isPressed = keyMapGetKey(ev.xkeymap.key_vector, key);
+                    if (isPressed) forceKey(key, eventTime, true);
+                }
+                break;
+            }
+
+            case MappingNotify :
+                osg::notify(osg::INFO)<<"MappingNotify event received"<<std::endl;
+                if (ev.xmapping.request == MappingModifier) rescanModifierMapping();
+                break;
+
+            case MotionNotify :
+            {
                 if (firstEventTime==0) firstEventTime = ev.xmotion.time;
                 Time relativeTime = ev.xmotion.time - firstEventTime;
                 eventTime = baseTime + static_cast<double>(relativeTime)*0.001;
@@ -1053,11 +1183,11 @@ void GraphicsWindowX11::checkEvents()
                 Time relativeTime = ev.xmotion.time - firstEventTime;
                 eventTime = baseTime + static_cast<double>(relativeTime)*0.001;
 
+                _modifierState = ev.xkey.state;
+                keyMapSetKey(_keyMap, ev.xkey.keycode);
                 int keySymbol = 0;
-                unsigned int modifierMask = 0;
-                adaptKey(ev.xkey, keySymbol, modifierMask);
+                adaptKey(ev.xkey, keySymbol);
 
-                //getEventQueue()->getCurrentEventState()->setModKeyMask(modifierMask);
                 getEventQueue()->keyPress(keySymbol, eventTime);
                 break;
             }
@@ -1083,21 +1213,22 @@ void GraphicsWindowX11::checkEvents()
                         break;
                     }
                 }
-#endif                
+#endif
+                _modifierState = ev.xkey.state;
+                keyMapClearKey(_keyMap, ev.xkey.keycode);
                 int keySymbol = 0;
-                unsigned int modifierMask = 0;
-                adaptKey(ev.xkey, keySymbol, modifierMask);
+                adaptKey(ev.xkey, keySymbol);
                 
-                //getEventQueue()->getCurrentEventState()->setModKeyMask(modifierMask);
                 getEventQueue()->keyRelease(keySymbol, eventTime);
                 break;
             }
             
             default:
-                osg::notify(osg::NOTICE)<<"Other event"<<std::endl;
+                osg::notify(osg::NOTICE)<<"Other event "<<ev.type<<std::endl;
                 break;
                 
         }
+        _lastEventType = ev.type;
     }
 
     if (windowX != _traits->x || 
@@ -1159,42 +1290,13 @@ void GraphicsWindowX11::transformMouseXY(float& x, float& y)
     }
 }
 
-void GraphicsWindowX11::adaptKey(XKeyEvent& keyevent, int& keySymbol, unsigned int& modifierMask)
+void GraphicsWindowX11::adaptKey(XKeyEvent& keyevent, int& keySymbol)
 {
     Display* display = _eventDisplay;
  
-    static XComposeStatus state;
     unsigned char keybuf[32];
-    XLookupString( &keyevent, (char *)keybuf, sizeof(keybuf), NULL, &state );
+    XLookupString( &keyevent, (char *)keybuf, sizeof(keybuf), NULL, NULL );
 
-    modifierMask = 0;
-    if( keyevent.state & ShiftMask )
-    {
-        modifierMask |= osgGA::GUIEventAdapter::MODKEY_SHIFT;
-    }
-    if( keyevent.state & LockMask )
-    {
-        modifierMask |= osgGA::GUIEventAdapter::MODKEY_CAPS_LOCK;
-    }
-    if( keyevent.state & ControlMask )
-    {
-        modifierMask |= osgGA::GUIEventAdapter::MODKEY_CTRL;
-    }
-    if( keyevent.state & Mod1Mask )
-    {
-        modifierMask |= osgGA::GUIEventAdapter::MODKEY_ALT;
-    }
-    if( keyevent.state & Mod2Mask )
-    {
-        modifierMask |= osgGA::GUIEventAdapter::MODKEY_NUM_LOCK;
-    }
-    if( keyevent.state & Mod4Mask )
-    {
-        modifierMask |= osgGA::GUIEventAdapter::MODKEY_META;
-    }
-
-    keySymbol = keybuf[0];
-    
     KeySym ks = XKeycodeToKeysym( display, keyevent.keycode, 0 );
     int remappedKey = remapX11Key(ks);
     if (remappedKey & 0xff00) 
@@ -1207,8 +1309,103 @@ void GraphicsWindowX11::adaptKey(XKeyEvent& keyevent, int& keySymbol, unsigned i
         // normal ascii key
         keySymbol = keybuf[0];
     }
-    
-    
+}
+
+// Function to inject artificial key presses/releases.
+void GraphicsWindowX11::forceKey(int key, double time, bool state)
+{
+    if (!(state ^ keyMapGetKey(_keyMap, key))) return; // already pressed/released
+
+    XKeyEvent event;
+    event.serial = 0;
+    event.send_event = True;
+    event.display = _eventDisplay;
+    event.window = _window;
+    event.subwindow = 0;
+    event.time = 0;
+    event.x = 0;
+    event.y = 0;
+    event.x_root = 0;
+    event.y_root = 0;
+    event.state = getModifierMask() | (_modifierState & (LockMask | _numLockMask));
+    event.keycode = key;
+    event.same_screen = True;
+
+    int keySymbol = 0;
+    if (state)
+    {
+        event.type = KeyPress;
+        adaptKey(event, keySymbol);
+        getEventQueue()->keyPress(keySymbol, time);
+        keyMapSetKey(_keyMap, key);
+    }
+    else
+    {
+        event.type = KeyRelease;
+        adaptKey(event, keySymbol);
+        getEventQueue()->keyRelease(keySymbol, time);
+        keyMapClearKey(_keyMap, key);
+    }
+}
+
+void GraphicsWindowX11::syncLocks()
+{
+    unsigned int mask = getEventQueue()->getCurrentEventState()->getModKeyMask();
+
+    if (_modifierState & LockMask)
+        mask |= osgGA::GUIEventAdapter::MODKEY_CAPS_LOCK;
+    else
+        mask &= ~osgGA::GUIEventAdapter::MODKEY_CAPS_LOCK;
+
+    if (_modifierState & _numLockMask)
+        mask |= osgGA::GUIEventAdapter::MODKEY_NUM_LOCK;
+    else
+        mask &= ~osgGA::GUIEventAdapter::MODKEY_NUM_LOCK;
+
+    getEventQueue()->getCurrentEventState()->setModKeyMask(mask);
+}
+
+void GraphicsWindowX11::rescanModifierMapping()
+{
+    XModifierKeymap *mkm = XGetModifierMapping(_eventDisplay);
+    KeyCode *m = mkm->modifiermap;
+    KeyCode numlock = XKeysymToKeycode(_eventDisplay, XK_Num_Lock);
+    _numLockMask = 0;
+    for (int i = 0; i < mkm->max_keypermod * 8; i++, m++)
+    {
+        if (*m == numlock)
+        {
+            _numLockMask = 1 << (i / mkm->max_keypermod);
+            break;
+        }
+    }
+}
+
+// Returns char[32] keymap with bits for every modifier key set.
+void GraphicsWindowX11::getModifierMap(char* keymap) const
+{
+    memset(keymap, 0, 32);
+    XModifierKeymap *mkm = XGetModifierMapping(_eventDisplay);
+    KeyCode *m = mkm->modifiermap;
+    for (int i = 0; i < mkm->max_keypermod * 8; i++, m++)
+    {
+        if (*m) keyMapSetKey(keymap, *m);
+    }
+}
+
+int GraphicsWindowX11::getModifierMask() const
+{
+    int mask = 0;
+    XModifierKeymap *mkm = XGetModifierMapping(_eventDisplay);
+    for (int i = 0; i < mkm->max_keypermod * 8; i++)
+    {
+        unsigned int key = mkm->modifiermap[i];
+        if (key && keyMapGetKey(_keyMap, key))
+        {
+            mask |= 1 << (i / mkm->max_keypermod);
+        }
+    }
+    return mask;
 }
 
 void GraphicsWindowX11::requestWarpPointer(float x,float y)
@@ -1263,9 +1460,90 @@ int X11ErrorHandling(Display* display, XErrorEvent* event)
 
 }
 
-struct X11WindowingSystemInterface : public osg::GraphicsContext::WindowingSystemInterface
+class X11WindowingSystemInterface : public osg::GraphicsContext::WindowingSystemInterface
 {
+#ifdef OSGVIEWER_USE_XRANDR
+    // TODO: Investigate whether or not Robert thinks we should store/restore the original
+    // resolution in the destructor; I'm not sure the other ones do this, and it may be the
+    // responsibility of the user.
+    bool _setScreen(const osg::GraphicsContext::ScreenIdentifier& si, unsigned int width, unsigned height, double rate) {
+        Display* display = XOpenDisplay(si.displayName().c_str());
+        
+        if(display)
+        {
+            XRRScreenConfiguration* sc = XRRGetScreenInfo(display, RootWindow(display, si.screenNum));
 
+            if(!sc)
+            {
+                osg::notify(osg::NOTICE) << "Unable to create XRRScreenConfiguration on display \"" << XDisplayName(si.displayName().c_str()) << "\"."<<std::endl;
+                return false;
+            }
+
+            int      numScreens = 0;
+            int      numRates   = 0;
+            Rotation currentRot = 0;
+            bool     okay       = false;
+
+            XRRConfigRotations(sc, &currentRot);
+            
+            // If the width or height are zero, use our defaults.
+            if(!width || !height)
+            {
+                getScreenResolution(si, width, height);
+            }
+
+            // If this somehow fails, okay will still be false, no iteration will take place below,
+            // and the sc pointer will still be freed later on.
+            XRRScreenSize* ss = XRRConfigSizes(sc, &numScreens);
+
+            for(int i = 0; i < numScreens; i++)
+            {
+                if(ss[i].width == static_cast<int>(width) && ss[i].height == static_cast<int>(height))
+                {
+                    short* rates     = XRRConfigRates(sc, i, &numRates);
+                    bool   rateFound = false;
+                    
+                    // Search for our rate in the list of acceptable rates given to us by Xrandr.
+                    // If it's not found, rateFound will still be false and the call will never
+                    // be made to XRRSetScreenConfigAndRate since the rate will be invalid.
+                    for(int r = 0; r < numRates; r++)
+                    {
+                        if(rates[r] == static_cast<short>(rate))
+                        {
+                            rateFound = true;
+                            break;
+                        }
+                    }
+
+                    if(rate > 0.0f && !rateFound)
+                    {
+                        osg::notify(osg::NOTICE) << "Unable to find valid refresh rate " << rate << " on display \"" << XDisplayName(si.displayName().c_str()) << "\"."<<std::endl;
+                    }
+                    else if(XRRSetScreenConfigAndRate(display, sc, DefaultRootWindow(display), i, currentRot, static_cast<short>(rate), CurrentTime) != RRSetConfigSuccess)
+                    {
+                        osg::notify(osg::NOTICE) << "Unable to set resolution to " << width << "x" << height << " on display \"" << XDisplayName(si.displayName().c_str()) << "\"."<<std::endl;
+                    }
+                    else
+                    {
+                        okay = true;
+                        break;
+                    }
+                }
+            }
+    
+            XRRFreeScreenConfigInfo(sc);
+    
+            return okay;
+        }
+        else
+        {
+            osg::notify(osg::NOTICE) << "Unable to open display \"" << XDisplayName(si.displayName().c_str()) << "\"."<<std::endl;
+            return false;
+        }
+    }
+#endif
+
+public:
     X11WindowingSystemInterface()
     {
         osg::notify(osg::INFO)<<"X11WindowingSystemInterface()"<<std::endl;
@@ -1329,6 +1607,26 @@ struct X11WindowingSystemInterface : public osg::GraphicsContext::WindowingSyste
             width = 0;
             height = 0;
         }
+    }
+
+    virtual bool setScreenResolution(const osg::GraphicsContext::ScreenIdentifier& si, unsigned int width, unsigned int height)
+    {
+#ifdef OSGVIEWER_USE_XRANDR
+        return _setScreen(si, width, height, 0.0f);
+#else
+        osg::notify(osg::NOTICE) << "You must build osgViewer with Xrandr 1.2 or higher for setScreenResolution support!" << std::endl;
+        return false;
+#endif
+    }
+
+    virtual bool setScreenRefreshRate(const osg::GraphicsContext::ScreenIdentifier& si, double rate)
+    {
+#ifdef OSGVIEWER_USE_XRANDR
+        return _setScreen(si, 0, 0, rate);
+#else
+        osg::notify(osg::NOTICE) << "You must build osgViewer with Xrandr 1.2 or higher for setScreenRefreshRate support!" << std::endl;
+        return false;
+#endif
     }
 
     virtual osg::GraphicsContext* createGraphicsContext(osg::GraphicsContext::Traits* traits)

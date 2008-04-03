@@ -45,7 +45,8 @@ class OSG_EXPORT TransferFunction : public osg::Referenced
         virtual ~TransferFunction();
 
         typedef std::vector<osg::Vec4> Colors;
-        Colors                     _colors;
+
+        Colors                      _colors;
         osg::ref_ptr<osg::Image>    _image;
         osg::ref_ptr<osg::Texture>  _texture;
         osg::ref_ptr<osg::Shader>   _shader;

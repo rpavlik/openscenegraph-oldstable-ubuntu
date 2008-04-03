@@ -30,7 +30,7 @@
 using namespace osgViewer;
 
 //#define DEBUG_MESSAGE osg::notify(osg::NOTICE)
-#define DEBUG_MESSAGE osg::notify(osg::INFO)
+#define DEBUG_MESSAGE osg::notify(osg::DEBUG_FP)
 
 
 OpenGLQuerySupport::OpenGLQuerySupport():
@@ -254,7 +254,7 @@ void Renderer::cull()
 
     if (_done || _graphicsThreadDoesCull) return;
 
-    // note we assume lock has already been aquired.
+    // note we assume lock has already been acquired.
     osgUtil::SceneView* sceneView = _availableQueue.takeFront();
 
     DEBUG_MESSAGE<<"cull() got SceneView "<<sceneView<<std::endl;
@@ -274,7 +274,7 @@ void Renderer::cull()
         const osg::FrameStamp* fs = state->getFrameStamp();
         int frameNumber = fs ? fs->getFrameNumber() : 0;
 
-        // do cull taversal
+        // do cull traversal
         osg::Timer_t beforeCullTick = osg::Timer::instance()->tick();
 
         sceneView->inheritCullSettings(*(sceneView->getCamera()));
@@ -356,15 +356,15 @@ void Renderer::draw()
             state->getDynamicObjectRenderingCompletedCallback()->completed(state);
         }
 
-        bool aquireGPUStats = stats && _timerQuerySupported && stats->collectStats("gpu");
+        bool acquireGPUStats = stats && _timerQuerySupported && stats->collectStats("gpu");
 
-        if (aquireGPUStats) 
+        if (acquireGPUStats) 
         {
             checkQuery(stats);
         }
 
-        // do draw traveral
-        if (aquireGPUStats) 
+        // do draw traversal
+        if (acquireGPUStats) 
         {
             checkQuery(stats);
             beginQuery(frameNumber);
@@ -390,10 +390,6 @@ void Renderer::draw()
         _availableQueue.add(sceneView);
 
         double availableTime = 0.004; // 4 ms
-        if (databasePager && databasePager->requiresExternalCompileGLObjects(sceneView->getState()->getContextID()))
-        {
-            databasePager->compileGLObjects(*(sceneView->getState()), availableTime);
-        }
 
         if (compileThread)
         {
@@ -404,7 +400,12 @@ void Renderer::draw()
             sceneView->flushDeletedGLObjects(availableTime);
         }
 
-        if (aquireGPUStats)
+        if (databasePager && databasePager->requiresExternalCompileGLObjects(sceneView->getState()->getContextID()))
+        {
+            databasePager->compileGLObjects(*(sceneView->getState()), availableTime);
+        }
+
+        if (acquireGPUStats)
         {
             endQuery();
             checkQuery(stats);
@@ -464,14 +465,14 @@ void Renderer::cull_draw()
         initialize(state);
     }
 
-    bool aquireGPUStats = stats && _timerQuerySupported && stats->collectStats("gpu");
+    bool acquireGPUStats = stats && _timerQuerySupported && stats->collectStats("gpu");
 
-    if (aquireGPUStats) 
+    if (acquireGPUStats) 
     {
         checkQuery(stats);
     }
 
-    // do cull taversal
+    // do cull traversal
     osg::Timer_t beforeCullTick = osg::Timer::instance()->tick();
 
     sceneView->inheritCullSettings(*(sceneView->getCamera()));
@@ -487,8 +488,8 @@ void Renderer::cull_draw()
 #endif
 
 
-    // do draw traveral
-    if (aquireGPUStats) 
+    // do draw traversal
+    if (acquireGPUStats) 
     {
         checkQuery(stats);
         beginQuery(frameNumber);
@@ -526,7 +527,7 @@ void Renderer::cull_draw()
         sceneView->flushDeletedGLObjects(availableTime);
     }
 
-    if (aquireGPUStats)
+    if (acquireGPUStats)
     {
         endQuery();
         checkQuery(stats);

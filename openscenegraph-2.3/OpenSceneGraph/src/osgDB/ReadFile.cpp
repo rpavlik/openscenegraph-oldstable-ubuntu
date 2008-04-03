@@ -13,6 +13,7 @@
 #include <osg/Notify>
 #include <osg/Object>
 #include <osg/Image>
+#include <osg/Shader>
 #include <osg/ImageStream>
 #include <osg/Node>
 #include <osg/Group>
@@ -41,6 +42,14 @@ Image* osgDB::readImageFile(const std::string& filename,const ReaderWriter::Opti
 {
     ReaderWriter::ReadResult rr = Registry::instance()->readImage(filename,options);
     if (rr.validImage()) return rr.takeImage();
+    if (rr.error()) notify(WARN) << rr.message() << std::endl;
+    return NULL;
+}
+
+Shader* osgDB::readShaderFile(const std::string& filename,const ReaderWriter::Options* options)
+{
+    ReaderWriter::ReadResult rr = Registry::instance()->readShader(filename,options);
+    if (rr.validShader()) return rr.takeShader();
     if (rr.error()) notify(WARN) << rr.message() << std::endl;
     return NULL;
 }
@@ -237,4 +246,44 @@ Node* osgDB::readNodeFiles(osg::ArgumentParser& arguments,const ReaderWriter::Op
         return group;
     }
     
+}
+
+osg::ref_ptr<osg::Object> osgDB::readRefObjectFile(const std::string& filename,const ReaderWriter::Options* options)
+{
+    ReaderWriter::ReadResult rr = Registry::instance()->readObject(filename,options);
+    if (rr.validObject()) return osg::ref_ptr<osg::Object>(rr.getObject());
+    if (rr.error()) notify(WARN) << rr.message() << std::endl;
+    return NULL;
+}
+
+osg::ref_ptr<osg::Image> osgDB::readRefImageFile(const std::string& filename,const ReaderWriter::Options* options)
+{
+    ReaderWriter::ReadResult rr = Registry::instance()->readImage(filename,options);
+    if (rr.validImage()) return osg::ref_ptr<osg::Image>(rr.getImage());
+    if (rr.error()) notify(WARN) << rr.message() << std::endl;
+    return NULL;
+}
+
+osg::ref_ptr<osg::Shader> osgDB::readRefShaderFile(const std::string& filename,const ReaderWriter::Options* options)
+{
+    ReaderWriter::ReadResult rr = Registry::instance()->readShader(filename,options);
+    if (rr.validShader()) return osg::ref_ptr<osg::Shader>(rr.getShader());
+    if (rr.error()) notify(WARN) << rr.message() << std::endl;
+    return NULL;
+}
+
+osg::ref_ptr<osg::HeightField> osgDB::readRefHeightFieldFile(const std::string& filename,const ReaderWriter::Options* options)
+{
+    ReaderWriter::ReadResult rr = Registry::instance()->readHeightField(filename,options);
+    if (rr.validHeightField()) return osg::ref_ptr<osg::HeightField>(rr.getHeightField());
+    if (rr.error()) notify(WARN) << rr.message() << std::endl;
+    return NULL;
+}
+
+osg::ref_ptr<osg::Node> osgDB::readRefNodeFile(const std::string& filename,const ReaderWriter::Options* options)
+{
+    ReaderWriter::ReadResult rr = Registry::instance()->readNode(filename,options);
+    if (rr.validNode()) return osg::ref_ptr<osg::Node>(rr.getNode());
+    if (rr.error()) notify(WARN) << rr.message() << std::endl;
+    return NULL;
 }

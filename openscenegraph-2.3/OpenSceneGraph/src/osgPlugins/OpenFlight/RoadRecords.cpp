@@ -1,7 +1,20 @@
+/* -*-c++-*- OpenSceneGraph - Copyright (C) 1998-2006 Robert Osfield 
+ *
+ * This library is open source and may be redistributed and/or modified under  
+ * the terms of the OpenSceneGraph Public License (OSGPL) version 0.0 or 
+ * (at your option) any later version.  The full license is in LICENSE file
+ * included with this distribution, and on the openscenegraph.org website.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
+ * OpenSceneGraph Public License for more details.
+*/
+
 //
 // OpenFlight® loader for OpenSceneGraph
 //
-//  Copyright (C) 2005-2006  Brede Johansen
+//  Copyright (C) 2005-2007  Brede Johansen
 //
 
 #include <osg/Notify>
@@ -27,17 +40,19 @@ class RoadSegment : public PrimaryRecord
 
         META_setID(_roadSegment)
         META_setComment(_roadSegment)
-        META_setMatrix(_roadSegment)
         META_setMultitexture(_roadSegment)
         META_addChild(_roadSegment)
+        META_dispose(_roadSegment)
 
     protected:
 
         virtual ~RoadSegment() {}
-
-        virtual void readRecord(RecordInputStream& /*in*/, Document& /*document*/)
+        virtual void readRecord(RecordInputStream& in, Document& /*document*/)
         {
             _roadSegment = new osg::Group;
+            std::string id = in.readString(8);
+
+            _roadSegment->setName(id);
 
             // Add to parent.
             if (_parent.valid())
@@ -62,17 +77,20 @@ class RoadConstruction : public PrimaryRecord
 
         META_setID(_roadConstruction)
         META_setComment(_roadConstruction)
-        META_setMatrix(_roadConstruction)
         META_setMultitexture(_roadConstruction)
         META_addChild(_roadConstruction)
+        META_dispose(_roadConstruction)
 
     protected:
 
         virtual ~RoadConstruction() {}
-
-        virtual void readRecord(RecordInputStream& /*in*/, Document& /*document*/)
+        virtual void readRecord(RecordInputStream& in, Document& /*document*/)
         {
             _roadConstruction = new osg::Group;
+
+            std::string id = in.readString(8);
+
+            _roadConstruction->setName(id);
 
             // Add to parent.
             if (_parent.valid())
@@ -97,14 +115,13 @@ class RoadPath : public PrimaryRecord
 
         META_setID(_roadPath)
         META_setComment(_roadPath)
-        META_setMatrix(_roadPath)
         META_setMultitexture(_roadPath)
         META_addChild(_roadPath)
+        META_dispose(_roadPath)
 
     protected:
 
         virtual ~RoadPath() {}
-
         virtual void readRecord(RecordInputStream& /*in*/, Document& /*document*/)
         {
             _roadPath = new osg::Group;

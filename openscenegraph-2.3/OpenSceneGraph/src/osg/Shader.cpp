@@ -1,6 +1,7 @@
 /* -*-c++-*- OpenSceneGraph - Copyright (C) 1998-2006 Robert Osfield 
  * Copyright (C) 2003-2005 3Dlabs Inc. Ltd.
  * Copyright (C) 2004-2005 Nathan Cournia
+ * Copyright (C) 2008 Zebra Imaging
  *
  * This application is open source and may be redistributed and/or modified   
  * freely and without restriction, both in commericial and non commericial
@@ -13,7 +14,7 @@
 */
 
 /* file:   src/osg/Shader.cpp
- * author: Mike Weiblen 2005-06-15
+ * author: Mike Weiblen 2008-01-02
 */
 
 #include <fstream>
@@ -83,6 +84,13 @@ void Shader::flushDeletedGlShaders(unsigned int contextID,double /*currentTime*/
     availableTime -= elapsedTime;
 }
 
+void Shader::discardDeletedGlShaders(unsigned int contextID)
+{
+    OpenThreads::ScopedLock<OpenThreads::Mutex> lock(s_mutex_deletedGlShaderCache);
+
+    GlShaderHandleList& pList = s_deletedGlShaderCache[contextID];
+    pList.clear();
+}
 
 ///////////////////////////////////////////////////////////////////////////
 // osg::Shader
@@ -102,7 +110,8 @@ Shader::Shader(Type type, const std::string& source) :
 Shader::Shader(const Shader& rhs, const osg::CopyOp& copyop):
     osg::Object( rhs, copyop ),
     _type(rhs._type),
-    _shaderSource(rhs._shaderSource)
+    _shaderSource(rhs._shaderSource),
+    _shaderFileName(rhs._shaderFileName)
 {
 }
 
@@ -134,6 +143,9 @@ int Shader::compare(const Shader& rhs) const
 
     if( getShaderSource() < rhs.getShaderSource() ) return -1;
     if( rhs.getShaderSource() < getShaderSource() ) return 1;
+
+    if( getFileName() < rhs.getFileName() ) return -1;
+    if( rhs.getFileName() < getFileName() ) return 1;
     return 0;
 }
 
@@ -163,6 +175,7 @@ bool Shader::loadShaderSourceFromFile( const std::string& fileName )
     }
 
     osg::notify(osg::INFO)<<"Loading shader source file \""<<fileName<<"\""<<std::endl;
+    _shaderFileName = fileName;
 
     sourceFile.seekg(0, std::ios::end);
     int length = sourceFile.tellg();
@@ -184,6 +197,7 @@ const char* Shader::getTypename() const
     {
         case VERTEX:    return "VERTEX";
         case FRAGMENT:  return "FRAGMENT";
+        case GEOMETRY:  return "GEOMETRY";
         default:        return "UNDEFINED";
     }
 }
@@ -193,6 +207,7 @@ Shader::Type Shader::getTypeId( const std::string& tname )
 {
     if( tname == "VERTEX" )     return VERTEX;
     if( tname == "FRAGMENT" )   return FRAGMENT;
+    if( tname == "GEOMETRY" )   return GEOMETRY;
     return UNDEFINED;
 }
 
@@ -238,6 +253,12 @@ void Shader::attachShader(unsigned int contextID, GLuint program) const
 {
     PerContextShader* pcs = getPCS( contextID );
     if( pcs ) pcs->attachShader( program );
+}
+
+void Shader::detachShader(unsigned int contextID, GLuint program) const
+{
+    PerContextShader* pcs = getPCS( contextID );
+    if( pcs ) pcs->detachShader( program );
 }
 
 
@@ -373,5 +394,3 @@ void Shader::PerContextShader::detachShader(GLuint program) const
 {
     _extensions->glDetachShader( program, _glShaderHandle );
 }
-
-/*EOF*/

@@ -236,17 +236,17 @@ BEGIN_OBJECT_REFLECTOR(osgDB::DatabasePager)
 	I_Method2(void, setCompileGLObjectsForContextID, IN, unsigned int, contextID, IN, bool, on,
 	          Properties::NON_VIRTUAL,
 	          __void__setCompileGLObjectsForContextID__unsigned_int__bool,
-	          "Turn the compilation of rendering objects for specfied graphics context on (true) or off(false). ",
+	          "Turn the compilation of rendering objects for specified graphics context on (true) or off(false). ",
 	          "");
 	I_Method1(bool, getCompileGLObjectsForContextID, IN, unsigned int, contextID,
 	          Properties::NON_VIRTUAL,
 	          __bool__getCompileGLObjectsForContextID__unsigned_int,
-	          "Get whether the compilation of rendering objects for specfied graphics context on (true) or off(false). ",
+	          "Get whether the compilation of rendering objects for specified graphics context on (true) or off(false). ",
 	          "");
 	I_Method1(bool, requiresExternalCompileGLObjects, IN, unsigned int, contextID,
 	          Properties::NON_VIRTUAL,
 	          __bool__requiresExternalCompileGLObjects__unsigned_int,
-	          "Rerturn true if an external draw thread should call compileGLObjects(. ",
+	          "Return true if an external draw thread should call compileGLObjects(. ",
 	          ".) or not. ");
 	I_Method0(bool, requiresCompileGLObjects,
 	          Properties::NON_VIRTUAL,
@@ -305,6 +305,24 @@ BEGIN_OBJECT_REFLECTOR(osgDB::DatabasePager)
 	                   Properties::NON_VIRTUAL,
 	                   Properties::NON_CONST,
 	                   __void__updateDatabasePagerThreadBlock,
+	                   "",
+	                   "");
+	I_ProtectedMethod1(bool, isCompiled, IN, osg::Texture *, texture,
+	                   Properties::NON_VIRTUAL,
+	                   Properties::CONST,
+	                   __bool__isCompiled__osg_Texture_P1,
+	                   "",
+	                   "");
+	I_ProtectedMethod1(bool, isCompiled, IN, osg::StateSet *, stateSet,
+	                   Properties::NON_VIRTUAL,
+	                   Properties::NON_CONST,
+	                   __bool__isCompiled__osg_StateSet_P1,
+	                   "",
+	                   "");
+	I_ProtectedMethod1(bool, isCompiled, IN, const osg::Drawable *, drawable,
+	                   Properties::NON_VIRTUAL,
+	                   Properties::CONST,
+	                   __bool__isCompiled__C5_osg_Drawable_P1,
 	                   "",
 	                   "");
 	I_ProtectedMethod1(void, removeExpiredSubgraphs, IN, double, currentFrameTime,
@@ -388,19 +406,14 @@ BEGIN_OBJECT_REFLECTOR(osg::observer_ptr< osg::GraphicsContext >)
 	          __void__objectDeleted__void_P1,
 	          "",
 	          "");
-	I_Method0(bool, valid,
-	          Properties::NON_VIRTUAL,
-	          __bool__valid,
-	          "",
-	          "");
 	I_Method0(osg::GraphicsContext *, get,
 	          Properties::NON_VIRTUAL,
 	          __T_P1__get,
 	          "",
 	          "");
-	I_Method0(const osg::GraphicsContext *, get,
+	I_Method0(bool, valid,
 	          Properties::NON_VIRTUAL,
-	          __C5_T_P1__get,
+	          __bool__valid,
 	          "",
 	          "");
 	I_SimpleProperty(osg::GraphicsContext *, , 

@@ -23,6 +23,10 @@
 #define GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS 0x8B4D
 #endif
 
+#ifndef GL_MAX_TEXTURE_UNITS
+#define GL_MAX_TEXTURE_UNITS 0x84E2
+#endif
+
 using namespace std;
 using namespace osg;
 
@@ -72,6 +76,9 @@ State::State():
     _glDisableVertexAttribArray = 0;
 
     _dynamicObjectCount  = 0;
+
+    _glMaxTextureCoords = 1;
+    _glMaxTextureUnits = 1;
 }
 
 State::~State()
@@ -110,7 +117,7 @@ void State::reset()
         as.changed = true;
     }
     
-    // we can do a straight clear, we arn't intrested in GL_DEPTH_TEST defaults in texture modes.
+    // we can do a straight clear, we arn't interested in GL_DEPTH_TEST defaults in texture modes.
     for(TextureModeMapList::iterator tmmItr=_textureModeMapList.begin();
         tmmItr!=_textureModeMapList.end();
         ++tmmItr)
@@ -147,7 +154,7 @@ void State::reset()
     // reset active texture unit values and call OpenGL
     // note, this OpenGL op precludes the use of State::reset() without a
     // valid graphics context, therefore the new implementation below 
-    // is prefered.
+    // is preferred.
     setActiveTextureUnit(0);
 #else
     // reset active texture unit values without calling OpenGL
@@ -365,7 +372,7 @@ void State::apply(const StateSet* dstate)
 {
     if (_checkGLErrors==ONCE_PER_ATTRIBUTE) checkGLErrors("start of State::apply(StateSet*)");
 
-    // equivilant to:
+    // equivalent to:
     //pushStateSet(dstate);
     //apply();
     //popStateSet();
@@ -428,7 +435,7 @@ void State::apply(const StateSet* dstate)
     }
     else
     {
-        // no incomming stateset, so simply apply state.
+        // no incoming stateset, so simply apply state.
         apply();
     }
 
@@ -742,12 +749,25 @@ void State::initializeExtensionProcs()
     _glDisableVertexAttribArray =  (DisableVertexAttribProc) osg::getGLExtensionFuncPtr("glDisableVertexAttribArray","glDisableVertexAttribArrayARB");
     _glBindBuffer = (BindBufferProc) osg::getGLExtensionFuncPtr("glBindBuffer","glBindBufferARB");
 
-    _glMaxTextureCoords = 1;
-    glGetIntegerv(GL_MAX_TEXTURE_COORDS,&_glMaxTextureCoords);
-
-    _glMaxTextureUnits = 1;
-    glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS,&_glMaxTextureUnits);
-    _glMaxTextureUnits = maximum(_glMaxTextureCoords,_glMaxTextureUnits);
+    if ( osg::getGLVersionNumber() >= 2.0 || osg::isGLExtensionSupported(_contextID,"GL_ARB_vertex_shader") )
+    {
+        glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS,&_glMaxTextureUnits);
+        glGetIntegerv(GL_MAX_TEXTURE_COORDS,&_glMaxTextureCoords);
+    }
+    else if ( osg::getGLVersionNumber() >= 1.3 ||
+                                 osg::isGLExtensionSupported(_contextID,"GL_ARB_multitexture") ||
+                                 osg::isGLExtensionSupported(_contextID,"GL_EXT_multitexture") )
+    {
+        GLint maxTextureUnits;
+        glGetIntegerv(GL_MAX_TEXTURE_UNITS,&maxTextureUnits);
+        _glMaxTextureUnits = maxTextureUnits;
+        _glMaxTextureCoords = maxTextureUnits;
+    }
+    else
+    {
+        _glMaxTextureUnits = 1;
+        _glMaxTextureCoords = 1;
+    }
 
     _extensionProcsInitialized = true;
 }
@@ -776,7 +796,7 @@ bool State::setActiveTextureUnit( unsigned int unit )
 {
     if (unit!=_currentActiveTextureUnit)
     {
-        if (_glActiveTexture && unit < (unsigned int)_glMaxTextureUnits)
+        if (_glActiveTexture && unit < (unsigned int)(maximum(_glMaxTextureCoords,_glMaxTextureUnits)) )
         {
             _glActiveTexture(GL_TEXTURE0+unit);
             _currentActiveTextureUnit = unit;

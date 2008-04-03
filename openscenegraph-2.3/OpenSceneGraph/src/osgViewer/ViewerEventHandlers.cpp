@@ -12,8 +12,12 @@
 */
 
 #include <stdlib.h>
+#include <float.h>
+#include <limits.h>
 
 #include <fstream>
+#include <sstream>
+
 #include <osgViewer/Viewer>
 #include <osgViewer/ViewerEventHandlers>
 
@@ -459,7 +463,7 @@ bool RecordCameraPathHandler::handle(const osgGA::GUIEventAdapter &ea, osgGA::GU
             // check for a KeySwitchManipulator, create one if not present, and then add this
             // to either the newly created one or the existing one. However, the code do that was
             // EXTREMELY dirty, so I opted for a simpler solution. At a later date, someone may
-            // want to implement the original recomendation (which is in a mailing list reply
+            // want to implement the original recommendation (which is in a mailing list reply
             // from June 1st by Robert in a thread called "osgviewer Camera Animation (preliminary)".
             else if (ea.getKey() == _keyEventTogglePlayback)
             {
@@ -483,7 +487,7 @@ bool RecordCameraPathHandler::handle(const osgGA::GUIEventAdapter &ea, osgGA::GU
                     _animPathManipulator->home(ea,aa);
 
 
-                    // If we succesfully found our _filename file, set it and keep a copy
+                    // If we successfully found our _filename file, set it and keep a copy
                     // around of the original MatrixManipulator to restore later.
                     if (_animPathManipulator.valid() && _animPathManipulator->valid())
                     {
@@ -513,5 +517,62 @@ bool RecordCameraPathHandler::handle(const osgGA::GUIEventAdapter &ea, osgGA::GU
 
     return false;
 }
+
+LODScaleHandler::LODScaleHandler():
+    _keyEventIncreaseLODScale('*'),
+    _keyEventDecreaseLODScale('/')
+{
+}
+
+bool LODScaleHandler::handle(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter& aa)
+{
+    osgViewer::View* view = dynamic_cast<osgViewer::View*>(&aa);
+    osg::Camera* camera = view ? view->getCamera() : 0;
+    if (!camera) return false;
+
+    if (ea.getHandled()) return false;
+
+    switch(ea.getEventType())
+    {
+        case(osgGA::GUIEventAdapter::KEYUP):
+        {
+            if (ea.getKey() == _keyEventIncreaseLODScale)
+            {
+                camera->setLODScale(camera->getLODScale()*1.1);
+                osg::notify(osg::NOTICE)<<"LODScale = "<<camera->getLODScale()<<std::endl;
+                return true;
+            }
+
+            else if (ea.getKey() == _keyEventDecreaseLODScale)
+            {
+                camera->setLODScale(camera->getLODScale()/1.1);
+                osg::notify(osg::NOTICE)<<"LODScale = "<<camera->getLODScale()<<std::endl;
+                return true;
+            }        
+
+            break;
+        }
+    default:
+        break;
+    }
+
+    return false;
+}
+
+void LODScaleHandler::getUsage(osg::ApplicationUsage& usage) const
+{
+    {
+        std::ostringstream ostr;
+        ostr<<char(_keyEventIncreaseLODScale);
+        usage.addKeyboardMouseBinding(ostr.str(),"Increase LODScale.");
+    }
+    
+    {
+        std::ostringstream ostr;
+        ostr<<char(_keyEventDecreaseLODScale);
+        usage.addKeyboardMouseBinding(ostr.str(),"Decrease LODScale.");
+    }
+}
+
 
 }

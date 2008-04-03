@@ -106,7 +106,7 @@ public:
         {   // near plane
             Face& face = createFace();
             face.name = "near";
-            face.plane.set(0.0,0.0,-1.0,1.0);
+            face.plane.set(0.0,0.0,1.0,1.0);
             face.vertices.push_back(v000);
             face.vertices.push_back(v010);
             face.vertices.push_back(v110);
@@ -117,7 +117,7 @@ public:
         {   // far plane
             Face& face = createFace();
             face.name = "far";
-            face.plane.set(0.0,0.0,1.0,1.0);
+            face.plane.set(0.0,0.0,-1.0,1.0);
             face.vertices.push_back(v001);
             face.vertices.push_back(v101);
             face.vertices.push_back(v111);
@@ -640,6 +640,9 @@ public:
 
                     // is first edge point inside plane?
                     if (distance_a>=0.0) newVertices.push_back(vertices[i]);
+
+                    // add point to new face if point exactly on a plane
+                    if (distance_a==0.0) newFace.vertices.push_back(vertices[i]); 
 
                     // does edge intersect plane
                     if (distance_a * distance_b<0.0)

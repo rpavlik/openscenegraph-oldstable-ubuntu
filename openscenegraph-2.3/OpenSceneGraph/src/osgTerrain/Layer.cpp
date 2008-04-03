@@ -16,13 +16,19 @@
 
 using namespace osgTerrain;
 
-Layer::Layer()
+Layer::Layer():
+    _minLevel(0),
+    _maxLevel(MAXIMUM_NUMBER_OF_LEVELS),
+    _filter(LINEAR)
 {
 }
 
 Layer::Layer(const Layer& layer,const osg::CopyOp& copyop):
     osg::Object(layer,copyop),
-    _filename(layer._filename)
+    _filename(layer._filename),
+    _minLevel(layer._minLevel),
+    _maxLevel(layer._maxLevel),
+    _filter(layer._filter)
 {
 }
 
@@ -30,32 +36,56 @@ Layer::~Layer()
 {
 }
 
-osg::BoundingSphere Layer::computeBound() const
+osg::BoundingSphere Layer::computeBound(bool treatAsElevationLayer) const
 {
     osg::BoundingSphere bs;
     if (!getLocator()) return bs;
-
-    osg::Vec3d v;
-    if (getLocator()->convertLocalToModel(osg::Vec3d(0.0,0.0,0.0), v))
-    {
-        bs.expandBy(v);
-    }
     
-    if (getLocator()->convertLocalToModel(osg::Vec3d(1.0,0.0,0.0), v))
+    if (treatAsElevationLayer)
     {
-        bs.expandBy(v);
-    }
+        osg::BoundingBox bb;
+        unsigned int numColumns = getNumColumns();
+        unsigned int numRows = getNumRows();
+        for(unsigned int r=0;r<numRows;++r)
+        {
+            for(unsigned int c=0;c<numColumns;++c)
+            {
+                float value = 0.0f;
+                bool validValue = getValidValue(c,r, value);
+                if (validValue) 
+                {
+                    osg::Vec3d ndc, v;
+                    ndc.x() = ((double)c)/(double)(numColumns-1), 
+                    ndc.y() = ((double)r)/(double)(numRows-1);
+                    ndc.z() = value;
 
-    if (getLocator()->convertLocalToModel(osg::Vec3d(1.0,1.0,0.0), v))
-    {
-        bs.expandBy(v);
+                    if (getLocator()->convertLocalToModel(ndc, v))
+                    {
+                        bb.expandBy(v);
+                    }
+                }
+            }
+        }
+        bs.expandBy(bb);
     }
-
-    if (getLocator()->convertLocalToModel(osg::Vec3d(0.0,1.0,0.0), v))
+    else
     {
-        bs.expandBy(v);
-    }
     
+        osg::Vec3d v;
+        if (getLocator()->convertLocalToModel(osg::Vec3d(0.5,0.5,0.0), v))
+        {
+            bs.center() = v;
+        }
+
+        if (getLocator()->convertLocalToModel(osg::Vec3d(0.0,0.0,0.0), v))
+        {
+            bs.expandBy(v);
+            
+            bs.radius() = (bs.center() - v).length();
+        }
+
+    }
+        
     return bs;
 }
 
@@ -64,7 +94,8 @@ osg::BoundingSphere Layer::computeBound() const
 //
 // ImageLayer
 //
-ImageLayer::ImageLayer()
+ImageLayer::ImageLayer(osg::Image* image):
+    _image(image)
 {
 }
 
@@ -233,10 +264,112 @@ unsigned int ImageLayer::getModifiedCount() const
 
 /////////////////////////////////////////////////////////////////////////////
 //
-// HieghtFieldLayer
+// ContourLayer
 //
-HeightFieldLayer::HeightFieldLayer():
-    _modifiedCount(0)
+ContourLayer::ContourLayer(osg::TransferFunction1D* tf):
+    _tf(tf)
+{
+    _filter = NEAREST;
+}
+
+ContourLayer::ContourLayer(const ContourLayer& contourLayer,const osg::CopyOp& copyop):
+    Layer(contourLayer, copyop),
+    _tf(contourLayer._tf)
+{
+}
+
+void ContourLayer::setTransferFunction(osg::TransferFunction1D* tf)
+{
+    _tf = tf;
+}
+
+bool ContourLayer::transform(float offset, float scale)
+{
+    if (!_tf) return false;
+
+    osg::notify(osg::NOTICE)<<"ContourLayer::transform("<<offset<<","<<scale<<")"<<std::endl;;
+
+    for(unsigned int i=0; i<_tf->getNumberCellsX(); ++i)
+    {
+        osg::Vec4 value = _tf->getValue(i);
+        value.r() = offset + value.r()* scale;
+        value.g() = offset + value.g()* scale;
+        value.b() = offset + value.b()* scale;
+        value.a() = offset + value.a()* scale;
+        _tf->setValue(i, value);
+    }
+
+    dirty();
+
+    return true;
+}
+
+bool ContourLayer::getValue(unsigned int i, unsigned int j, float& value) const
+{
+    if (!_tf) return false;
+
+    const osg::Vec4& v = _tf->getValue(i);
+    value = v[0];
+
+    return true;
+}
+
+bool ContourLayer::getValue(unsigned int i, unsigned int j, osg::Vec2& value) const
+{
+    if (!_tf) return false;
+
+    const osg::Vec4& v = _tf->getValue(i);
+    value.x() = v.x();
+    value.y() = v.y();
+
+    return true;
+}
+
+bool ContourLayer::getValue(unsigned int i, unsigned int j, osg::Vec3& value) const
+{
+    if (!_tf) return false;
+
+    const osg::Vec4& v = _tf->getValue(i);
+    value.x() = v.x();
+    value.y() = v.y();
+    value.z() = v.z();
+
+    return true;
+}
+
+bool ContourLayer::getValue(unsigned int i, unsigned int j, osg::Vec4& value) const
+{
+    if (!_tf) return false;
+
+    value = _tf->getValue(i);
+
+    return true;
+}
+
+void ContourLayer::dirty()
+{
+    if (getImage()) getImage()->dirty();
+}
+
+void ContourLayer::setModifiedCount(unsigned int value)
+{
+    if (getImage()) getImage()->setModifiedCount(value);
+}
+
+unsigned int ContourLayer::getModifiedCount() const
+{
+    if (!getImage()) return 0;
+    else return getImage()->getModifiedCount();
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// HeightFieldLayer
+//
+HeightFieldLayer::HeightFieldLayer(osg::HeightField* hf):
+    _modifiedCount(0),
+    _heightField(hf)
 {
 }
 
@@ -358,5 +491,77 @@ ProxyLayer::ProxyLayer(const ProxyLayer& proxyLayer,const osg::CopyOp& copyop):
 
 ProxyLayer::~ProxyLayer()
 {
+}
+
+void ProxyLayer::setFileName(const std::string& filename)
+{
+    _filename = filename;
+    if (_implementation.valid())
+    {
+        _implementation->setFileName(_filename);
+    }
+}
+
+unsigned int ProxyLayer::getNumColumns() const
+{
+    if (_implementation.valid()) return _implementation->getNumColumns();
+    else return 0;
+}
+
+unsigned int ProxyLayer::getNumRows() const
+{
+    if (_implementation.valid()) return _implementation->getNumRows();
+    else return 0;
+}
+
+bool ProxyLayer::transform(float offset, float scale)
+{
+    if (_implementation.valid()) return _implementation->transform(offset,scale);
+    else return false;
+}
+
+bool ProxyLayer::getValue(unsigned int i, unsigned int j, float& value) const
+{
+    if (_implementation.valid()) return _implementation->getValue(i,j,value);
+    else return false;
+}
+
+bool ProxyLayer::getValue(unsigned int i, unsigned int j, osg::Vec2& value) const
+{
+    if (_implementation.valid()) return _implementation->getValue(i,j,value);
+    else return false;
+}
+
+bool ProxyLayer::getValue(unsigned int i, unsigned int j, osg::Vec3& value) const
+{
+    if (_implementation.valid()) return _implementation->getValue(i,j,value);
+    else return false;
+}
+
+bool ProxyLayer::getValue(unsigned int i, unsigned int j, osg::Vec4& value) const
+{
+    if (_implementation.valid()) return _implementation->getValue(i,j,value);
+    else return false;
+}
+
+void ProxyLayer::dirty()
+{
+    if (_implementation.valid()) _implementation->dirty();
+}
+
+void ProxyLayer::setModifiedCount(unsigned int value)
+{
+    if (_implementation.valid()) _implementation->setModifiedCount(value);
+};
+
+unsigned int ProxyLayer::getModifiedCount() const
+{
+    return _implementation.valid() ? _implementation->getModifiedCount() : 0;
+}
+
+
+osg::BoundingSphere ProxyLayer::computeBound(bool treatAsElevationLayer) const
+{
+    if (_implementation.valid()) return _implementation->computeBound(treatAsElevationLayer);
 }
 

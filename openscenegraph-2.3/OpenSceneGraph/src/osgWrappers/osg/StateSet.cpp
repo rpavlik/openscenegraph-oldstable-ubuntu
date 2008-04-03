@@ -124,7 +124,7 @@ BEGIN_OBJECT_REFLECTOR(osg::StateSet)
 	I_Method0(void, computeDataVariance,
 	          Properties::VIRTUAL,
 	          __void__computeDataVariance,
-	          "Compute the DataVariance based on an assestment of callback etc. ",
+	          "Compute the DataVariance based on an assessment of callback etc. ",
 	          "");
 	I_Method0(void, setGlobalDefaults,
 	          Properties::NON_VIRTUAL,
@@ -306,9 +306,19 @@ BEGIN_OBJECT_REFLECTOR(osg::StateSet)
 	          __void__setAssociatedModes__C5_StateAttribute_P1__StateAttribute_GLModeValue,
 	          "",
 	          "");
+	I_Method1(void, removeAssociatedModes, IN, const osg::StateAttribute *, attribute,
+	          Properties::NON_VIRTUAL,
+	          __void__removeAssociatedModes__C5_StateAttribute_P1,
+	          "",
+	          "");
 	I_Method3(void, setAssociatedTextureModes, IN, unsigned int, unit, IN, const osg::StateAttribute *, attribute, IN, osg::StateAttribute::GLModeValue, value,
 	          Properties::NON_VIRTUAL,
 	          __void__setAssociatedTextureModes__unsigned_int__C5_StateAttribute_P1__StateAttribute_GLModeValue,
+	          "",
+	          "");
+	I_Method2(void, removeAssociatedTextureModes, IN, unsigned int, unit, IN, const osg::StateAttribute *, attribute,
+	          Properties::NON_VIRTUAL,
+	          __void__removeAssociatedTextureModes__unsigned_int__C5_StateAttribute_P1,
 	          "",
 	          "");
 	I_MethodWithDefaults2(void, addUniform, IN, osg::Uniform *, uniform, , IN, osg::StateAttribute::OverrideValue, value, osg::StateAttribute::ON,

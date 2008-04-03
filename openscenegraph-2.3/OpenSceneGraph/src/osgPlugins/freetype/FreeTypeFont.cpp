@@ -18,6 +18,7 @@
 #include <osgDB/WriteFile>
 
 FreeTypeFont::FreeTypeFont(const std::string& filename, FT_Face face, unsigned int flags):
+    _currentRes(osgText::FontResolution(0,0)),
     _filename(filename),
     _buffer(0),
     _face(face),
@@ -26,6 +27,7 @@ FreeTypeFont::FreeTypeFont(const std::string& filename, FT_Face face, unsigned i
 }
 
 FreeTypeFont::FreeTypeFont(FT_Byte* buffer, FT_Face face, unsigned int flags):
+    _currentRes(osgText::FontResolution(0,0)),
     _filename(""),
     _buffer(buffer),
     _face(face),
@@ -58,13 +60,17 @@ FreeTypeFont::~FreeTypeFont()
     }
 }
 
-void FreeTypeFont::setFontResolution(unsigned int width, unsigned int height)
+void FreeTypeFont::setFontResolution(const osgText::FontResolution& fontSize)
 {
+    if (fontSize==_currentRes) return;
+
+    int width = fontSize.first;
+    int height = fontSize.second;
     int maxAxis = std::max(width, height);
     int margin = _facade->getGlyphImageMargin() + (int)((float)maxAxis * _facade->getGlyphImageMarginRatio());
 
-    if (width+2*margin>_facade->getTextureWidthHint() ||
-        width+2*margin>_facade->getTextureHeightHint())
+    if ((unsigned int)(width+2*margin) > _facade->getTextureWidthHint() ||
+        (unsigned int)(width+2*margin) > _facade->getTextureHeightHint())
     {
         osg::notify(osg::WARN)<<"Warning: FreeTypeFont::setSize("<<width<<","<<height<<") sizes too large,"<<std::endl;
     
@@ -84,14 +90,17 @@ void FreeTypeFont::setFontResolution(unsigned int width, unsigned int height)
     }
     else
     {
-        setFontWidth(width);
-        setFontHeight(height);
+        _currentRes = fontSize;
     }
 
 }
 
-osgText::Font::Glyph* FreeTypeFont::getGlyph(unsigned int charcode)
+osgText::Font::Glyph* FreeTypeFont::getGlyph(const osgText::FontResolution& fontRes, unsigned int charcode)
 {
+    OpenThreads::ScopedLock<OpenThreads::Mutex> lock(FreeTypeLibrary::instance()->getMutex());
+
+    setFontResolution(fontRes);
+
     //
     // GT: fix for symbol fonts (i.e. the Webdings font) as the wrong character are being  
     // returned, for symbol fonts in windows (FT_ENCONDING_MS_SYMBOL in freetype) the correct 
@@ -182,7 +191,7 @@ osgText::Font::Glyph* FreeTypeFont::getGlyph(unsigned int charcode)
     glyph->setVerticalBearing(osg::Vec2((float)metrics->vertBearingX/64.0f,(float)(metrics->vertBearingY-metrics->height)/64.0f)); // top middle.
     glyph->setVerticalAdvance((float)metrics->vertAdvance/64.0f);
 
-    addGlyph(_facade->getFontWidth(),_facade->getFontHeight(),charcode,glyph.get());
+    addGlyph(fontRes,charcode,glyph.get());
     
 //    cout << "      in getGlyph() implementation="<<this<<"  "<<_filename<<"  facade="<<_facade<<endl;
 
@@ -190,9 +199,13 @@ osgText::Font::Glyph* FreeTypeFont::getGlyph(unsigned int charcode)
 
 }
 
-osg::Vec2 FreeTypeFont::getKerning(unsigned int leftcharcode,unsigned int rightcharcode, osgText::KerningType kerningType)
+osg::Vec2 FreeTypeFont::getKerning(const osgText::FontResolution& fontRes, unsigned int leftcharcode,unsigned int rightcharcode, osgText::KerningType kerningType)
 {
+    OpenThreads::ScopedLock<OpenThreads::Mutex> lock(FreeTypeLibrary::instance()->getMutex());
+
     if (!FT_HAS_KERNING(_face) || (kerningType == osgText::KERNING_NONE)) return osg::Vec2(0.0f,0.0f);
+
+    setFontResolution(fontRes);
 
     FT_Kerning_Mode mode = (kerningType==osgText::KERNING_DEFAULT) ? ft_kerning_default : ft_kerning_unfitted;
 
@@ -220,5 +233,6 @@ osg::Vec2 FreeTypeFont::getKerning(unsigned int leftcharcode,unsigned int rightc
 
 bool FreeTypeFont::hasVertical() const
 {
+    OpenThreads::ScopedLock<OpenThreads::Mutex> lock(FreeTypeLibrary::instance()->getMutex());
     return FT_HAS_VERTICAL(_face)!=0;
 }

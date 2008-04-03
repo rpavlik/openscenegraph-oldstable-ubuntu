@@ -354,6 +354,16 @@ class ReaderWriterBMP : public osgDB::ReaderWriter
             return pOsgImage;
         }
 
+        virtual ReadResult readObject(std::istream& fin,const osgDB::ReaderWriter::Options* options =NULL) const
+        {
+            return readImage(fin, options);
+        }
+
+        virtual ReadResult readObject(const std::string& file, const osgDB::ReaderWriter::Options* options =NULL) const
+        {
+            return readImage(file, options);
+        }
+
         virtual ReadResult readImage(std::istream& fin,const Options* =NULL) const
         {
             return readBMPStream(fin);
@@ -420,20 +430,19 @@ class ReaderWriterBMP : public osgDB::ReaderWriter
             // 1) swap Blue with Red - needed for Windoss.
             const unsigned char* data = img.data();
             unsigned char *dta=new unsigned char[size];
-            unsigned char tmp;
             // we need to case between different number of components
             switch(img.computeNumComponents(img.getPixelFormat()))
             {
                 case(3) :
                 {
-                    memcpy(dta,img.data(),size*sizeof(unsigned char));
                     for(unsigned int i=0;i<ny;i++) { // per scanline
                         int ioff=4*wordsPerScan*i;
                         for(unsigned int j=0;j<nx;j++) {
-                        tmp=dta[3*j+ioff]; // swap r with b,  thanks to good ole Bill - 
+                        // swap r with b,  thanks to good ole Bill - 
                         //"Let's use BGR it's more logical than rgb which everyone else uses."
-                        dta[3*j+ioff]=dta[3*j+ioff+2];
-                        dta[3*j+ioff+2]=tmp;
+                        dta[3*j+ioff]=data[3*(j+i*nx)+2];
+                        dta[3*j+ioff+1]=data[3*(j+i*nx)+1];
+                        dta[3*j+ioff+2]=data[3*(j+i*nx)+0];
                         }
                     }
                 }

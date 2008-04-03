@@ -2,7 +2,12 @@
 
 
 SET(TARGET_SRC 
-    Terrain.cpp
+    Locator.cpp
+    ImageLayer.cpp
+    HeightFieldLayer.cpp
+    CompositeLayer.cpp
+    Layer.cpp
+    TerrainTile.cpp
     GeometryTechnique.cpp
     ReaderWriterOsgTerrain.cpp
 )

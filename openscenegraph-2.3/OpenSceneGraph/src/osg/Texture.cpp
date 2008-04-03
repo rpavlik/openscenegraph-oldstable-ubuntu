@@ -101,6 +101,8 @@ public:
 
     void flushAllTextureObjects(unsigned int contextID);
 
+    void discardAllTextureObjects(unsigned int contextID);
+
     void flushTextureObjects(unsigned int contextID,double currentTime, double& availableTime);
 
     void setExpiryDelay(double expiryDelay) { _expiryDelay = expiryDelay; }
@@ -238,6 +240,14 @@ void TextureObjectManager::flushAllTextureObjects(unsigned int contextID)
     tol.clear();
 }
 
+void TextureObjectManager::discardAllTextureObjects(unsigned int contextID)
+{
+    OpenThreads::ScopedLock<OpenThreads::Mutex> lock(_mutex);
+
+    Texture::TextureObjectList& tol = _textureObjectListMap[contextID];
+    tol.clear();
+}
+
 void TextureObjectManager::flushTextureObjects(unsigned int contextID,double currentTime, double& availableTime)
 {
     // if no time available don't try to flush objects.
@@ -332,6 +342,11 @@ Texture::TextureObject* Texture::generateTextureObject(unsigned int contextID,
 void Texture::flushAllDeletedTextureObjects(unsigned int contextID)
 {
     if (getTextureObjectManager()) getTextureObjectManager()->flushAllTextureObjects(contextID);
+}
+
+void Texture::discardAllDeletedTextureObjects(unsigned int contextID)
+{
+    if (getTextureObjectManager()) getTextureObjectManager()->discardAllTextureObjects(contextID);
 }
 
 void Texture::flushDeletedTextureObjects(unsigned int contextID,double currentTime, double& availbleTime)
@@ -510,7 +525,7 @@ void Texture::takeTextureObjects(Texture::TextureObjectListMap& toblm)
     {
         if (_textureObjectBuffer[i].valid()) 
         {
-            //notify(INFO) << "releasing texure "<<toblm[i].size()<<std::endl;
+            //notify(INFO) << "releasing texture "<<toblm[i].size()<<std::endl;
             toblm[i].push_back(_textureObjectBuffer[i]);
         }
     }
@@ -542,7 +557,7 @@ void Texture::computeInternalFormatWithImage(const osg::Image& image) const
     else
     {
 
-        const unsigned int contextID = 0; // state.getContextID();  // set to 0 right now, assume same paramters for each graphics context...
+        const unsigned int contextID = 0; // state.getContextID();  // set to 0 right now, assume same parameters for each graphics context...
         const Extensions* extensions = getExtensions(contextID,true);
 
         switch(_internalFormatMode)

@@ -118,6 +118,9 @@ int main(int argc, char** argv)
     // add the record camera path handler
     viewer.addEventHandler(new osgViewer::RecordCameraPathHandler);
 
+    // add the LOD Scale handler
+    viewer.addEventHandler(new osgViewer::LODScaleHandler);
+
     // load the data
     osg::ref_ptr<osg::Node> loadedModel = osgDB::readNodeFiles(arguments);
     if (!loadedModel) 
@@ -145,6 +148,6 @@ int main(int argc, char** argv)
 
     viewer.realize();
 
-    viewer.run();
+    return viewer.run();
 
 }

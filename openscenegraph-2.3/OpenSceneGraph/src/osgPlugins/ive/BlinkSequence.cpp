@@ -43,7 +43,10 @@ void BlinkSequence::write(DataOutputStream* out){
     // Write out phase shift.
     out->writeDouble(getPhaseShift());
     // Write out SequenceGroup.
-    out->writeDouble(getSequenceGroup()->_baseTime);
+    if( getSequenceGroup() )
+        out->writeDouble(getSequenceGroup()->_baseTime);
+    else 
+        out->writeDouble( 0.0 );
 
 }
 
@@ -71,9 +74,11 @@ void BlinkSequence::read(DataInputStream* in){
         }
         // Read in phase shift.
         setPhaseShift(in->readDouble());
-        // Read in SequenceGroup
-        setSequenceGroup(new osgSim::SequenceGroup(in->readDouble()));
 
+        // Read in SequenceGroup
+        double baseTime = in->readDouble();
+        if (baseTime!=0.0) setSequenceGroup(new osgSim::SequenceGroup(baseTime));
+        
     }
     else{
         throw Exception("BlinkSequence::read(): Expected BlinkSequence identification.");

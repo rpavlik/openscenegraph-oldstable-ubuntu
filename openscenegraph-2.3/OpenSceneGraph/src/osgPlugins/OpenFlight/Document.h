@@ -1,7 +1,20 @@
+/* -*-c++-*- OpenSceneGraph - Copyright (C) 1998-2006 Robert Osfield 
+ *
+ * This library is open source and may be redistributed and/or modified under  
+ * the terms of the OpenSceneGraph Public License (OSGPL) version 0.0 or 
+ * (at your option) any later version.  The full license is in LICENSE file
+ * included with this distribution, and on the openscenegraph.org website.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
+ * OpenSceneGraph Public License for more details.
+*/
+
 //
 // OpenFlight® loader for OpenSceneGraph
 //
-//  Copyright (C) 2005-2006  Brede Johansen
+//  Copyright (C) 2005-2007  Brede Johansen
 //
 
 #ifndef FLT_FLIGHTDATA_H
@@ -13,7 +26,7 @@
 #include <osg/Geometry>
 #include <osgDB/ReaderWriter>
 
-#include "types.h"
+#include "Types.h"
 #include "Record.h"
 #include "Pools.h"
 
@@ -83,7 +96,7 @@ class Document
         const osgDB::ReaderWriter::Options* getOptions() const { return _options.get(); }
 
         // Current primar record
-        void setCurrentPrimaryRecord(PrimaryRecord* record) {_currentPrimaryRecord=record; }
+        void setCurrentPrimaryRecord(PrimaryRecord* record) { _currentPrimaryRecord=record; }
         PrimaryRecord* getCurrentPrimaryRecord() { return _currentPrimaryRecord.get(); }
         const PrimaryRecord* getCurrentPrimaryRecord() const { return _currentPrimaryRecord.get(); }
 
@@ -99,7 +112,6 @@ class Document
         // Extension stack
         void pushExtension();
         void popExtension();
-
 
         void setHeaderNode(osg::Node* node) { _osgHeader = node; }
         osg::Node* getHeaderNode() { return _osgHeader.get(); }
@@ -173,8 +185,11 @@ class Document
         void setDesiredUnits(CoordUnits units ) { _desiredUnits=units; }
         CoordUnits getDesiredUnits() const { return _desiredUnits; }
         
-        bool getKeepExternalReferences() const { return _keepExternalReferences; }
         void setKeepExternalReferences( bool flag) { _keepExternalReferences=flag; }
+        bool getKeepExternalReferences() const { return _keepExternalReferences; }
+
+        void setReadObjectRecordData(bool flag) { _readObjectRecordData = flag; }
+        bool getReadObjectRecordData() const { return _readObjectRecordData; }
 
     protected:
 
@@ -187,6 +202,7 @@ class Document
         bool                        _useTextureAlphaForTransparancyBinning;
         bool                        _useBillboardCenter;
         bool                        _doUnitsConversion;
+        bool                        _readObjectRecordData;
         CoordUnits                  _desiredUnits;
         
         bool                        _keepExternalReferences;

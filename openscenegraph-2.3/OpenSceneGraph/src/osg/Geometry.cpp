@@ -33,15 +33,13 @@ class DrawVertex
     
         inline unsigned int index(unsigned int pos)
         {
-            switch(_indicesType)
+            if (_indices) 
             {
-            case(Array::ByteArrayType): return (*static_cast<const ByteArray*>(_indices))[pos];
-            case(Array::ShortArrayType): return (*static_cast<const ShortArray*>(_indices))[pos];
-            case(Array::IntArrayType): return (*static_cast<const IntArray*>(_indices))[pos];
-            case(Array::UByteArrayType): return (*static_cast<const UByteArray*>(_indices))[pos];
-            case(Array::UShortArrayType): return (*static_cast<const UShortArray*>(_indices))[pos];
-            case(Array::UIntArrayType): return (*static_cast<const UIntArray*>(_indices))[pos];
-            default: return 0;
+                return _indices->index(pos);
+            }
+            else 
+            {
+                return 0;
             }
         }
 
@@ -52,13 +50,22 @@ class DrawVertex
             switch(_verticesType)
             {
             case(Array::Vec3ArrayType): 
-                apply((*(static_cast<const Vec3Array*>(_vertices)))[pos]);
+                apply(static_cast<const Vec3*>(_vertices->getDataPointer())[pos]);
                 break;
             case(Array::Vec2ArrayType): 
-                apply((*(static_cast<const Vec2Array*>(_vertices)))[pos]);
+                apply(static_cast<const Vec2*>(_vertices->getDataPointer())[pos]);
                 break;
             case(Array::Vec4ArrayType): 
-                apply((*(static_cast<const Vec4Array*>(_vertices)))[pos]);
+                apply(static_cast<const Vec4*>(_vertices->getDataPointer())[pos]);
+                break;
+            case(Array::Vec3dArrayType): 
+                apply(static_cast<const Vec3d*>(_vertices->getDataPointer())[pos]);
+                break;
+            case(Array::Vec2dArrayType): 
+                apply(static_cast<const Vec2d*>(_vertices->getDataPointer())[pos]);
+                break;
+            case(Array::Vec4dArrayType): 
+                apply(static_cast<const Vec4d*>(_vertices->getDataPointer())[pos]);
                 break;
             default:
                 break;
@@ -69,6 +76,9 @@ class DrawVertex
         inline void apply(const Vec2& v)   { glVertex2fv(v.ptr()); }
         inline void apply(const Vec3& v)   { glVertex3fv(v.ptr()); }
         inline void apply(const Vec4& v)   { glVertex4fv(v.ptr()); }
+        inline void apply(const Vec2d& v)   { glVertex2dv(v.ptr()); }
+        inline void apply(const Vec3d& v)   { glVertex3dv(v.ptr()); }
+        inline void apply(const Vec4d& v)   { glVertex4dv(v.ptr()); }
 
         const Array*        _vertices;
         const IndexArray*   _indices;
@@ -93,37 +103,51 @@ class DrawNormal
             {
                 case (Array::Vec3ArrayType):
                     {
-                        const Vec3Array& normals = *static_cast<const Vec3Array*>(_normals);
+                        const Vec3* normals(static_cast<const Vec3*>(_normals->getDataPointer()));
                         if (_indices) glNormal3fv(normals[_indices->index(pos)].ptr());
                         else glNormal3fv(normals[pos].ptr());
                     }
                     break;
                 case (Array::Vec3sArrayType):
                     {
-                        const Vec3sArray& normals = *static_cast<const Vec3sArray*>(_normals);
+                        const Vec3s* normals(static_cast<const Vec3s*>(_normals->getDataPointer()));
                         if (_indices) glNormal3sv(normals[_indices->index(pos)].ptr());
                         else glNormal3sv(normals[pos].ptr());
                     }
                     break;
                 case (Array::Vec4sArrayType):
                     {
-                        const Vec4sArray& normals = *static_cast<const Vec4sArray*>(_normals);
+                        const Vec4s* normals(static_cast<const Vec4s*>(_normals->getDataPointer()));
                         if (_indices) glNormal3sv(normals[_indices->index(pos)].ptr());
                         else glNormal3sv(normals[pos].ptr());
                     }
                     break;
                 case (Array::Vec3bArrayType):
                     {
-                        const Vec3bArray& normals = *static_cast<const Vec3bArray*>(_normals);
+                        const Vec3b* normals(static_cast<const Vec3b*>(_normals->getDataPointer()));
                         if (_indices) glNormal3bv((const GLbyte*)normals[_indices->index(pos)].ptr());
                         else glNormal3bv((const GLbyte*)normals[pos].ptr());
                     }
                     break;
                 case (Array::Vec4bArrayType):
                     {
-                        const Vec4bArray& normals = *static_cast<const Vec4bArray*>(_normals);
+                        const Vec4b* normals(static_cast<const Vec4b*>(_normals->getDataPointer()));
                         if (_indices) glNormal3bv((const GLbyte*)normals[_indices->index(pos)].ptr());
                         else glNormal3bv((const GLbyte*)normals[pos].ptr());
+                    }
+                    break;
+                case (Array::Vec3dArrayType):
+                    {
+                        const Vec3d* normals(static_cast<const Vec3d*>(_normals->getDataPointer()));
+                        if (_indices) glNormal3dv(normals[_indices->index(pos)].ptr());
+                        else glNormal3dv(normals[pos].ptr());
+                    }
+                    break;
+                case (Array::Vec4dArrayType):
+                    {
+                        const Vec4d* normals(static_cast<const Vec4d*>(_normals->getDataPointer()));
+                        if (_indices) glNormal3dv(normals[_indices->index(pos)].ptr());
+                        else glNormal3dv(normals[pos].ptr());
                     }
                     break;
                 default:
@@ -151,15 +175,11 @@ class DrawColor
 
         inline unsigned int index(unsigned int pos)
         {
-            switch(_indicesType)
-            {
-            case(Array::ByteArrayType): return (*static_cast<const ByteArray*>(_indices))[pos];
-            case(Array::ShortArrayType): return (*static_cast<const ShortArray*>(_indices))[pos];
-            case(Array::IntArrayType): return (*static_cast<const IntArray*>(_indices))[pos];
-            case(Array::UByteArrayType): return (*static_cast<const UByteArray*>(_indices))[pos];
-            case(Array::UShortArrayType): return (*static_cast<const UShortArray*>(_indices))[pos];
-            case(Array::UIntArrayType): return (*static_cast<const UIntArray*>(_indices))[pos];
-            default: return 0;
+            if (_indices) {
+                return _indices->index(pos);
+            }
+            else {
+                return 0;
             }
         }
 
@@ -170,13 +190,19 @@ class DrawColor
             switch(_colorsType)
             {
             case(Array::Vec4ArrayType):
-                apply((*static_cast<const Vec4Array*>(_colors))[pos]);
+                apply(static_cast<const Vec4*>(_colors->getDataPointer())[pos]);
                 break;
             case(Array::Vec4ubArrayType):
-                apply((*static_cast<const Vec4ubArray*>(_colors))[pos]);
+                apply(static_cast<const Vec4ub*>(_colors->getDataPointer())[pos]);
                 break;
             case(Array::Vec3ArrayType):
-                apply((*static_cast<const Vec3Array*>(_colors))[pos]);
+                apply(static_cast<const Vec3*>(_colors->getDataPointer())[pos]);
+                break;
+            case(Array::Vec3dArrayType):
+                apply(static_cast<const Vec3d*>(_colors->getDataPointer())[pos]);
+                break;
+            case(Array::Vec4dArrayType):
+                apply(static_cast<const Vec4d*>(_colors->getDataPointer())[pos]);
                 break;
             default:
                 break;
@@ -243,6 +269,18 @@ public:
     virtual void apply(const Vec4& v) 
     {
         _extensions->glVertexAttrib4fv( _vertAttribIndex, v.ptr() );
+    }
+    virtual void apply(const Vec2d& v) 
+    {
+        _extensions->glVertexAttrib2dv( _vertAttribIndex, v.ptr() );
+    }
+    virtual void apply(const Vec3d& v) 
+    {
+        _extensions->glVertexAttrib3dv( _vertAttribIndex, v.ptr() );
+    }
+    virtual void apply(const Vec4d& v) 
+    {
+        _extensions->glVertexAttrib4dv( _vertAttribIndex, v.ptr() );
     }
 
     unsigned int                    _vertAttribIndex;
@@ -829,7 +867,9 @@ bool Geometry::insertPrimitiveSet(unsigned int i,PrimitiveSet* primitiveset)
 
 bool Geometry::removePrimitiveSet(unsigned int i, unsigned int numElementsToRemove)
 {
-    if (i<_primitives.size() && numElementsToRemove>0)
+    if (numElementsToRemove==0) return false;
+
+    if (i<_primitives.size())
     {
         if (i+numElementsToRemove<=_primitives.size())
         {
@@ -867,7 +907,7 @@ bool Geometry::computeFastPathsUsed()
     if (_useDisplayList && s_DisableFastPathInDisplayLists)
     {
         osg::notify(osg::DEBUG_INFO)<<"Geometry::computeFastPathsUsed() - Disabling fast paths in display lists"<<std::endl;
-        _fastPath = false;
+        _supportsVertexBufferObjects = _fastPath = false;
         return _fastPath;
     }
 
@@ -1057,7 +1097,7 @@ osg::VertexBufferObject* Geometry::getOrCreateVertexBufferObject()
         ++vitr)
     {
         osg::Array* array = *vitr;
-        if (!array->getVertexBufferObject()) vbo = array->getVertexBufferObject();
+        if (array->getVertexBufferObject()) vbo = array->getVertexBufferObject();
     }
 
     if (!vbo) vbo = new osg::VertexBufferObject;
@@ -1120,7 +1160,7 @@ void Geometry::setUseVertexBufferObjects(bool flag)
                 ++vitr)
             {
                 osg::Array* array = *vitr;
-                if (!array->getVertexBufferObject()) vbo = array->getVertexBufferObject();
+                if (array->getVertexBufferObject()) vbo = array->getVertexBufferObject();
             }
 
             if (!vbo) vbo = new osg::VertexBufferObject;
@@ -1146,7 +1186,7 @@ void Geometry::setUseVertexBufferObjects(bool flag)
                 ++deitr)
             {
                 osg::DrawElements* elements = *deitr;
-                if (!elements->getElementBufferObject()) ebo = elements->getElementBufferObject();
+                if (elements->getElementBufferObject()) ebo = elements->getElementBufferObject();
             }
 
             if (!ebo) ebo = new osg::ElementBufferObject;
@@ -1167,7 +1207,7 @@ void Geometry::setUseVertexBufferObjects(bool flag)
             ++vitr)
         {
             osg::Array* array = *vitr;
-            if (!array->getVertexBufferObject()) array->setVertexBufferObject(0);
+            if (array->getVertexBufferObject()) array->setVertexBufferObject(0);
         }
 
         for(DrawElementsList::iterator deitr = drawElementsList.begin();
@@ -1175,7 +1215,7 @@ void Geometry::setUseVertexBufferObjects(bool flag)
             ++deitr)
         {
             osg::DrawElements* elements = *deitr;
-            if (!elements->getElementBufferObject()) elements->setElementBufferObject(0);
+            if (elements->getElementBufferObject()) elements->setElementBufferObject(0);
         }
     }
 }
@@ -1683,7 +1723,7 @@ void Geometry::drawImplementation(RenderInfo& renderInfo) const
             }
 
 
-            // draw primtives by the more flexible "slow" path,
+            // draw primitives by the more flexible "slow" path,
             // sending OpenGL glBegin/glVertex.../glEnd().
             switch(primitiveset->getType())
             {
@@ -2056,6 +2096,10 @@ class AttributeFunctorArrayVisitor : public ArrayVisitor
         virtual void apply(Vec2Array& array) {  if (!array.empty()) _af.apply(_type,array.size(),&(array.front())); }
         virtual void apply(Vec3Array& array) {  if (!array.empty()) _af.apply(_type,array.size(),&(array.front())); }
         virtual void apply(Vec4Array& array) {  if (!array.empty()) _af.apply(_type,array.size(),&(array.front())); }
+        virtual void apply(DoubleArray& array) {  if (!array.empty()) _af.apply(_type,array.size(),&(array.front())); }
+        virtual void apply(Vec2dArray& array) {  if (!array.empty()) _af.apply(_type,array.size(),&(array.front())); }
+        virtual void apply(Vec3dArray& array) {  if (!array.empty()) _af.apply(_type,array.size(),&(array.front())); }
+        virtual void apply(Vec4dArray& array) {  if (!array.empty()) _af.apply(_type,array.size(),&(array.front())); }
     
     
         inline void applyArray(Drawable::AttributeType type,Array* array)
@@ -2112,6 +2156,10 @@ class ConstAttributeFunctorArrayVisitor : public ConstArrayVisitor
         virtual void apply(const Vec2Array& array) {  if (!array.empty()) _af.apply(_type,array.size(),&(array.front())); }
         virtual void apply(const Vec3Array& array) {  if (!array.empty()) _af.apply(_type,array.size(),&(array.front())); }
         virtual void apply(const Vec4Array& array) {  if (!array.empty()) _af.apply(_type,array.size(),&(array.front())); }
+        virtual void apply(const DoubleArray& array) {  if (!array.empty()) _af.apply(_type,array.size(),&(array.front())); }
+        virtual void apply(const Vec2dArray& array) {  if (!array.empty()) _af.apply(_type,array.size(),&(array.front())); }
+        virtual void apply(const Vec3dArray& array) {  if (!array.empty()) _af.apply(_type,array.size(),&(array.front())); }
+        virtual void apply(const Vec4dArray& array) {  if (!array.empty()) _af.apply(_type,array.size(),&(array.front())); }
     
     
         inline void applyArray(Drawable::AttributeType type,const Array* array)
@@ -2165,8 +2213,17 @@ void Geometry::accept(PrimitiveFunctor& functor) const
         case(Array::Vec4ArrayType): 
             functor.setVertexArray(_vertexData.array->getNumElements(),static_cast<const Vec4*>(_vertexData.array->getDataPointer()));
             break;
+        case(Array::Vec2dArrayType): 
+            functor.setVertexArray(_vertexData.array->getNumElements(),static_cast<const Vec2d*>(_vertexData.array->getDataPointer()));
+            break;
+        case(Array::Vec3dArrayType): 
+            functor.setVertexArray(_vertexData.array->getNumElements(),static_cast<const Vec3d*>(_vertexData.array->getDataPointer()));
+            break;
+        case(Array::Vec4dArrayType): 
+            functor.setVertexArray(_vertexData.array->getNumElements(),static_cast<const Vec4d*>(_vertexData.array->getDataPointer()));
+            break;
         default:
-            notify(WARN)<<"Warning: Geometry::accept(PrimtiveFunctor&) cannot handle Vertex Array type"<<_vertexData.array->getType()<<std::endl;
+            notify(WARN)<<"Warning: Geometry::accept(PrimitiveFunctor&) cannot handle Vertex Array type"<<_vertexData.array->getType()<<std::endl;
             return;
         }
         
@@ -2179,23 +2236,35 @@ void Geometry::accept(PrimitiveFunctor& functor) const
     }
     else
     {
-        const Vec2Array* vec2Array = 0;
-        const Vec3Array* vec3Array = 0;
-        const Vec4Array* vec4Array = 0;
+        const Vec2* vec2Array = 0;
+        const Vec3* vec3Array = 0;
+        const Vec4* vec4Array = 0;
+        const Vec2d* vec2dArray = 0;
+        const Vec3d* vec3dArray = 0;
+        const Vec4d* vec4dArray = 0;
         Array::Type type = _vertexData.array->getType();
         switch(type)
         {
         case(Array::Vec2ArrayType): 
-            vec2Array = static_cast<const Vec2Array*>(_vertexData.array.get());
+            vec2Array = static_cast<const Vec2*>(_vertexData.array->getDataPointer());
             break;
         case(Array::Vec3ArrayType): 
-            vec3Array = static_cast<const Vec3Array*>(_vertexData.array.get());
+            vec3Array = static_cast<const Vec3*>(_vertexData.array->getDataPointer());
             break;
         case(Array::Vec4ArrayType): 
-            vec4Array = static_cast<const Vec4Array*>(_vertexData.array.get());
+            vec4Array = static_cast<const Vec4*>(_vertexData.array->getDataPointer());
+            break;
+        case(Array::Vec2dArrayType): 
+            vec2dArray = static_cast<const Vec2d*>(_vertexData.array->getDataPointer());
+            break;
+        case(Array::Vec3dArrayType): 
+            vec3dArray = static_cast<const Vec3d*>(_vertexData.array->getDataPointer());
+            break;
+        case(Array::Vec4dArrayType): 
+            vec4dArray = static_cast<const Vec4d*>(_vertexData.array->getDataPointer());
             break;
         default:
-            notify(WARN)<<"Warning: Geometry::accept(PrimtiveFunctor&) cannot handle Vertex Array type"<<_vertexData.array->getType()<<std::endl;
+            notify(WARN)<<"Warning: Geometry::accept(PrimitiveFunctor&) cannot handle Vertex Array type"<<_vertexData.array->getType()<<std::endl;
             return;
         }
 
@@ -2221,13 +2290,22 @@ void Geometry::accept(PrimitiveFunctor& functor) const
                         switch(type)
                         {
                         case(Array::Vec2ArrayType): 
-                            functor.vertex((*vec2Array)[_vertexData.indices->index(vindex)]);
+                            functor.vertex(vec2Array[_vertexData.indices->index(vindex)]);
                             break;
                         case(Array::Vec3ArrayType): 
-                            functor.vertex((*vec3Array)[_vertexData.indices->index(vindex)]);
+                            functor.vertex(vec3Array[_vertexData.indices->index(vindex)]);
                             break;
                         case(Array::Vec4ArrayType): 
-                            functor.vertex((*vec4Array)[_vertexData.indices->index(vindex)]);
+                            functor.vertex(vec4Array[_vertexData.indices->index(vindex)]);
+                            break;
+                        case(Array::Vec2dArrayType): 
+                            functor.vertex(vec2dArray[_vertexData.indices->index(vindex)]);
+                            break;
+                        case(Array::Vec3dArrayType): 
+                            functor.vertex(vec3dArray[_vertexData.indices->index(vindex)]);
+                            break;
+                        case(Array::Vec4dArrayType): 
+                            functor.vertex(vec4dArray[_vertexData.indices->index(vindex)]);
                             break;
                         default:
                             break;
@@ -2255,13 +2333,22 @@ void Geometry::accept(PrimitiveFunctor& functor) const
                             switch(type)
                             {
                             case(Array::Vec2ArrayType): 
-                                functor.vertex((*vec2Array)[_vertexData.indices->index(vindex)]);
+                                functor.vertex(vec2Array[_vertexData.indices->index(vindex)]);
                                 break;
                             case(Array::Vec3ArrayType): 
-                                functor.vertex((*vec3Array)[_vertexData.indices->index(vindex)]);
+                                functor.vertex(vec3Array[_vertexData.indices->index(vindex)]);
                                 break;
                             case(Array::Vec4ArrayType): 
-                                functor.vertex((*vec4Array)[_vertexData.indices->index(vindex)]);
+                                functor.vertex(vec4Array[_vertexData.indices->index(vindex)]);
+                                break;
+                            case(Array::Vec2dArrayType): 
+                                functor.vertex(vec2dArray[_vertexData.indices->index(vindex)]);
+                                break;
+                            case(Array::Vec3dArrayType): 
+                                functor.vertex(vec3dArray[_vertexData.indices->index(vindex)]);
+                                break;
+                            case(Array::Vec4dArrayType): 
+                                functor.vertex(vec4dArray[_vertexData.indices->index(vindex)]);
                                 break;
                             default:
                                 break;
@@ -2288,13 +2375,22 @@ void Geometry::accept(PrimitiveFunctor& functor) const
                         switch(type)
                         {
                         case(Array::Vec2ArrayType): 
-                            functor.vertex((*vec2Array)[_vertexData.indices->index(vindex)]);
+                            functor.vertex(vec2Array[_vertexData.indices->index(vindex)]);
                             break;
                         case(Array::Vec3ArrayType): 
-                            functor.vertex((*vec3Array)[_vertexData.indices->index(vindex)]);
+                            functor.vertex(vec3Array[_vertexData.indices->index(vindex)]);
                             break;
                         case(Array::Vec4ArrayType): 
-                            functor.vertex((*vec4Array)[_vertexData.indices->index(vindex)]);
+                            functor.vertex(vec4Array[_vertexData.indices->index(vindex)]);
+                            break;
+                        case(Array::Vec2dArrayType): 
+                            functor.vertex(vec2dArray[_vertexData.indices->index(vindex)]);
+                            break;
+                        case(Array::Vec3dArrayType): 
+                            functor.vertex(vec3dArray[_vertexData.indices->index(vindex)]);
+                            break;
+                        case(Array::Vec4dArrayType): 
+                            functor.vertex(vec4dArray[_vertexData.indices->index(vindex)]);
                             break;
                         default:
                             break;
@@ -2317,13 +2413,22 @@ void Geometry::accept(PrimitiveFunctor& functor) const
                         switch(type)
                         {
                         case(Array::Vec2ArrayType): 
-                            functor.vertex((*vec2Array)[_vertexData.indices->index(vindex)]);
+                            functor.vertex(vec2Array[_vertexData.indices->index(vindex)]);
                             break;
                         case(Array::Vec3ArrayType): 
-                            functor.vertex((*vec3Array)[_vertexData.indices->index(vindex)]);
+                            functor.vertex(vec3Array[_vertexData.indices->index(vindex)]);
                             break;
                         case(Array::Vec4ArrayType): 
-                            functor.vertex((*vec4Array)[_vertexData.indices->index(vindex)]);
+                            functor.vertex(vec4Array[_vertexData.indices->index(vindex)]);
+                            break;
+                        case(Array::Vec2dArrayType): 
+                            functor.vertex(vec2dArray[_vertexData.indices->index(vindex)]);
+                            break;
+                        case(Array::Vec3dArrayType): 
+                            functor.vertex(vec3dArray[_vertexData.indices->index(vindex)]);
+                            break;
+                        case(Array::Vec4dArrayType): 
+                            functor.vertex(vec4dArray[_vertexData.indices->index(vindex)]);
                             break;
                         default:
                             break;
@@ -2346,13 +2451,22 @@ void Geometry::accept(PrimitiveFunctor& functor) const
                         switch(type)
                         {
                         case(Array::Vec2ArrayType): 
-                            functor.vertex((*vec2Array)[_vertexData.indices->index(vindex)]);
+                            functor.vertex(vec2Array[_vertexData.indices->index(vindex)]);
                             break;
                         case(Array::Vec3ArrayType): 
-                            functor.vertex((*vec3Array)[_vertexData.indices->index(vindex)]);
+                            functor.vertex(vec3Array[_vertexData.indices->index(vindex)]);
                             break;
                         case(Array::Vec4ArrayType): 
-                            functor.vertex((*vec4Array)[_vertexData.indices->index(vindex)]);
+                            functor.vertex(vec4Array[_vertexData.indices->index(vindex)]);
+                            break;
+                        case(Array::Vec2dArrayType): 
+                            functor.vertex(vec2dArray[_vertexData.indices->index(vindex)]);
+                            break;
+                        case(Array::Vec3dArrayType): 
+                            functor.vertex(vec3dArray[_vertexData.indices->index(vindex)]);
+                            break;
+                        case(Array::Vec4dArrayType): 
+                            functor.vertex(vec4dArray[_vertexData.indices->index(vindex)]);
                             break;
                         default:
                             break;
@@ -2387,8 +2501,17 @@ void Geometry::accept(PrimitiveIndexFunctor& functor) const
     case(Array::Vec4ArrayType): 
         functor.setVertexArray(_vertexData.array->getNumElements(),static_cast<const Vec4*>(_vertexData.array->getDataPointer()));
         break;
+    case(Array::Vec2dArrayType): 
+        functor.setVertexArray(_vertexData.array->getNumElements(),static_cast<const Vec2d*>(_vertexData.array->getDataPointer()));
+        break;
+    case(Array::Vec3dArrayType): 
+        functor.setVertexArray(_vertexData.array->getNumElements(),static_cast<const Vec3d*>(_vertexData.array->getDataPointer()));
+        break;
+    case(Array::Vec4dArrayType): 
+        functor.setVertexArray(_vertexData.array->getNumElements(),static_cast<const Vec4d*>(_vertexData.array->getDataPointer()));
+        break;
     default:
-        notify(WARN)<<"Warning: Geometry::accept(PrimtiveIndexFunctor&) cannot handle Vertex Array type"<<_vertexData.array->getType()<<std::endl;
+        notify(WARN)<<"Warning: Geometry::accept(PrimitiveIndexFunctor&) cannot handle Vertex Array type"<<_vertexData.array->getType()<<std::endl;
         return;
     }
 
@@ -2509,7 +2632,7 @@ void Geometry::accept(PrimitiveIndexFunctor& functor) const
     return;
 }
 
-unsigned int _computeNumberOfPrimtives(const osg::Geometry& geom)
+unsigned int _computeNumberOfPrimitives(const osg::Geometry& geom)
 {
 
     unsigned int totalNumberOfPrimitives = 0;
@@ -2531,7 +2654,7 @@ unsigned int _computeNumberOfPrimtives(const osg::Geometry& geom)
             default:            primLength=0; osg::notify(osg::INFO)<<"prim="<<std::hex<<mode<<std::dec<<std::endl; break; // compute later when =0.
         }
 
-        // draw primtives by the more flexible "slow" path,
+        // draw primitives by the more flexible "slow" path,
         // sending OpenGL glBegin/glVertex.../glEnd().
         switch(primitiveset->getType())
         {
@@ -2578,7 +2701,7 @@ bool _verifyBindings(const osg::Geometry& geom, const A& arrayData)
             if (numElements!=geom.getPrimitiveSetList().size()) return false;
             break;
         case(osg::Geometry::BIND_PER_PRIMITIVE):
-            if (numElements!=_computeNumberOfPrimtives(geom)) return false;
+            if (numElements!=_computeNumberOfPrimitives(geom)) return false;
             break;
         case(osg::Geometry::BIND_PER_VERTEX):
         {
@@ -2669,7 +2792,7 @@ void _computeCorrectBindingsAndArraySizes(std::ostream& out, const osg::Geometry
     }
     
     // check to see if binding might be per primitive   
-    unsigned int numPrimitives = _computeNumberOfPrimtives(geom);
+    unsigned int numPrimitives = _computeNumberOfPrimitives(geom);
     if (numElements==numPrimitives)
     {
         if (arrayData.binding != osg::Geometry::BIND_PER_PRIMITIVE)
@@ -2782,8 +2905,11 @@ class ExpandIndexedArray : public osg::ConstArrayVisitor
         
         virtual ~ExpandIndexedArray() {}
 
+        // Create when both of the arrays are predefined templated classes. We 
+        // can do some optimizations in this case that aren't possible in the general
+        // case.
         template <class T,class I>
-        T* create(const T& array,const I& indices)
+        T* create_inline(const T& array,const I& indices)
         {
             T* newArray = 0;
 
@@ -2812,22 +2938,84 @@ class ExpandIndexedArray : public osg::ConstArrayVisitor
             return newArray;
         }
 
+        // Create when one of the arrays isn't one of the predefined templated classes. The
+        // template parameter is the type of the array that will get created. This is  always 
+        // one of the predefined classes. We could call clone to get one of the same type as 
+        // the input array, but the interface of the osg::Array class doesn't include a way 
+        // to set an element.
         template <class T>
-        T* create(const T& array)
+        osg::Array* create_noinline(const osg::Array& array, const osg::IndexArray& indices) {
+            T* newArray = 0;
+            typedef typename T::ElementDataType EDT;
+
+            unsigned int num_indices = indices.getNumElements();
+            newArray = new T(num_indices);
+
+            const EDT* src = static_cast<const EDT*>(array.getDataPointer());
+
+            for(unsigned int i=0;i<num_indices;++i)
+            {
+                (*newArray)[i]= src[indices.index(i)];
+            }
+
+            return newArray;
+        }
+
+        osg::Array* create_noinline(const osg::Array& array, const osg::IndexArray& indices) {
+        switch (array.getType()) 
+            {
+            case(osg::Array::ByteArrayType):   return create_noinline<osg::ByteArray>(array,indices);
+            case(osg::Array::ShortArrayType):  return create_noinline<osg::ShortArray>(array,indices);
+            case(osg::Array::IntArrayType):    return create_noinline<osg::IntArray>(array,indices);
+            case(osg::Array::UByteArrayType):  return create_noinline<osg::UByteArray>(array,indices);
+            case(osg::Array::UShortArrayType): return create_noinline<osg::UShortArray>(array,indices);
+            case(osg::Array::UIntArrayType):   return create_noinline<osg::UIntArray>(array,indices);
+            case(osg::Array::Vec4ubArrayType): return create_noinline<osg::Vec4ubArray>(array,indices);
+            case(osg::Array::FloatArrayType):  return create_noinline<osg::FloatArray>(array,indices);
+            case(osg::Array::Vec2ArrayType):   return create_noinline<osg::Vec2Array>(array,indices);
+            case(osg::Array::Vec3ArrayType):   return create_noinline<osg::Vec3Array>(array,indices);
+            case(osg::Array::Vec4ArrayType):   return create_noinline<osg::Vec4Array>(array,indices);
+            case(osg::Array::Vec2dArrayType):   return create_noinline<osg::Vec2dArray>(array,indices);
+            case(osg::Array::Vec3dArrayType):   return create_noinline<osg::Vec3dArray>(array,indices);
+            case(osg::Array::Vec4dArrayType):   return create_noinline<osg::Vec4dArray>(array,indices);
+            default:
+                return NULL;
+        }
+    }
+
+        template <class TA, class TI>
+    osg::Array* create(const TA& array, const osg::IndexArray& indices) {
+        // We know that indices.getType returned the same thing as TI, but 
+        // we need to determine whether it is really an instance of TI, or 
+        // perhaps another subclass of osg::Array that contains the same 
+        // type of data.
+        const TI* ba(dynamic_cast<const TI*>(&indices));
+        if (ba != NULL) {
+        return create_inline(array,*ba);
+        }
+        else {
+        return create_noinline(array, _indices);
+        }
+    }
+
+        template <class T>
+        osg::Array* create(const T& array)
         {
             switch(_indices.getType())
             {
-            case(osg::Array::ByteArrayType): return create(array,static_cast<const osg::ByteArray&>(_indices));
-            case(osg::Array::ShortArrayType): return create(array,static_cast<const osg::ShortArray&>(_indices));
-            case(osg::Array::IntArrayType): return create(array,static_cast<const osg::IntArray&>(_indices));
-            case(osg::Array::UByteArrayType): return create(array,static_cast<const osg::UByteArray&>(_indices));
-            case(osg::Array::UShortArrayType): return create(array,static_cast<const osg::UShortArray&>(_indices));
-            case(osg::Array::UIntArrayType): return create(array,static_cast<const osg::UIntArray&>(_indices));
-            default: return 0;
+            case(osg::Array::ByteArrayType):   return create<T, osg::ByteArray>(array, _indices);
+            case(osg::Array::ShortArrayType):  return create<T, osg::ShortArray>(array, _indices);
+            case(osg::Array::IntArrayType):    return create<T, osg::IntArray>(array, _indices);
+            case(osg::Array::UByteArrayType):  return create<T, osg::UByteArray>(array, _indices);
+            case(osg::Array::UShortArrayType): return create<T, osg::UShortArray>(array, _indices);
+            case(osg::Array::UIntArrayType):   return create<T, osg::UIntArray>(array, _indices);
+            default: 
+        return create_noinline(array, _indices);
             }
             
         }
 
+        // applys for the predefined classes go through 1-arg create to do indexing
         virtual void apply(const osg::ByteArray& array) { _targetArray = create(array); }
         virtual void apply(const osg::ShortArray& array) { _targetArray = create(array); }
         virtual void apply(const osg::IntArray& array) { _targetArray = create(array); }
@@ -2839,6 +3027,9 @@ class ExpandIndexedArray : public osg::ConstArrayVisitor
         virtual void apply(const osg::Vec2Array& array) { _targetArray = create(array); }
         virtual void apply(const osg::Vec3Array& array) { _targetArray = create(array); }
         virtual void apply(const osg::Vec4Array& array) { _targetArray = create(array); }
+
+        // other subclasses of osg::Array end up here
+        virtual void apply(const osg::Array& array) { _targetArray = create_noinline(array, _indices); }
 
         const osg::IndexArray& _indices;
         osg::Array* _targetArray;
@@ -3597,6 +3788,7 @@ Geometry* osg::createTexturedQuadGeometry(const Vec3& corner,const Vec3& widthVe
     typedef DrawAttributeArrays_TTT<T2USI,N3USI,V3USI>   DrawAttributeArrays_T2N3iV3i;
 
     typedef DrawAttributeArrays_TTT_USI<T2,N3,V3>        DrawAttributeArrays_T2N3V3_i;
+
 
 
     typedef DrawAttributeArrays_TTT<T2,C4,V3>            DrawAttributeArrays_T2C4V3;

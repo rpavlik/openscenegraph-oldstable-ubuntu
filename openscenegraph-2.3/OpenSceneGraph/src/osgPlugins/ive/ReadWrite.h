@@ -37,6 +37,7 @@ namespace ive {
 #define IVECAMERA                       0x00000028
 #define IVECAMERAVIEW                   0x00000029
 #define IVEAUTOTRANSFORM                0x00000030
+#define IVEOCCLUSIONQUERYNODE           0x00000031
 
 // Node callbacks
 #define IVENODECALLBACK                 0x00000050
@@ -118,6 +119,18 @@ namespace ive {
 
 #define IVEVISIBILITYGROUP              0x00100009
 #define IVEDIRECTIONALSECTOR            0x0010000A
+
+// osgTerrain classes
+#define IVETERRAINTILE                  0x00200001
+#define IVELOCATOR                      0x00200002
+#define IVELAYER                        0x00200003
+#define IVEIMAGELAYER                   0x00200004
+#define IVEHEIGHTFIELDLAYER             0x00200005
+#define IVECOMPOSITELAYER               0x00200006
+#define IVEPROXYLAYER                   0x00200007
+#define IVETERRAINTECHNIQUE             0x00200008
+#define IVEGEOMETRYTECHNIQUE            0x00200009
+//#define IVETERRAIN                      0x0020000A
 
 // osgFX classes
 #define IVEMULTITEXTURECONTROL          0x01000001

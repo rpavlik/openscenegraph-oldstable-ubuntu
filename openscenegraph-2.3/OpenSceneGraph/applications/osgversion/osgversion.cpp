@@ -205,6 +205,11 @@ bool validName(const std::string& first)
     if (first=="TexMat(Matrix") return false;
     if (first=="GraphicsWindowX11") return false;
     if (first=="OperationThread") return false;
+    if (first=="SimpleViewer") return false;
+    if (first=="IndexFaceSets") return false;
+    if (first=="Quicktime") return false;
+    if (first=="SceneGraphBuilder") return false;
+    if (first=="LightPointNode") return false;
     return true;
 }
 
@@ -217,7 +222,9 @@ std::string typoCorrection(const std::string& name)
     if (name=="") return "";
 #endif
     if (name=="Martsz") return "Martz";
+    if (name=="Matz")  return "Martz";
     if (name=="Froenlich") return "Fröhlich";
+    if (name=="Froechlich") return "Fröhlich";
     if (name=="Froelich") return "Fröhlich";    
     if (name=="Fruciel") return "Frauciel";
     if (name=="Hebelin") return "Herbelin";
@@ -237,6 +244,7 @@ std::string typoCorrection(const std::string& name)
     if (name=="Lugi") return "Luigi";
     if (name=="Daved") return "David";
     if (name=="Fred") return "Frederic";
+    if (name=="Drederic") return "Frederic";
     if (name=="Fredrick") return "Frederic";
     if (name=="Fredric") return "Frederic";
     if (name=="Garrat") return "Garret";
@@ -315,14 +323,50 @@ std::string typoCorrection(const std::string& name)
     if (name=="Skinnder") return "Skinner";
     if (name=="Mihair")  return "Mihai";
     if (name=="Mahai")  return "Mihai";
-    
-    if (name=="SimpleViewer") return "";
-    
+    if (name=="Wojiech")  return "Wojciech";
+    if (name=="Leandowski")  return "Lewandowski";
+    if (name=="Aderian")  return "Adrian";
+    if (name=="Callue")  return "Callu";
+    if (name=="Waldrom")  return "Waldron";
+    if (name=="Atr")  return "Art";
+    if (name=="Lawandowski") return "Lewandowski";
+    if (name=="Sylvan") return "Sylvain";
+    if (name=="Giatan") return "Gaitan";
+    if (name=="Melchoir") return "Melchior";
+    if (name=="Simmonsson") return "Simonsson";
+    if (name=="Sokolwsky") return "Sokolowsky";
+    if (name=="Cullu") return "Callu";
+    if (name=="Comporesi") return "Camporesi";
     return name;
 }
 
 void nameCorrection(NamePair& name)
 {
+    if (name.first=="Franz" && name.second=="Melchior")
+    {
+        name.first = "Melchior";
+        name.second = "Franz";
+    }
+    if (name.first=="Glen" && name.second=="Waldon")
+    {
+        name.first = "Glenn";
+        name.second = "Waldron";
+    }
+    if (name.first=="Ralf" && name.second=="Karn")
+    {
+        name.first = "Ralf";
+        name.second = "Kern";
+    }
+    if (name.first=="Donny" && name.second=="Cipperly")
+    {
+        name.first = "Donald";
+        name.second = "Cipperly";
+    }
+    if (name.first=="Gino" && name.second=="")
+    {
+        name.first = "Gino";
+        name.second = "van den Bergen";
+    }
     if (name.first=="Radu" && name.second=="Mihai")
     {
         name.first = "Mihai";
@@ -669,7 +713,10 @@ int main( int argc, char **argv)
     arguments.getApplicationUsage()->addCommandLineOption("-h or --help","Display this information");
     arguments.getApplicationUsage()->addCommandLineOption("--entries","Print out number of entries into the ChangeLog file for each contributor.");
     arguments.getApplicationUsage()->addCommandLineOption("--version-number","Print out version number only");
-    arguments.getApplicationUsage()->addCommandLineOption("--soversion-number","Print out shared object version number only");
+    arguments.getApplicationUsage()->addCommandLineOption("--major-number","Print out major version number only");
+    arguments.getApplicationUsage()->addCommandLineOption("--minor-number","Print out minor version number only");
+    arguments.getApplicationUsage()->addCommandLineOption("--patch-number","Print out patch version number only");
+    arguments.getApplicationUsage()->addCommandLineOption("--so-number ","Print out shared object version number only");
     arguments.getApplicationUsage()->addCommandLineOption("--openthreads-version-number","Print out version number for OpenThreads only");
     arguments.getApplicationUsage()->addCommandLineOption("--openthreads-soversion-number","Print out shared object version number for OpenThreads only");
     arguments.getApplicationUsage()->addCommandLineOption("-r <file> or --read <file>","Read the ChangeLog to generate an estimated contributors list.");
@@ -698,7 +745,7 @@ int main( int argc, char **argv)
         return 0;
     }
     
-    if (arguments.read("--soversion-number"))
+    if (arguments.read("--soversion-number") || arguments.read("--so-number") )
     {
         std::cout<<osgGetSOVersion()<<std::endl;
         return 0;

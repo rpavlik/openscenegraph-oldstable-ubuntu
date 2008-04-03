@@ -13,8 +13,8 @@
 #include <osg/CopyOp>
 #include <osg/NodeVisitor>
 #include <osg/Object>
-#include <osgTerrain/Terrain>
 #include <osgTerrain/TerrainTechnique>
+#include <osgTerrain/TerrainTile>
 #include <osgUtil/CullVisitor>
 #include <osgUtil/UpdateVisitor>
 
@@ -61,14 +61,14 @@ BEGIN_OBJECT_REFLECTOR(osgTerrain::TerrainTechnique)
 	          __C5_char_P1__className,
 	          "return the name of the object's class type. ",
 	          "Must be defined by derived classes. ");
-	I_Method0(osgTerrain::Terrain *, getTerrain,
+	I_Method0(osgTerrain::TerrainTile *, getTerrainTile,
 	          Properties::NON_VIRTUAL,
-	          __Terrain_P1__getTerrain,
+	          __TerrainTile_P1__getTerrainTile,
 	          "",
 	          "");
-	I_Method0(const osgTerrain::Terrain *, getTerrain,
+	I_Method0(const osgTerrain::TerrainTile *, getTerrainTile,
 	          Properties::NON_VIRTUAL,
-	          __C5_Terrain_P1__getTerrain,
+	          __C5_TerrainTile_P1__getTerrainTile,
 	          "",
 	          "");
 	I_Method0(void, init,
@@ -94,20 +94,20 @@ BEGIN_OBJECT_REFLECTOR(osgTerrain::TerrainTechnique)
 	I_Method1(void, traverse, IN, osg::NodeVisitor &, nv,
 	          Properties::VIRTUAL,
 	          __void__traverse__osg_NodeVisitor_R1,
-	          "Traverse the terain subgraph. ",
+	          "Traverse the terrain subgraph. ",
 	          "");
 	I_Method0(void, dirty,
 	          Properties::VIRTUAL,
 	          __void__dirty,
-	          "Dirty so that cached data structurese will be updated on next use. ",
+	          "Dirty so that cached data structures will be updated on next use. ",
 	          "");
 	I_Method0(bool, isDirty,
 	          Properties::VIRTUAL,
 	          __bool__isDirty,
-	          "Return true if cached data structurese need updating. ",
+	          "Return true if cached data structures need updating. ",
 	          "");
-	I_SimpleProperty(osgTerrain::Terrain *, Terrain, 
-	                 __Terrain_P1__getTerrain, 
+	I_SimpleProperty(osgTerrain::TerrainTile *, TerrainTile, 
+	                 __TerrainTile_P1__getTerrainTile, 
 	                 0);
 END_REFLECTOR
 

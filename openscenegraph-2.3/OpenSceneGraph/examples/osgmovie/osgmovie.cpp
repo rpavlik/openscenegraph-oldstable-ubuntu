@@ -34,6 +34,7 @@
 #include <osg/io_utils>
 
 #include <osgGA/TrackballManipulator>
+#include <osgGA/StateSetManipulator>
 #include <osgGA/EventVisitor>
 
 #include <iostream>
@@ -43,7 +44,7 @@ class MovieEventHandler : public osgGA::GUIEventHandler
 {
 public:
 
-    MovieEventHandler():_trackMouse(false) {}
+    MovieEventHandler():_trackMouse(false),playToggle_(true) {}
     
     void setMouseTracking(bool track) { _trackMouse = track; }
     bool getMouseTracking() const { return _trackMouse; }
@@ -54,7 +55,7 @@ public:
     
     virtual void getUsage(osg::ApplicationUsage& usage) const;
 
-    typedef std::vector< osg::ref_ptr<osg::ImageStream> > ImageStreamList;
+    typedef std::vector< osg::observer_ptr<osg::ImageStream> > ImageStreamList;
 
 protected:
 
@@ -112,6 +113,7 @@ protected:
     };
 
 
+    bool            playToggle_;
     bool            _trackMouse;
     ImageStreamList _imageStreamList;
     
@@ -196,25 +198,25 @@ bool MovieEventHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIAction
         }
         case(osgGA::GUIEventAdapter::KEYDOWN):
         {
-            if (ea.getKey()=='s')
+            if (ea.getKey()=='p')
             {
                 for(ImageStreamList::iterator itr=_imageStreamList.begin();
                     itr!=_imageStreamList.end();
                     ++itr)
                 {
-                    std::cout<<"Play"<<std::endl;
-                     (*itr)->play();
-                }
-                return true;
-            }
-            else if (ea.getKey()=='p')
-            {
-                for(ImageStreamList::iterator itr=_imageStreamList.begin();
-                    itr!=_imageStreamList.end();
-                    ++itr)
-                {
-                    std::cout<<"Pause"<<std::endl;
-                    (*itr)->pause();
+                    playToggle_ = !playToggle_;
+                    if ( playToggle_ )
+                    {
+                        // playing, so pause
+                        std::cout<<"Play"<<std::endl;
+                        (*itr)->play();
+                    }
+                    else
+                    {
+                        // playing, so pause
+                        std::cout<<"Pause"<<std::endl;
+                        (*itr)->pause();
+                    }
                 }
                 return true;
             }
@@ -230,7 +232,7 @@ bool MovieEventHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIAction
                 }
                 return true;
             }
-            else if (ea.getKey()=='l')
+            else if (ea.getKey()=='L')
             {
                 for(ImageStreamList::iterator itr=_imageStreamList.begin();
                     itr!=_imageStreamList.end();
@@ -260,8 +262,7 @@ bool MovieEventHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIAction
 
 void MovieEventHandler::getUsage(osg::ApplicationUsage& usage) const
 {
-    usage.addKeyboardMouseBinding("p","Pause movie");
-    usage.addKeyboardMouseBinding("s","Play movie");
+    usage.addKeyboardMouseBinding("p","Play/Pause movie");
     usage.addKeyboardMouseBinding("r","Restart movie");
     usage.addKeyboardMouseBinding("l","Toggle looping of movie");
 }
@@ -325,6 +326,7 @@ int main(int argc, char** argv)
     arguments.getApplicationUsage()->addCommandLineOption("--shader","Use shaders to post process the video.");
     arguments.getApplicationUsage()->addCommandLineOption("--interactive","Use camera manipulator to allow movement around movie.");
     arguments.getApplicationUsage()->addCommandLineOption("--flip","Flip the movie so top becomes bottom.");
+    arguments.getApplicationUsage()->addCommandLineOption("--devices","Print the Video input capability via QuickTime and exit.");
     
     bool useTextureRectangle = true;
     bool useShader = false;
@@ -335,6 +337,14 @@ int main(int argc, char** argv)
     if (arguments.argc()<=1)
     {
         arguments.getApplicationUsage()->write(std::cout,osg::ApplicationUsage::COMMAND_LINE_OPTION);
+        return 1;
+    }
+
+    // if user requests devices video capability.
+    if (arguments.read("-devices") || arguments.read("--devices"))
+    {
+        // Force load QuickTime plugin, probe video capability, exit
+        osgDB::readImageFile("devices.live");
         return 1;
     }
 
@@ -434,13 +444,17 @@ int main(int argc, char** argv)
 
     // pass the model to the MovieEventHandler so it can pick out ImageStream's to manipulate.
     MovieEventHandler* meh = new MovieEventHandler();
-    meh->set(viewer.getSceneData());
-    viewer.addEventHandler(meh);
-    
-    // add in support for stats
-    viewer.addEventHandler(new osgViewer::StatsHandler());
+    meh->set( viewer.getSceneData() );
+    viewer.addEventHandler( meh );
 
-    // report any errors if they have occured when parsing the program aguments.
+    viewer.addEventHandler( new osgViewer::StatsHandler );
+    viewer.addEventHandler( new osgGA::StateSetManipulator( viewer.getCamera()->getOrCreateStateSet() ) );
+    viewer.addEventHandler( new osgViewer::WindowSizeHandler );
+
+    // add the record camera path handler
+    viewer.addEventHandler(new osgViewer::RecordCameraPathHandler);
+
+    // report any errors if they have occurred when parsing the program arguments.
     if (arguments.errors())
     {
         arguments.writeErrorMessages(std::cout);

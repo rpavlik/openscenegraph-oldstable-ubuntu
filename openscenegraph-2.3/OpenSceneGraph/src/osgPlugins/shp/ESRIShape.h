@@ -7,13 +7,10 @@
 #endif
 #include <osg/Referenced>
 
+#include "ESRIType.h"
+
 namespace ESRIShape {
 
-typedef int             Integer;
-typedef short           Short;
-typedef unsigned char   Byte;
-typedef double          Double;
-typedef unsigned char * BytePtr;
 
 enum ByteOrder {
     LittleEndian,
@@ -299,12 +296,6 @@ struct PointZ : public ShapeObject
     bool read( int fd );
 
     void print();
-};
-
-struct PointZRecord
-{
-    PointZ pointZ;
-    bool read( int fd );
 };
 
 struct MultiPointZ: public ShapeObject

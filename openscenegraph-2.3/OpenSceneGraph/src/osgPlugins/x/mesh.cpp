@@ -1,7 +1,7 @@
 // -*-c++-*-
 
 /*
- * $Id: mesh.cpp 6297 2007-03-01 13:41:28Z robert $
+ * $Id: mesh.cpp 7747 2007-12-24 15:19:52Z robert $
  *
  * Loader for DirectX .x files.
  * Copyright (c)2002-2006 Ulrich Hertlein <u.hertlein@sandbox.de>
@@ -29,6 +29,8 @@
 #include "directx.h"
 
 #include <iostream>
+#include <string.h>
+#include <stdlib.h>
 
 #include <osg/Notify>
 

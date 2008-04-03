@@ -23,8 +23,11 @@
 #include <osg/State>
 #include <osg/StateSet>
 #include <osg/Vec2>
+#include <osg/Vec2d>
 #include <osg/Vec3>
+#include <osg/Vec3d>
 #include <osg/Vec4>
+#include <osg/Vec4d>
 #include <osg/Vec4ub>
 
 // Must undefine IN and OUT macros defined in Windows headers
@@ -98,7 +101,7 @@ BEGIN_ABSTRACT_OBJECT_REFLECTOR(osg::Drawable)
 	I_Method0(void, computeDataVariance,
 	          Properties::VIRTUAL,
 	          __void__computeDataVariance,
-	          "Compute the DataVariance based on an assestment of callback etc. ",
+	          "Compute the DataVariance based on an assessment of callback etc. ",
 	          "");
 	I_Method0(const osg::Drawable::ParentList &, getParents,
 	          Properties::NON_VIRTUAL,
@@ -269,7 +272,7 @@ BEGIN_ABSTRACT_OBJECT_REFLECTOR(osg::Drawable)
 	                      Properties::VIRTUAL,
 	                      __void__releaseGLObjects__State_P1,
 	                      "If State is non-zero, this function releases OpenGL objects for the specified graphics context. ",
-	                      "Otherwise, releases OpenGL objexts for all graphics contexts. ");
+	                      "Otherwise, releases OpenGL objects for all graphics contexts. ");
 	I_Method1(void, setUpdateCallback, IN, osg::Drawable::UpdateCallback *, ac,
 	          Properties::VIRTUAL,
 	          __void__setUpdateCallback__UpdateCallback_P1,
@@ -344,7 +347,7 @@ BEGIN_ABSTRACT_OBJECT_REFLECTOR(osg::Drawable)
 	          Properties::PURE_VIRTUAL,
 	          __void__drawImplementation__RenderInfo_R1,
 	          "drawImplementation(RenderInfo&) is a pure virtual method for the actual implementation of OpenGL drawing calls, such as vertex arrays and primitives, that must be implemented in concrete subclasses of the Drawable base class, examples include osg::Geometry and osg::ShapeDrawable. ",
-	          " param renderInfo The osg::RenderInfo object that encapulates the current rendering information including the osg::State OpenGL state for the current graphics context.  ");
+	          " param renderInfo The osg::RenderInfo object that encapsulates the current rendering information including the osg::State OpenGL state for the current graphics context.  ");
 	I_Method1(bool, supports, IN, const osg::Drawable::AttributeFunctor &, x,
 	          Properties::VIRTUAL,
 	          __bool__supports__C5_AttributeFunctor_R1,
@@ -405,17 +408,13 @@ BEGIN_ABSTRACT_OBJECT_REFLECTOR(osg::Drawable)
 	                __void__flushAllDeletedDisplayLists__unsigned_int_S,
 	                "Flush all the cached display list which need to be deleted in the OpenGL context related to contextID. ",
 	                "");
+	I_StaticMethod1(void, discardAllDeletedDisplayLists, IN, unsigned int, contextID,
+	                __void__discardAllDeletedDisplayLists__unsigned_int_S,
+	                "Flush all the cached display list which need to be deleted in the OpenGL context related to contextID. ",
+	                "Note, unlike flush no OpenGL calls are made, instead the handles are all removed. this call is useful for when an OpenGL context has been destroyed. ");
 	I_StaticMethod2(void, flushDeletedDisplayLists, IN, unsigned int, contextID, IN, double &, availableTime,
 	                __void__flushDeletedDisplayLists__unsigned_int__double_R1_S,
 	                "Flush the cached display list which need to be deleted in the OpenGL context related to contextID. ",
-	                "");
-	I_StaticMethod2(void, deleteVertexBufferObject, IN, unsigned int, contextID, IN, GLuint, globj,
-	                __void__deleteVertexBufferObject__unsigned_int__GLuint_S,
-	                "Use deleteVertexBufferObject instead of glDeleteBuffers to allow OpenGL buffer objects to be cached until they can be deleted by the OpenGL context in which they were created, specified by contextID. ",
-	                "");
-	I_StaticMethod3(void, flushDeletedVertexBufferObjects, IN, unsigned int, contextID, IN, double, currentTime, IN, double &, availableTime,
-	                __void__flushDeletedVertexBufferObjects__unsigned_int__double__double_R1_S,
-	                "Flush all the cached vertex buffer objects which need to be deleted in the OpenGL context related to contextID. ",
 	                "");
 	I_StaticMethod2(osg::Drawable::Extensions *, getExtensions, IN, unsigned int, contextID, IN, bool, createIfNotInitalized,
 	                __Extensions_P1__getExtensions__unsigned_int__bool_S,
@@ -581,6 +580,26 @@ BEGIN_VALUE_REFLECTOR(osg::Drawable::AttributeFunctor)
 	          __void__apply__AttributeType__unsigned__Vec4ub_P1,
 	          "",
 	          "");
+	I_Method3(void, apply, IN, osg::Drawable::AttributeType, x, IN, unsigned, int, IN, double *, x,
+	          Properties::VIRTUAL,
+	          __void__apply__AttributeType__unsigned__double_P1,
+	          "",
+	          "");
+	I_Method3(void, apply, IN, osg::Drawable::AttributeType, x, IN, unsigned, int, IN, osg::Vec2d *, x,
+	          Properties::VIRTUAL,
+	          __void__apply__AttributeType__unsigned__Vec2d_P1,
+	          "",
+	          "");
+	I_Method3(void, apply, IN, osg::Drawable::AttributeType, x, IN, unsigned, int, IN, osg::Vec3d *, x,
+	          Properties::VIRTUAL,
+	          __void__apply__AttributeType__unsigned__Vec3d_P1,
+	          "",
+	          "");
+	I_Method3(void, apply, IN, osg::Drawable::AttributeType, x, IN, unsigned, int, IN, osg::Vec4d *, x,
+	          Properties::VIRTUAL,
+	          __void__apply__AttributeType__unsigned__Vec4d_P1,
+	          "",
+	          "");
 END_REFLECTOR
 
 BEGIN_OBJECT_REFLECTOR(osg::Drawable::ComputeBoundingBoxCallback)
@@ -683,6 +702,26 @@ BEGIN_VALUE_REFLECTOR(osg::Drawable::ConstAttributeFunctor)
 	I_Method3(void, apply, IN, osg::Drawable::AttributeType, x, IN, unsigned, int, IN, const osg::Vec4ub *, x,
 	          Properties::VIRTUAL,
 	          __void__apply__AttributeType__unsigned__C5_Vec4ub_P1,
+	          "",
+	          "");
+	I_Method3(void, apply, IN, osg::Drawable::AttributeType, x, IN, unsigned, int, IN, const double *, x,
+	          Properties::VIRTUAL,
+	          __void__apply__AttributeType__unsigned__C5_double_P1,
+	          "",
+	          "");
+	I_Method3(void, apply, IN, osg::Drawable::AttributeType, x, IN, unsigned, int, IN, const osg::Vec2d *, x,
+	          Properties::VIRTUAL,
+	          __void__apply__AttributeType__unsigned__C5_Vec2d_P1,
+	          "",
+	          "");
+	I_Method3(void, apply, IN, osg::Drawable::AttributeType, x, IN, unsigned, int, IN, const osg::Vec3d *, x,
+	          Properties::VIRTUAL,
+	          __void__apply__AttributeType__unsigned__C5_Vec3d_P1,
+	          "",
+	          "");
+	I_Method3(void, apply, IN, osg::Drawable::AttributeType, x, IN, unsigned, int, IN, const osg::Vec4d *, x,
+	          Properties::VIRTUAL,
+	          __void__apply__AttributeType__unsigned__C5_Vec4d_P1,
 	          "",
 	          "");
 END_REFLECTOR
@@ -946,6 +985,26 @@ BEGIN_OBJECT_REFLECTOR(osg::Drawable::Extensions)
 	          __void__glMultiTexCoord4fv__GLenum__C5_GLfloat_P1,
 	          "",
 	          "");
+	I_Method2(void, glMultiTexCoord1d, IN, GLenum, target, IN, GLdouble, coord,
+	          Properties::NON_VIRTUAL,
+	          __void__glMultiTexCoord1d__GLenum__GLdouble,
+	          "",
+	          "");
+	I_Method2(void, glMultiTexCoord2dv, IN, GLenum, target, IN, const GLdouble *, coord,
+	          Properties::NON_VIRTUAL,
+	          __void__glMultiTexCoord2dv__GLenum__C5_GLdouble_P1,
+	          "",
+	          "");
+	I_Method2(void, glMultiTexCoord3dv, IN, GLenum, target, IN, const GLdouble *, coord,
+	          Properties::NON_VIRTUAL,
+	          __void__glMultiTexCoord3dv__GLenum__C5_GLdouble_P1,
+	          "",
+	          "");
+	I_Method2(void, glMultiTexCoord4dv, IN, GLenum, target, IN, const GLdouble *, coord,
+	          Properties::NON_VIRTUAL,
+	          __void__glMultiTexCoord4dv__GLenum__C5_GLdouble_P1,
+	          "",
+	          "");
 	I_Method2(void, glVertexAttrib1s, IN, unsigned int, index, IN, GLshort, s,
 	          Properties::NON_VIRTUAL,
 	          __void__glVertexAttrib1s__unsigned_int__GLshort,
@@ -954,6 +1013,11 @@ BEGIN_OBJECT_REFLECTOR(osg::Drawable::Extensions)
 	I_Method2(void, glVertexAttrib1f, IN, unsigned int, index, IN, GLfloat, f,
 	          Properties::NON_VIRTUAL,
 	          __void__glVertexAttrib1f__unsigned_int__GLfloat,
+	          "",
+	          "");
+	I_Method2(void, glVertexAttrib1d, IN, unsigned int, index, IN, GLdouble, f,
+	          Properties::NON_VIRTUAL,
+	          __void__glVertexAttrib1d__unsigned_int__GLdouble,
 	          "",
 	          "");
 	I_Method2(void, glVertexAttrib2fv, IN, unsigned int, index, IN, const GLfloat *, v,
@@ -969,6 +1033,21 @@ BEGIN_OBJECT_REFLECTOR(osg::Drawable::Extensions)
 	I_Method2(void, glVertexAttrib4fv, IN, unsigned int, index, IN, const GLfloat *, v,
 	          Properties::NON_VIRTUAL,
 	          __void__glVertexAttrib4fv__unsigned_int__C5_GLfloat_P1,
+	          "",
+	          "");
+	I_Method2(void, glVertexAttrib2dv, IN, unsigned int, index, IN, const GLdouble *, v,
+	          Properties::NON_VIRTUAL,
+	          __void__glVertexAttrib2dv__unsigned_int__C5_GLdouble_P1,
+	          "",
+	          "");
+	I_Method2(void, glVertexAttrib3dv, IN, unsigned int, index, IN, const GLdouble *, v,
+	          Properties::NON_VIRTUAL,
+	          __void__glVertexAttrib3dv__unsigned_int__C5_GLdouble_P1,
+	          "",
+	          "");
+	I_Method2(void, glVertexAttrib4dv, IN, unsigned int, index, IN, const GLdouble *, v,
+	          Properties::NON_VIRTUAL,
+	          __void__glVertexAttrib4dv__unsigned_int__C5_GLdouble_P1,
 	          "",
 	          "");
 	I_Method2(void, glVertexAttrib4ubv, IN, unsigned int, index, IN, const GLubyte *, v,
@@ -1116,6 +1195,10 @@ BEGIN_OBJECT_REFLECTOR(osg::Drawable::Extensions)
 	          __void__glGetQueryObjectui64v__GLuint__GLenum__GLuint64EXT_P1,
 	          "",
 	          "");
+
+
+
+
 
 
 

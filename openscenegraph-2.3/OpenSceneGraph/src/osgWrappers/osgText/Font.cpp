@@ -19,6 +19,7 @@
 #include <osg/Texture>
 #include <osg/Vec2>
 #include <osgText/Font>
+#include <osgText/KerningType>
 
 // Must undefine IN and OUT macros defined in Windows headers
 #ifdef IN
@@ -98,29 +99,14 @@ BEGIN_OBJECT_REFLECTOR(osgText::Font)
 	          __C5_osg_StateSet_P1__getStateSet,
 	          "",
 	          "");
-	I_Method2(void, setFontResolution, IN, unsigned int, width, IN, unsigned int, height,
+	I_Method4(osg::Vec2, getKerning, IN, const osgText::FontResolution &, fontSize, IN, unsigned int, leftcharcode, IN, unsigned int, rightcharcode, IN, osgText::KerningType, kerningType,
 	          Properties::VIRTUAL,
-	          __void__setFontResolution__unsigned_int__unsigned_int,
-	          "Set the pixel width and height hint. ",
-	          "");
-	I_Method0(unsigned int, getFontWidth,
-	          Properties::NON_VIRTUAL,
-	          __unsigned_int__getFontWidth,
-	          "",
-	          "");
-	I_Method0(unsigned int, getFontHeight,
-	          Properties::NON_VIRTUAL,
-	          __unsigned_int__getFontHeight,
-	          "",
-	          "");
-	I_Method3(osg::Vec2, getKerning, IN, unsigned int, leftcharcode, IN, unsigned int, rightcharcode, IN, osgText::KerningType, kerningType,
-	          Properties::VIRTUAL,
-	          __osg_Vec2__getKerning__unsigned_int__unsigned_int__KerningType,
+	          __osg_Vec2__getKerning__C5_FontResolution_R1__unsigned_int__unsigned_int__KerningType,
 	          "Get a kerning (adjustment of spacing of two adjacent character) for specified charcodes, w.r.t the current font size hint. ",
 	          "");
-	I_Method1(osgText::Font::Glyph *, getGlyph, IN, unsigned int, charcode,
+	I_Method2(osgText::Font::Glyph *, getGlyph, IN, const osgText::FontResolution &, fontSize, IN, unsigned int, charcode,
 	          Properties::VIRTUAL,
-	          __Glyph_P1__getGlyph__unsigned_int,
+	          __Glyph_P1__getGlyph__C5_FontResolution_R1__unsigned_int,
 	          "Get a Glyph for specified charcode, and the font size nearest to the current font size hint. ",
 	          "");
 	I_Method0(bool, hasVertical,
@@ -213,24 +199,14 @@ BEGIN_OBJECT_REFLECTOR(osgText::Font)
 	                      __void__releaseGLObjects__osg_State_P1,
 	                      "If State is non-zero, this function releases OpenGL objects for the specified graphics context. ",
 	                      "Otherwise, releases OpenGL objexts for all graphics contexts. ");
-	I_StaticMethod0(osgText::Font::FontMutex *, getSerializeFontCallsMutex,
-	                __FontMutex_P1__getSerializeFontCallsMutex_S,
-	                "Get the mutex that enables the serialization of calls to this font. ",
-	                "");
-	I_ProtectedMethod4(void, addGlyph, IN, unsigned int, width, IN, unsigned int, height, IN, unsigned int, charcode, IN, osgText::Font::Glyph *, glyph,
+	I_ProtectedMethod3(void, addGlyph, IN, const osgText::FontResolution &, fontRes, IN, unsigned int, charcode, IN, osgText::Font::Glyph *, glyph,
 	                   Properties::NON_VIRTUAL,
 	                   Properties::NON_CONST,
-	                   __void__addGlyph__unsigned_int__unsigned_int__unsigned_int__Glyph_P1,
+	                   __void__addGlyph__C5_FontResolution_R1__unsigned_int__Glyph_P1,
 	                   "",
 	                   "");
 	I_SimpleProperty(std::string, FileName, 
 	                 __std_string__getFileName, 
-	                 0);
-	I_SimpleProperty(unsigned int, FontHeight, 
-	                 __unsigned_int__getFontHeight, 
-	                 0);
-	I_SimpleProperty(unsigned int, FontWidth, 
-	                 __unsigned_int__getFontWidth, 
 	                 0);
 	I_SimpleProperty(unsigned int, GlyphImageMargin, 
 	                 __unsigned_int__getGlyphImageMargin, 
@@ -275,19 +251,14 @@ BEGIN_ABSTRACT_OBJECT_REFLECTOR(osgText::Font::FontImplementation)
 	          __std_string__getFileName,
 	          "",
 	          "");
-	I_Method2(void, setFontResolution, IN, unsigned int, width, IN, unsigned int, height,
+	I_Method2(osgText::Font::Glyph *, getGlyph, IN, const osgText::FontResolution &, fontRes, IN, unsigned int, charcode,
 	          Properties::PURE_VIRTUAL,
-	          __void__setFontResolution__unsigned_int__unsigned_int,
-	          "Set the pixel width and height hint. ",
-	          "");
-	I_Method1(osgText::Font::Glyph *, getGlyph, IN, unsigned int, charcode,
-	          Properties::PURE_VIRTUAL,
-	          __Glyph_P1__getGlyph__unsigned_int,
+	          __Glyph_P1__getGlyph__C5_FontResolution_R1__unsigned_int,
 	          "Get a Glyph for specified charcode, and the font size nearest to the current font size hint. ",
 	          "");
-	I_Method3(osg::Vec2, getKerning, IN, unsigned int, leftcharcode, IN, unsigned int, rightcharcode, IN, osgText::KerningType, kerningType,
+	I_Method4(osg::Vec2, getKerning, IN, const osgText::FontResolution &, fontRes, IN, unsigned int, leftcharcode, IN, unsigned int, rightcharcode, IN, osgText::KerningType, kerningType,
 	          Properties::PURE_VIRTUAL,
-	          __osg_Vec2__getKerning__unsigned_int__unsigned_int__KerningType,
+	          __osg_Vec2__getKerning__C5_FontResolution_R1__unsigned_int__unsigned_int__KerningType,
 	          "Get a kerning (adjustment of spacing of two adjacent character) for specified charcodes, w.r.t the current font size hint. ",
 	          "");
 	I_Method0(bool, hasVertical,
@@ -295,30 +266,14 @@ BEGIN_ABSTRACT_OBJECT_REFLECTOR(osgText::Font::FontImplementation)
 	          __bool__hasVertical,
 	          "Return true if this font provides vertical alignments and spacing or glyphs. ",
 	          "");
-	I_Method1(void, setFontWidth, IN, unsigned int, width,
+	I_Method3(void, addGlyph, IN, const osgText::FontResolution &, fontRes, IN, unsigned int, charcode, IN, osgText::Font::Glyph *, glyph,
 	          Properties::NON_VIRTUAL,
-	          __void__setFontWidth__unsigned_int,
-	          "",
-	          "");
-	I_Method1(void, setFontHeight, IN, unsigned int, height,
-	          Properties::NON_VIRTUAL,
-	          __void__setFontHeight__unsigned_int,
-	          "",
-	          "");
-	I_Method4(void, addGlyph, IN, unsigned int, width, IN, unsigned int, height, IN, unsigned int, charcode, IN, osgText::Font::Glyph *, glyph,
-	          Properties::NON_VIRTUAL,
-	          __void__addGlyph__unsigned_int__unsigned_int__unsigned_int__Glyph_P1,
+	          __void__addGlyph__C5_FontResolution_R1__unsigned_int__Glyph_P1,
 	          "",
 	          "");
 	I_SimpleProperty(std::string, FileName, 
 	                 __std_string__getFileName, 
 	                 0);
-	I_SimpleProperty(unsigned int, FontHeight, 
-	                 0, 
-	                 __void__setFontHeight__unsigned_int);
-	I_SimpleProperty(unsigned int, FontWidth, 
-	                 0, 
-	                 __void__setFontWidth__unsigned_int);
 	I_PublicMemberProperty(osgText::Font *, _facade);
 END_REFLECTOR
 
@@ -535,12 +490,5 @@ BEGIN_OBJECT_REFLECTOR(osgText::Font::GlyphTexture)
 	I_SimpleProperty(bool, ThreadSafeRefUnref, 
 	                 0, 
 	                 __void__setThreadSafeRefUnref__bool);
-END_REFLECTOR
-
-BEGIN_ENUM_REFLECTOR(osgText::KerningType)
-	I_DeclaringFile("osgText/Font");
-	I_EnumLabel(osgText::KERNING_DEFAULT);
-	I_EnumLabel(osgText::KERNING_UNFITTED);
-	I_EnumLabel(osgText::KERNING_NONE);
 END_REFLECTOR
 

@@ -10,16 +10,11 @@
 #include <osgIntrospection/StaticMethodInfo>
 #include <osgIntrospection/Attributes>
 
-#include <osg/BoundingSphere>
 #include <osg/CopyOp>
 #include <osg/NodeVisitor>
 #include <osg/Object>
-#include <osg/OperationThread>
-#include <osg/TransferFunction>
-#include <osgTerrain/Layer>
-#include <osgTerrain/Locator>
 #include <osgTerrain/Terrain>
-#include <osgTerrain/TerrainTechnique>
+#include <osgTerrain/TerrainTile>
 
 // Must undefine IN and OUT macros defined in Windows headers
 #ifdef IN
@@ -28,12 +23,6 @@
 #ifdef OUT
 #undef OUT
 #endif
-
-BEGIN_ENUM_REFLECTOR(osgTerrain::Terrain::Filter)
-	I_DeclaringFile("osgTerrain/Terrain");
-	I_EnumLabel(osgTerrain::Terrain::NEAREST);
-	I_EnumLabel(osgTerrain::Terrain::LINEAR);
-END_REFLECTOR
 
 BEGIN_OBJECT_REFLECTOR(osgTerrain::Terrain)
 	I_DeclaringFile("osgTerrain/Terrain");
@@ -80,176 +69,27 @@ BEGIN_OBJECT_REFLECTOR(osgTerrain::Terrain)
 	          __void__traverse__osg_NodeVisitor_R1,
 	          "Traverse downwards : calls children's accept method with NodeVisitor. ",
 	          "");
-	I_Method0(void, init,
+	I_Method1(osgTerrain::TerrainTile *, getTile, IN, const osgTerrain::TileID &, tileID,
 	          Properties::NON_VIRTUAL,
-	          __void__init,
-	          "Call init on any attached TerrainTechnique. ",
+	          __TerrainTile_P1__getTile__C5_TileID_R1,
+	          "Get the TerrainTile for a given TileID. ",
 	          "");
-	I_Method1(void, setTerrainTechnique, IN, osgTerrain::TerrainTechnique *, TerrainTechnique,
+	I_Method1(const osgTerrain::TerrainTile *, getTile, IN, const osgTerrain::TileID &, tileID,
 	          Properties::NON_VIRTUAL,
-	          __void__setTerrainTechnique__osgTerrain_TerrainTechnique_P1,
-	          "Set the TerrainTechnique. ",
+	          __C5_TerrainTile_P1__getTile__C5_TileID_R1,
+	          "Get the const TerrainTile for a given TileID. ",
 	          "");
-	I_Method0(osgTerrain::TerrainTechnique *, getTerrainTechnique,
-	          Properties::NON_VIRTUAL,
-	          __TerrainTechnique_P1__getTerrainTechnique,
-	          "Get the TerrainTechnique. ",
-	          "");
-	I_Method0(const osgTerrain::TerrainTechnique *, getTerrainTechnique,
-	          Properties::NON_VIRTUAL,
-	          __C5_TerrainTechnique_P1__getTerrainTechnique,
-	          "Get the const TerrainTechnique. ",
-	          "");
-	I_Method1(void, setLocator, IN, osgTerrain::Locator *, locator,
-	          Properties::NON_VIRTUAL,
-	          __void__setLocator__Locator_P1,
-	          "Set the coordinate frame locator of the terrain node. ",
-	          "The locator takes non-dimensional s,t coordinates into the X,Y,Z world coords and back. ");
-	I_Method0(osgTerrain::Locator *, getLocator,
-	          Properties::NON_VIRTUAL,
-	          __Locator_P1__getLocator,
-	          "Get the coordinate frame locator of the terrain node. ",
-	          "");
-	I_Method0(const osgTerrain::Locator *, getLocator,
-	          Properties::NON_VIRTUAL,
-	          __C5_Locator_P1__getLocator,
-	          "Get the coordinate frame locator of the terrain node. ",
-	          "");
-	I_Method1(void, setElevationLayer, IN, osgTerrain::Layer *, layer,
-	          Properties::NON_VIRTUAL,
-	          __void__setElevationLayer__Layer_P1,
-	          "Set the layer to use to define the elevations of the terrain. ",
-	          "");
-	I_Method0(osgTerrain::Layer *, getElevationLayer,
-	          Properties::NON_VIRTUAL,
-	          __Layer_P1__getElevationLayer,
-	          "Get the layer to use to define the elevations of the terrain. ",
-	          "");
-	I_Method0(const osgTerrain::Layer *, getElevationLayer,
-	          Properties::NON_VIRTUAL,
-	          __C5_Layer_P1__getElevationLayer,
-	          "Get the const layer to use to define the elevations of the terrain. ",
-	          "");
-	I_Method2(void, setColorLayer, IN, unsigned int, i, IN, osgTerrain::Layer *, layer,
-	          Properties::NON_VIRTUAL,
-	          __void__setColorLayer__unsigned_int__osgTerrain_Layer_P1,
-	          "Set a color layer with specified layer number. ",
-	          "");
-	I_Method1(osgTerrain::Layer *, getColorLayer, IN, unsigned int, i,
-	          Properties::NON_VIRTUAL,
-	          __Layer_P1__getColorLayer__unsigned_int,
-	          "Get color layer with specified layer number. ",
-	          "");
-	I_Method1(const osgTerrain::Layer *, getColorLayer, IN, unsigned int, i,
-	          Properties::NON_VIRTUAL,
-	          __C5_Layer_P1__getColorLayer__unsigned_int,
-	          "Set const color layer with specified layer number. ",
-	          "");
-	I_Method2(void, setColorTransferFunction, IN, unsigned int, i, IN, osg::TransferFunction *, tf,
-	          Properties::NON_VIRTUAL,
-	          __void__setColorTransferFunction__unsigned_int__osg_TransferFunction_P1,
-	          "Set a color transfer function with specified layer number. ",
-	          "");
-	I_Method1(osg::TransferFunction *, getColorTransferFunction, IN, unsigned int, i,
-	          Properties::NON_VIRTUAL,
-	          __osg_TransferFunction_P1__getColorTransferFunction__unsigned_int,
-	          "Get color transfer function with specified layer number. ",
-	          "");
-	I_Method1(const osg::TransferFunction *, getColorTransferFunction, IN, unsigned int, i,
-	          Properties::NON_VIRTUAL,
-	          __C5_osg_TransferFunction_P1__getColorTransferFunction__unsigned_int,
-	          "Get const color transfer function with specified layer number. ",
-	          "");
-	I_Method2(void, setColorFilter, IN, unsigned int, i, IN, osgTerrain::Terrain::Filter, filter,
-	          Properties::NON_VIRTUAL,
-	          __void__setColorFilter__unsigned_int__Filter,
-	          "Set a color filter with specified layer number. ",
-	          "");
-	I_Method1(osgTerrain::Terrain::Filter, getColorFilter, IN, unsigned int, i,
-	          Properties::NON_VIRTUAL,
-	          __Filter__getColorFilter__unsigned_int,
-	          "Set const color filter with specified layer number. ",
-	          "");
-	I_Method0(unsigned int, getNumColorLayers,
-	          Properties::NON_VIRTUAL,
-	          __unsigned_int__getNumColorLayers,
-	          "Get the number of colour layers. ",
-	          "");
-	I_Method1(void, setRequiresNormals, IN, bool, flag,
-	          Properties::NON_VIRTUAL,
-	          __void__setRequiresNormals__bool,
-	          "Set hint to whether the TerrainTechnique should create per vertex normals for lighting purposes. ",
-	          "");
-	I_Method0(bool, getRequiresNormals,
-	          Properties::NON_VIRTUAL,
-	          __bool__getRequiresNormals,
-	          "Get whether the TerrainTechnique should create per vertex normals for lighting purposes. ",
-	          "");
-	I_Method1(void, setTreatBoundariesToValidDataAsDefaultValue, IN, bool, flag,
-	          Properties::NON_VIRTUAL,
-	          __void__setTreatBoundariesToValidDataAsDefaultValue__bool,
-	          "Set the hint to whether the TerrainTechnique should treat the invalid Layer entries that at are neigbours to valid entries with the default value. ",
-	          "");
-	I_Method0(bool, getTreatBoundariesToValidDataAsDefaultValue,
-	          Properties::NON_VIRTUAL,
-	          __bool__getTreatBoundariesToValidDataAsDefaultValue,
-	          "Get whether the TeatBoundariesToValidDataAsDefaultValue hint. ",
-	          "");
-	I_Method1(void, setOperationQueue, IN, osg::OperationQueue *, operations,
-	          Properties::NON_VIRTUAL,
-	          __void__setOperationQueue__osg_OperationQueue_P1,
-	          "Set an OperationQueue to do an data initialization and update work. ",
-	          "");
-	I_Method0(osg::OperationQueue *, getOperationQueue,
-	          Properties::NON_VIRTUAL,
-	          __osg_OperationQueue_P1__getOperationQueue,
-	          "Get the OperationsQueue if one is attached, return NULL otherwise. ",
-	          "");
-	I_Method0(const osg::OperationQueue *, getOperationsQueue,
-	          Properties::NON_VIRTUAL,
-	          __C5_osg_OperationQueue_P1__getOperationsQueue,
-	          "Get the const OperationsQueue if one is attached, return NULL otherwise. ",
-	          "");
-	I_Method0(osg::BoundingSphere, computeBound,
-	          Properties::VIRTUAL,
-	          __osg_BoundingSphere__computeBound,
-	          "Compute the bounding volume of the terrain by computing the union of the bounding volumes of all layers. ",
-	          "");
-	I_IndexedProperty(osgTerrain::Terrain::Filter, ColorFilter, 
-	                  __Filter__getColorFilter__unsigned_int, 
-	                  __void__setColorFilter__unsigned_int__Filter, 
-	                  0);
-	I_ArrayProperty(osgTerrain::Layer *, ColorLayer, 
-	                __Layer_P1__getColorLayer__unsigned_int, 
-	                __void__setColorLayer__unsigned_int__osgTerrain_Layer_P1, 
-	                __unsigned_int__getNumColorLayers, 
-	                0, 
-	                0, 
-	                0);
-	I_IndexedProperty(osg::TransferFunction *, ColorTransferFunction, 
-	                  __osg_TransferFunction_P1__getColorTransferFunction__unsigned_int, 
-	                  __void__setColorTransferFunction__unsigned_int__osg_TransferFunction_P1, 
-	                  0);
-	I_SimpleProperty(osgTerrain::Layer *, ElevationLayer, 
-	                 __Layer_P1__getElevationLayer, 
-	                 __void__setElevationLayer__Layer_P1);
-	I_SimpleProperty(osgTerrain::Locator *, Locator, 
-	                 __Locator_P1__getLocator, 
-	                 __void__setLocator__Locator_P1);
-	I_SimpleProperty(osg::OperationQueue *, OperationQueue, 
-	                 __osg_OperationQueue_P1__getOperationQueue, 
-	                 __void__setOperationQueue__osg_OperationQueue_P1);
-	I_SimpleProperty(const osg::OperationQueue *, OperationsQueue, 
-	                 __C5_osg_OperationQueue_P1__getOperationsQueue, 
-	                 0);
-	I_SimpleProperty(bool, RequiresNormals, 
-	                 __bool__getRequiresNormals, 
-	                 __void__setRequiresNormals__bool);
-	I_SimpleProperty(osgTerrain::TerrainTechnique *, TerrainTechnique, 
-	                 __TerrainTechnique_P1__getTerrainTechnique, 
-	                 __void__setTerrainTechnique__osgTerrain_TerrainTechnique_P1);
-	I_SimpleProperty(bool, TreatBoundariesToValidDataAsDefaultValue, 
-	                 __bool__getTreatBoundariesToValidDataAsDefaultValue, 
-	                 __void__setTreatBoundariesToValidDataAsDefaultValue__bool);
+	I_ProtectedMethod1(void, registerTerrainTile, IN, osgTerrain::TerrainTile *, tile,
+	                   Properties::NON_VIRTUAL,
+	                   Properties::NON_CONST,
+	                   __void__registerTerrainTile__TerrainTile_P1,
+	                   "",
+	                   "");
+	I_ProtectedMethod1(void, unregisterTerrainTile, IN, osgTerrain::TerrainTile *, tile,
+	                   Properties::NON_VIRTUAL,
+	                   Properties::NON_CONST,
+	                   __void__unregisterTerrainTile__TerrainTile_P1,
+	                   "",
+	                   "");
 END_REFLECTOR
 

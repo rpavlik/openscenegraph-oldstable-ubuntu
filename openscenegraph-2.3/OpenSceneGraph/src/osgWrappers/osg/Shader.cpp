@@ -27,6 +27,7 @@ BEGIN_ENUM_REFLECTOR(osg::Shader::Type)
 	I_DeclaringFile("osg/Shader");
 	I_EnumLabel(osg::Shader::VERTEX);
 	I_EnumLabel(osg::Shader::FRAGMENT);
+	I_EnumLabel(osg::Shader::GEOMETRY);
 	I_EnumLabel(osg::Shader::UNDEFINED);
 END_REFLECTOR
 
@@ -106,6 +107,16 @@ BEGIN_OBJECT_REFLECTOR(osg::Shader)
 	          __C5_char_P1__getTypename,
 	          "Get the Shader type as a descriptive string. ",
 	          "");
+	I_Method1(void, setFileName, IN, const std::string &, fileName,
+	          Properties::NON_VIRTUAL,
+	          __void__setFileName__C5_std_string_R1,
+	          "Set file name for the shader source code. ",
+	          "");
+	I_Method0(const std::string &, getFileName,
+	          Properties::NON_VIRTUAL,
+	          __C5_std_string_R1__getFileName,
+	          "Get filename to which the shader source code belongs. ",
+	          "");
 	I_Method1(void, resizeGLObjectBuffers, IN, unsigned int, maxSize,
 	          Properties::VIRTUAL,
 	          __void__resizeGLObjectBuffers__unsigned_int,
@@ -131,6 +142,11 @@ BEGIN_OBJECT_REFLECTOR(osg::Shader)
 	          __void__attachShader__unsigned_int__GLuint,
 	          "For a given GL context, attach a glShader to a glProgram. ",
 	          "");
+	I_Method2(void, detachShader, IN, unsigned int, contextID, IN, GLuint, program,
+	          Properties::NON_VIRTUAL,
+	          __void__detachShader__unsigned_int__GLuint,
+	          "For a given GL context, detach a glShader to a glProgram. ",
+	          "");
 	I_Method2(bool, getGlShaderInfoLog, IN, unsigned int, contextID, IN, std::string &, log,
 	          Properties::NON_VIRTUAL,
 	          __bool__getGlShaderInfoLog__unsigned_int__std_string_R1,
@@ -143,11 +159,15 @@ BEGIN_OBJECT_REFLECTOR(osg::Shader)
 	I_StaticMethod2(void, deleteGlShader, IN, unsigned int, contextID, IN, GLuint, shader,
 	                __void__deleteGlShader__unsigned_int__GLuint_S,
 	                "Mark internal glShader for deletion. ",
-	                "Deletion requests are queued tuntil they can be executed in the proper GL context. ");
+	                "Deletion requests are queued until they can be executed in the proper GL context. ");
 	I_StaticMethod3(void, flushDeletedGlShaders, IN, unsigned int, contextID, IN, double, currentTime, IN, double &, availableTime,
 	                __void__flushDeletedGlShaders__unsigned_int__double__double_R1_S,
 	                "flush all the cached glShaders which need to be deleted in the OpenGL context related to contextID. ",
 	                "");
+	I_StaticMethod1(void, discardDeletedGlShaders, IN, unsigned int, contextID,
+	                __void__discardDeletedGlShaders__unsigned_int_S,
+	                "discard all the cached glShaders which need to be deleted in the OpenGL context related to contextID. ",
+	                "Note, unlike flush no OpenGL calls are made, instead the handles are all removed. this call is useful for when an OpenGL context has been destroyed. ");
 	I_StaticMethod1(osg::Shader::Type, getTypeId, IN, const std::string &, tname,
 	                __Shader_Type__getTypeId__C5_std_string_R1_S,
 	                "",
@@ -165,6 +185,9 @@ BEGIN_OBJECT_REFLECTOR(osg::Shader)
 	                   __bool__removeProgramRef__osg_Program_P1,
 	                   "",
 	                   "");
+	I_SimpleProperty(const std::string &, FileName, 
+	                 __C5_std_string_R1__getFileName, 
+	                 __void__setFileName__C5_std_string_R1);
 	I_SimpleProperty(const std::string &, ShaderSource, 
 	                 __C5_std_string_R1__getShaderSource, 
 	                 __void__setShaderSource__C5_std_string_R1);

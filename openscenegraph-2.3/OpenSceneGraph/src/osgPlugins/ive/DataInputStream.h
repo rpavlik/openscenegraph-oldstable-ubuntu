@@ -21,6 +21,8 @@
 #include <osg/Uniform>
 #include <osg/ref_ptr>
 
+#include <osgTerrain/TerrainTile>
+
 #include <osgDB/ReaderWriter>
 
 #include "IveVersion.h"
@@ -37,8 +39,8 @@ public:
     DataInputStream(std::istream* istream);
     ~DataInputStream();
 
-        void setOptions(const osgDB::ReaderWriter::Options* options);
-        const osgDB::ReaderWriter::Options* getOptions() const { return _options.get(); }
+    void setOptions(const osgDB::ReaderWriter::Options* options);
+    const osgDB::ReaderWriter::Options* getOptions() const { return _options.get(); }
 
     inline unsigned int getVersion() const { return _version; }
     bool readBool();
@@ -82,7 +84,10 @@ public:
     osg::Vec4bArray* readVec4bArray();
     osg::Vec2sArray* readVec2sArray();
     osg::Vec3sArray* readVec3sArray();
-    osg::Vec4sArray* readVec4sArray();    
+    osg::Vec4sArray* readVec4sArray();
+    osg::Vec2dArray* readVec2dArray();
+    osg::Vec3dArray* readVec3dArray();
+    osg::Vec4dArray* readVec4dArray();    
 
     osg::Image* readImage(std::string s);
     osg::Image* readImage(IncludeImageMode mode);
@@ -93,6 +98,8 @@ public:
     osg::Drawable* readDrawable();
     osg::Shape* readShape();
     osg::Node* readNode();
+    osgTerrain::Layer* readLayer();
+    osgTerrain::Locator* readLocator();
 
     // Set and get if must be generated external reference ive files
     void setLoadExternalReferenceFiles(bool b) {_loadExternalReferenceFiles=b;};
@@ -106,12 +113,15 @@ public:
     typedef std::map<int,osg::ref_ptr<osg::Drawable> >          DrawableMap;
     typedef std::map<int,osg::ref_ptr<osg::Shape> >             ShapeMap;
     typedef std::map<int,osg::ref_ptr<osg::Node> >              NodeMap;
+    typedef std::map<int,osg::ref_ptr<osgTerrain::Layer> >      LayerMap;
+    typedef std::map<int,osg::ref_ptr<osgTerrain::Locator> >    LocatorMap;
 
     bool                _verboseOutput;
     std::istream*       _istream;
     int                 _byteswap;
 
 private:
+
     int                 _version;
     bool                _peeking;
     int                 _peekValue; 
@@ -123,6 +133,8 @@ private:
     DrawableMap         _drawableMap;
     ShapeMap            _shapeMap;
     NodeMap             _nodeMap;
+    LayerMap            _layerMap;
+    LocatorMap          _locatorMap;
 
     bool _loadExternalReferenceFiles;
         

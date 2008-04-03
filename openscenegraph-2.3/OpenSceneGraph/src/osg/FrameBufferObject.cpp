@@ -132,6 +132,13 @@ void RenderBuffer::flushDeletedRenderBuffers(unsigned int contextID,double /*cur
     availableTime -= elapsedTime;
 }
 
+void RenderBuffer::discardDeletedRenderBuffers(unsigned int contextID)
+{
+    OpenThreads::ScopedLock<OpenThreads::Mutex> lock(s_mutex_deletedRenderBufferCache);
+    RenderBufferHandleList& pList = s_deletedRenderBufferCache[contextID];
+    pList.clear();
+}
+
 
 RenderBuffer::RenderBuffer()
 :    Object(),
@@ -191,7 +198,7 @@ GLuint RenderBuffer::getObjectID(unsigned int contextID, const FBOExtensions *ex
 }
 
 /**************************************************************************
- * FrameBufferAttachement
+ * FrameBufferAttachment
  **************************************************************************/
 
 #ifndef GL_TEXTURE_CUBE_MAP_POSITIVE_X
@@ -265,7 +272,7 @@ FrameBufferAttachment::FrameBufferAttachment(Texture2D* target, int level)
     _ximpl->textureTarget = target;
 }
 
-FrameBufferAttachment::FrameBufferAttachment(Texture3D* target, int level, int zoffset)
+FrameBufferAttachment::FrameBufferAttachment(Texture3D* target, int zoffset, int level)
 {
     _ximpl = new Pimpl(Pimpl::TEXTURE3D, level);
     _ximpl->textureTarget = target;
@@ -532,6 +539,14 @@ void FrameBufferObject::flushDeletedFrameBufferObjects(unsigned int contextID,do
     availableTime -= elapsedTime;
 }
 
+void FrameBufferObject::discardDeletedFrameBufferObjects(unsigned int contextID)
+{
+    OpenThreads::ScopedLock<OpenThreads::Mutex> lock(s_mutex_deletedFrameBufferObjectCache);
+    FrameBufferObjectHandleList& pList = s_deletedFrameBufferObjectCache[contextID];
+
+    pList.clear();
+}
+
 
 
 FrameBufferObject::FrameBufferObject()
@@ -593,7 +608,7 @@ void FrameBufferObject::apply(State &state) const
 
     if (dirtyAttachmentList)
     {
-        // the set of of attachements appears to be thread sensitive, it shouldn't be because 
+        // the set of of attachments appears to be thread sensitive, it shouldn't be because 
         // OpenGL FBO handles osg::FrameBufferObject has are multi-buffered...
         // so as a temporary fix will stick in a mutex to ensure that only one thread passes through here
         // at one time.

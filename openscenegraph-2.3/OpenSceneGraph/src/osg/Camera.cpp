@@ -11,6 +11,7 @@
  * OpenSceneGraph Public License for more details.
 */
 #include <osg/Camera>
+#include <osg/RenderInfo>
 #include <osg/Notify>
 
 using namespace osg;
@@ -18,8 +19,11 @@ using namespace osg;
 Camera::Camera():
     _view(0),
     _allowEventFocus(true),
-    _clearColor(osg::Vec4(0.0f,0.0f,0.0f,1.0f)),
     _clearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT),
+    _clearColor(osg::Vec4(0.0f,0.0f,0.0f,1.0f)),
+    _clearAccum(osg::Vec4(0.0f,0.0f,0.0f,1.0f)),
+    _clearDepth(1.0),
+    _clearStencil(0),
     _transformOrder(PRE_MULTIPLY),
     _projectionResizePolicy(HORIZONTAL),
     _renderOrder(POST_RENDER),
@@ -38,8 +42,11 @@ Camera::Camera(const Camera& camera,const CopyOp& copyop):
     _view(camera._view),
     _allowEventFocus(camera._allowEventFocus),
     _displaySettings(camera._displaySettings),
-    _clearColor(camera._clearColor),
     _clearMask(camera._clearMask),
+    _clearColor(camera._clearColor),
+    _clearAccum(camera._clearAccum),
+    _clearDepth(camera._clearDepth),
+    _clearStencil(camera._clearStencil),
     _colorMask(camera._colorMask),
     _viewport(camera._viewport),
     _transformOrder(camera._transformOrder),
@@ -53,8 +60,10 @@ Camera::Camera(const Camera& camera,const CopyOp& copyop):
     _renderTargetImplementation(camera._renderTargetImplementation),
     _renderTargetFallback(camera._renderTargetFallback),
     _bufferAttachmentMap(camera._bufferAttachmentMap),
+    _initialDrawCallback(camera._initialDrawCallback),
     _preDrawCallback(camera._preDrawCallback),
-    _postDrawCallback(camera._postDrawCallback)
+    _postDrawCallback(camera._postDrawCallback),
+    _finalDrawCallback(camera._finalDrawCallback)
 {
     // need to copy/share graphics context?
 }
@@ -66,6 +75,19 @@ Camera::~Camera()
     
     if (_graphicsContext.valid()) _graphicsContext->removeCamera(this);
 }
+
+void Camera::DrawCallback::operator () (osg::RenderInfo& renderInfo) const
+{
+    if (renderInfo.getCurrentCamera())
+    {
+        operator()(*(renderInfo.getCurrentCamera()));
+    }
+    else
+    {
+        osg::notify(osg::WARN)<<"Error: Camera::DrawCallback called without valid camera."<<std::endl;
+    }
+}
+
 
 void Camera::setGraphicsContext(GraphicsContext* context) 
 {
@@ -215,12 +237,17 @@ bool Camera::getProjectionMatrixAsPerspective(double& fovy,double& aspectRatio,
     return _projectionMatrix.getPerspective(fovy, aspectRatio, zNear, zFar);
 }                                                 
 
-void Camera::setViewMatrixAsLookAt(const Vec3& eye,const Vec3& center,const Vec3& up)
+void Camera::setViewMatrixAsLookAt(const Vec3d& eye,const Vec3d& center,const Vec3d& up)
 {
     setViewMatrix(osg::Matrixd::lookAt(eye,center,up));
 }
 
-void Camera::getViewMatrixAsLookAt(Vec3& eye,Vec3& center,Vec3& up,float lookDistance)
+void Camera::getViewMatrixAsLookAt(Vec3d& eye,Vec3d& center,Vec3d& up,double lookDistance)
+{
+    _viewMatrix.getLookAt(eye,center,up,lookDistance);
+}
+
+void Camera::getViewMatrixAsLookAt(Vec3f& eye,Vec3f& center,Vec3f& up,float lookDistance)
 {
     _viewMatrix.getLookAt(eye,center,up,lookDistance);
 }

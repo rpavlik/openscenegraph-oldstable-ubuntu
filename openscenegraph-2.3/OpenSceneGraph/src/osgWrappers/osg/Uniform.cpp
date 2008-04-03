@@ -152,6 +152,33 @@ BEGIN_ENUM_REFLECTOR(osg::Uniform::Type)
 	I_EnumLabel(osg::Uniform::SAMPLER_2D_ARRAY);
 	I_EnumLabel(osg::Uniform::SAMPLER_1D_ARRAY_SHADOW);
 	I_EnumLabel(osg::Uniform::SAMPLER_2D_ARRAY_SHADOW);
+	I_EnumLabel(osg::Uniform::FLOAT_MAT2x3);
+	I_EnumLabel(osg::Uniform::FLOAT_MAT2x4);
+	I_EnumLabel(osg::Uniform::FLOAT_MAT3x2);
+	I_EnumLabel(osg::Uniform::FLOAT_MAT3x4);
+	I_EnumLabel(osg::Uniform::FLOAT_MAT4x2);
+	I_EnumLabel(osg::Uniform::FLOAT_MAT4x3);
+	I_EnumLabel(osg::Uniform::SAMPLER_BUFFER);
+	I_EnumLabel(osg::Uniform::SAMPLER_CUBE_SHADOW);
+	I_EnumLabel(osg::Uniform::UNSIGNED_INT_VEC2);
+	I_EnumLabel(osg::Uniform::UNSIGNED_INT_VEC3);
+	I_EnumLabel(osg::Uniform::UNSIGNED_INT_VEC4);
+	I_EnumLabel(osg::Uniform::INT_SAMPLER_1D);
+	I_EnumLabel(osg::Uniform::INT_SAMPLER_2D);
+	I_EnumLabel(osg::Uniform::INT_SAMPLER_3D);
+	I_EnumLabel(osg::Uniform::INT_SAMPLER_CUBE);
+	I_EnumLabel(osg::Uniform::INT_SAMPLER_2D_RECT);
+	I_EnumLabel(osg::Uniform::INT_SAMPLER_1D_ARRAY);
+	I_EnumLabel(osg::Uniform::INT_SAMPLER_2D_ARRAY);
+	I_EnumLabel(osg::Uniform::INT_SAMPLER_BUFFER);
+	I_EnumLabel(osg::Uniform::UNSIGNED_INT_SAMPLER_1D);
+	I_EnumLabel(osg::Uniform::UNSIGNED_INT_SAMPLER_2D);
+	I_EnumLabel(osg::Uniform::UNSIGNED_INT_SAMPLER_3D);
+	I_EnumLabel(osg::Uniform::UNSIGNED_INT_SAMPLER_CUBE);
+	I_EnumLabel(osg::Uniform::UNSIGNED_INT_SAMPLER_2D_RECT);
+	I_EnumLabel(osg::Uniform::UNSIGNED_INT_SAMPLER_1D_ARRAY);
+	I_EnumLabel(osg::Uniform::UNSIGNED_INT_SAMPLER_2D_ARRAY);
+	I_EnumLabel(osg::Uniform::UNSIGNED_INT_SAMPLER_BUFFER);
 	I_EnumLabel(osg::Uniform::UNDEFINED);
 END_REFLECTOR
 
@@ -682,7 +709,7 @@ BEGIN_OBJECT_REFLECTOR(osg::Uniform)
 	          Properties::NON_VIRTUAL,
 	          __void__dirty,
 	          "Increment the modified count on the Uniform so Programs watching it know it update themselves. ",
-	          "NOTE: autotomatically called during osg::Uniform::set*(); you must call if modifying the internal data array directly. ");
+	          "NOTE: automatically called during osg::Uniform::set*(); you must call if modifying the internal data array directly. ");
 	I_Method1(bool, setArray, IN, osg::FloatArray *, array,
 	          Properties::NON_VIRTUAL,
 	          __bool__setArray__FloatArray_P1,

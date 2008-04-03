@@ -1,7 +1,7 @@
 // -*-c++-*-
 
 /*
- * $Id: directx.cpp 5224 2006-07-04 09:13:15Z robert $
+ * $Id: directx.cpp 7747 2007-12-24 15:19:52Z robert $
  *
  * Loader for DirectX .x files.
  * Copyright (c)2002-2006 Ulrich Hertlein <u.hertlein@sandbox.de>
@@ -30,6 +30,7 @@
 
 #include <iostream>
 #include <sstream>
+#include <string.h>
 
 #include <math.h>
 

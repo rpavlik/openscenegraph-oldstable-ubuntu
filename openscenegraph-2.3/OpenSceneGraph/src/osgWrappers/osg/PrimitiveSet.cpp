@@ -16,8 +16,11 @@
 #include <osg/PrimitiveSet>
 #include <osg/State>
 #include <osg/Vec2>
+#include <osg/Vec2d>
 #include <osg/Vec3>
+#include <osg/Vec3d>
 #include <osg/Vec4>
+#include <osg/Vec4d>
 
 // Must undefine IN and OUT macros defined in Windows headers
 #ifdef IN
@@ -293,7 +296,7 @@ BEGIN_ABSTRACT_OBJECT_REFLECTOR(osg::DrawElements)
 	                      Properties::VIRTUAL,
 	                      __void__releaseGLObjects__State_P1,
 	                      "If State is non-zero, this function releases OpenGL objects for the specified graphics context. ",
-	                      "Otherwise, releases OpenGL objexts for all graphics contexts. ");
+	                      "Otherwise, releases OpenGL objects for all graphics contexts. ");
 	I_SimpleProperty(osg::DrawElements *, DrawElements, 
 	                 __DrawElements_P1__getDrawElements, 
 	                 0);
@@ -320,8 +323,8 @@ BEGIN_OBJECT_REFLECTOR(osg::DrawElementsUByte)
 	                           ____DrawElementsUByte__C5_DrawElementsUByte_R1__C5_CopyOp_R1,
 	                           "",
 	                           "");
-	I_Constructor3(IN, GLenum, mode, IN, unsigned int, no, IN, GLubyte *, ptr,
-	               ____DrawElementsUByte__GLenum__unsigned_int__GLubyte_P1,
+	I_Constructor3(IN, GLenum, mode, IN, unsigned int, no, IN, const GLubyte *, ptr,
+	               ____DrawElementsUByte__GLenum__unsigned_int__C5_GLubyte_P1,
 	               "",
 	               "");
 	I_Constructor2(IN, GLenum, mode, IN, unsigned int, no,
@@ -426,8 +429,8 @@ BEGIN_OBJECT_REFLECTOR(osg::DrawElementsUInt)
 	                           ____DrawElementsUInt__C5_DrawElementsUInt_R1__C5_CopyOp_R1,
 	                           "",
 	                           "");
-	I_Constructor3(IN, GLenum, mode, IN, unsigned int, no, IN, GLuint *, ptr,
-	               ____DrawElementsUInt__GLenum__unsigned_int__GLuint_P1,
+	I_Constructor3(IN, GLenum, mode, IN, unsigned int, no, IN, const GLuint *, ptr,
+	               ____DrawElementsUInt__GLenum__unsigned_int__C5_GLuint_P1,
 	               "",
 	               "");
 	I_Constructor2(IN, GLenum, mode, IN, unsigned int, no,
@@ -532,8 +535,8 @@ BEGIN_OBJECT_REFLECTOR(osg::DrawElementsUShort)
 	                           ____DrawElementsUShort__C5_DrawElementsUShort_R1__C5_CopyOp_R1,
 	                           "",
 	                           "");
-	I_Constructor3(IN, GLenum, mode, IN, unsigned int, no, IN, GLushort *, ptr,
-	               ____DrawElementsUShort__GLenum__unsigned_int__GLushort_P1,
+	I_Constructor3(IN, GLenum, mode, IN, unsigned int, no, IN, const GLushort *, ptr,
+	               ____DrawElementsUShort__GLenum__unsigned_int__C5_GLushort_P1,
 	               "",
 	               "");
 	I_Constructor2(IN, GLenum, mode, IN, unsigned int, no,
@@ -643,6 +646,21 @@ BEGIN_ABSTRACT_OBJECT_REFLECTOR(osg::PrimitiveFunctor)
 	          __void__setVertexArray__unsigned_int__C5_Vec4_P1,
 	          "Sets the array of vertices used to describe the primitives. ",
 	          "Somehow mimics the OpenGL glVertexPointer() function. ");
+	I_Method2(void, setVertexArray, IN, unsigned int, count, IN, const osg::Vec2d *, vertices,
+	          Properties::PURE_VIRTUAL,
+	          __void__setVertexArray__unsigned_int__C5_Vec2d_P1,
+	          "Sets the array of vertices used to describe the primitives. ",
+	          "Somehow mimics the OpenGL glVertexPointer() function. ");
+	I_Method2(void, setVertexArray, IN, unsigned int, count, IN, const osg::Vec3d *, vertices,
+	          Properties::PURE_VIRTUAL,
+	          __void__setVertexArray__unsigned_int__C5_Vec3d_P1,
+	          "Sets the array of vertices used to describe the primitives. ",
+	          "Somehow mimics the OpenGL glVertexPointer() function. ");
+	I_Method2(void, setVertexArray, IN, unsigned int, count, IN, const osg::Vec4d *, vertices,
+	          Properties::PURE_VIRTUAL,
+	          __void__setVertexArray__unsigned_int__C5_Vec4d_P1,
+	          "Sets the array of vertices used to describe the primitives. ",
+	          "Somehow mimics the OpenGL glVertexPointer() function. ");
 	I_Method3(void, drawArrays, IN, GLenum, mode, IN, GLint, first, IN, GLsizei, count,
 	          Properties::PURE_VIRTUAL,
 	          __void__drawArrays__GLenum__GLint__GLsizei,
@@ -723,6 +741,21 @@ BEGIN_ABSTRACT_OBJECT_REFLECTOR(osg::PrimitiveIndexFunctor)
 	I_Method2(void, setVertexArray, IN, unsigned int, count, IN, const osg::Vec4 *, vertices,
 	          Properties::PURE_VIRTUAL,
 	          __void__setVertexArray__unsigned_int__C5_Vec4_P1,
+	          "",
+	          "");
+	I_Method2(void, setVertexArray, IN, unsigned int, count, IN, const osg::Vec2d *, vertices,
+	          Properties::PURE_VIRTUAL,
+	          __void__setVertexArray__unsigned_int__C5_Vec2d_P1,
+	          "",
+	          "");
+	I_Method2(void, setVertexArray, IN, unsigned int, count, IN, const osg::Vec3d *, vertices,
+	          Properties::PURE_VIRTUAL,
+	          __void__setVertexArray__unsigned_int__C5_Vec3d_P1,
+	          "",
+	          "");
+	I_Method2(void, setVertexArray, IN, unsigned int, count, IN, const osg::Vec4d *, vertices,
+	          Properties::PURE_VIRTUAL,
+	          __void__setVertexArray__unsigned_int__C5_Vec4d_P1,
 	          "",
 	          "");
 	I_Method3(void, drawArrays, IN, GLenum, mode, IN, GLint, first, IN, GLsizei, count,
@@ -911,7 +944,7 @@ BEGIN_ABSTRACT_OBJECT_REFLECTOR(osg::PrimitiveSet)
 	                      Properties::VIRTUAL,
 	                      __void__releaseGLObjects__State_P1,
 	                      "If State is non-zero, this function releases OpenGL objects for the specified graphics context. ",
-	                      "Otherwise, releases OpenGL objexts for all graphics contexts. ");
+	                      "Otherwise, releases OpenGL objects for all graphics contexts. ");
 	I_Method0(void, computeRange,
 	          Properties::VIRTUAL,
 	          __void__computeRange,
@@ -970,8 +1003,8 @@ BEGIN_OBJECT_REFLECTOR(osg::VectorGLubyte)
 	               ____VectorGLubyte__C5_VectorGLubyte_R1,
 	               "",
 	               "");
-	I_Constructor2(IN, GLubyte *, beg, IN, GLubyte *, end,
-	               ____VectorGLubyte__GLubyte_P1__GLubyte_P1,
+	I_Constructor2(IN, const GLubyte *, beg, IN, const GLubyte *, end,
+	               ____VectorGLubyte__C5_GLubyte_P1__C5_GLubyte_P1,
 	               "",
 	               "");
 	I_Constructor1(IN, unsigned int, n,
@@ -992,8 +1025,8 @@ BEGIN_OBJECT_REFLECTOR(osg::VectorGLuint)
 	               ____VectorGLuint__C5_VectorGLuint_R1,
 	               "",
 	               "");
-	I_Constructor2(IN, GLuint *, beg, IN, GLuint *, end,
-	               ____VectorGLuint__GLuint_P1__GLuint_P1,
+	I_Constructor2(IN, const GLuint *, beg, IN, const GLuint *, end,
+	               ____VectorGLuint__C5_GLuint_P1__C5_GLuint_P1,
 	               "",
 	               "");
 	I_Constructor1(IN, unsigned int, n,
@@ -1014,8 +1047,8 @@ BEGIN_OBJECT_REFLECTOR(osg::VectorGLushort)
 	               ____VectorGLushort__C5_VectorGLushort_R1,
 	               "",
 	               "");
-	I_Constructor2(IN, GLushort *, beg, IN, GLushort *, end,
-	               ____VectorGLushort__GLushort_P1__GLushort_P1,
+	I_Constructor2(IN, const GLushort *, beg, IN, const GLushort *, end,
+	               ____VectorGLushort__C5_GLushort_P1__C5_GLushort_P1,
 	               "",
 	               "");
 	I_Constructor1(IN, unsigned int, n,

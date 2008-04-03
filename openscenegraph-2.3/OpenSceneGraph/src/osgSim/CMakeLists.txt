@@ -23,11 +23,12 @@ SET(LIB_PUBLIC_HEADERS
     ${HEADER_PATH}/LightPointSystem
     ${HEADER_PATH}/LineOfSight
     ${HEADER_PATH}/MultiSwitch
-    ${HEADER_PATH}/OpenFlightOptimizer
     ${HEADER_PATH}/OverlayNode
+    ${HEADER_PATH}/ObjectRecordData
     ${HEADER_PATH}/ScalarBar
     ${HEADER_PATH}/ScalarsToColors
     ${HEADER_PATH}/Sector
+    ${HEADER_PATH}/ShapeAttribute
     ${HEADER_PATH}/SphereSegment
     ${HEADER_PATH}/Version
     ${HEADER_PATH}/VisibilityGroup
@@ -53,11 +54,11 @@ ADD_LIBRARY(${LIB_NAME}
     LightPointSpriteDrawable.h
     LineOfSight.cpp
     MultiSwitch.cpp
-    OpenFlightOptimizer.cpp
     OverlayNode.cpp
     ScalarBar.cpp
     ScalarsToColors.cpp
     Sector.cpp
+    ShapeAttribute.cpp
     SphereSegment.cpp
     Version.cpp
     VisibilityGroup.cpp

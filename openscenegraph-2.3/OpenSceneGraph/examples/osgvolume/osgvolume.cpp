@@ -262,7 +262,7 @@ struct ProcessRow
     }
 
     ///////////////////////////////////////////////////////////////////////////////
-    // alpha luminiance sources..    
+    // alpha luminance sources..    
     virtual void LA_to_A(unsigned int num, unsigned char* source, unsigned char* dest) const
     {
         for(unsigned int i=0;i<num;++i)
@@ -757,7 +757,7 @@ osg::Node* createShaderModel(osg::ref_ptr<osg::Image>& image_3d, osg::ref_ptr<os
     // set up the 3d texture itself,
     // note, well set the filtering up so that mip mapping is disabled,
     // gluBuild3DMipsmaps doesn't do a very good job of handled the
-    // inbalanced dimensions of the 256x256x4 texture.
+    // imbalanced dimensions of the 256x256x4 texture.
     osg::Texture3D* texture3D = new osg::Texture3D;
     texture3D->setFilter(osg::Texture3D::MIN_FILTER,osg::Texture3D::LINEAR);
     texture3D->setFilter(osg::Texture3D::MAG_FILTER,osg::Texture3D::LINEAR);
@@ -792,13 +792,13 @@ osg::Node* createShaderModel(osg::ref_ptr<osg::Image>& image_3d, osg::ref_ptr<os
     {
         char vertexShaderSource[] = 
             "varying vec3 texcoord;\n"
-            "varying vec3 deltaTexCoord;\n"
+            "varying vec3 cameraPos;\n"
             "\n"
             "void main(void)\n"
             "{\n"
-            "    texcoord = gl_MultiTexCoord0.xyz;\n"
-            "    gl_Position     = ftransform();  \n"
-            "    deltaTexCoord = normalize(gl_ModelViewMatrixInverse * vec4(0,0,0,1) - gl_Vertex);\n"
+            "        texcoord = gl_MultiTexCoord0.xyz;\n"
+            "        gl_Position     = ftransform();\n"
+            "        cameraPos=vec4(gl_ModelViewMatrixInverse*vec4(0,0,0,1)).xyz;\n"
             "}\n";
 
         osg::Shader* vertex_shader = new osg::Shader(osg::Shader::VERTEX, vertexShaderSource);
@@ -822,27 +822,26 @@ osg::Node* createShaderModel(osg::ref_ptr<osg::Image>& image_3d, osg::ref_ptr<os
             "uniform float transparency;\n"
             "uniform float alphaCutOff;\n"
             "\n"
-            "varying vec3 deltaTexCoord;\n"
+            "varying vec3 cameraPos;\n"
             "varying vec3 texcoord;\n"
-            "void main(void) \n"
-            "{ \n"
-            "    vec3 deltaTexCoord2 = normalize(deltaTexCoord)*sampleDensity; \n"
             "\n"
-            "    gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0); \n"
-            "    \n"
-            "    while (texcoord.x>=0.0 && texcoord.x<=1.0 &&\n"
-            "           texcoord.y>=0.0 && texcoord.y<=1.0 &&\n"
-            "           texcoord.z>=0.0 && texcoord.z<=1.0)\n"
-            "    {\n"
-            "       vec4 color = texture3D( baseTexture, texcoord);\n"
-            "       float r = color[3]*transparency;\n"
-            "       if (r>alphaCutOff)\n"
-            "       {\n"
-            "         gl_FragColor.xyz = gl_FragColor.xyz*(1.0-r)+color.xyz*r;\n"
-            "         gl_FragColor.w += r;\n"
-            "       }\n"
-            "       texcoord += deltaTexCoord2; \n"
-            "    }\n"
+            "void main(void)\n"
+            "{ \n"
+            "        vec3 deltaTexCoord=normalize(cameraPos-texcoord.xyz)*sampleDensity;\n"
+            "        gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0); \n"
+            "        while (texcoord.x>=0.0 && texcoord.x<=1.0 &&\n"
+            "               texcoord.y>=0.0 && texcoord.y<=1.0 &&\n"
+            "               texcoord.z>=0.0 && texcoord.z<=1.0)\n"
+            "        {\n"
+            "            vec4 color = texture3D( baseTexture, texcoord);\n"
+            "            float r = color[3]*transparency;\n"
+            "            if (r>alphaCutOff)\n"
+            "            {\n"
+            "                gl_FragColor.xyz = gl_FragColor.xyz*(1.0-r)+color.xyz*r;\n"
+            "                gl_FragColor.w += r;\n"
+            "            }\n"
+            "            texcoord += deltaTexCoord; \n"
+            "        }\n"
             "    if (gl_FragColor.w>1.0) gl_FragColor.w = 1.0; \n"
             "}\n";
 
@@ -1138,7 +1137,7 @@ osg::Node* createModel(osg::ref_ptr<osg::Image>& image_3d, osg::ref_ptr<osg::Ima
         // set up the 3d texture itself,
         // note, well set the filtering up so that mip mapping is disabled,
         // gluBuild3DMipsmaps doesn't do a very good job of handled the
-        // inbalanced dimensions of the 256x256x4 texture.
+        // imbalanced dimensions of the 256x256x4 texture.
         osg::Texture3D* texture3D = new osg::Texture3D;
         texture3D->setFilter(osg::Texture3D::MIN_FILTER,osg::Texture3D::LINEAR);
         texture3D->setFilter(osg::Texture3D::MAG_FILTER,osg::Texture3D::LINEAR);
@@ -1332,7 +1331,7 @@ osg::Image* readRaw(int sizeX, int sizeY, int sizeZ, int numberBytesPerComponent
         {
             for(int t=0;t<sizeT;++t)
             {
-                // reset the indices to begining
+                // reset the indices to beginning
                 readOp._pos = 0;
                 writeOp._pos = 0;
             
@@ -1562,14 +1561,14 @@ int main( int argc, char **argv )
     // any option left unread are converted into errors to write out later.
     arguments.reportRemainingOptionsAsUnrecognized();
 
-    // report any errors if they have occured when parsing the program aguments.
+    // report any errors if they have occurred when parsing the program arguments.
     if (arguments.errors())
     {
         arguments.writeErrorMessages(std::cout);
         return 1;
     }
 
-    // assume remaining argments are file names of textures.
+    // assume remaining arguments are file names of textures.
     for(int pos=1;pos<arguments.argc() && !image_3d;++pos)
     {
         if (!arguments.isOption(pos))

@@ -41,7 +41,7 @@ class OSGVIEWER_EXPORT View : public osg::View, public osgGA::GUIActionAdapter
 
         META_Object(osgViewer,View);
         
-        /** Provide a mechanism for getting the osg::View assocaited from the GUIActionAdapter.
+        /** Provide a mechanism for getting the osg::View associated from the GUIActionAdapter.
           * One would use this to case view to osgViewer::View(er) if supported by the subclass.*/
         virtual osg::View* asView() { return this; }
         
@@ -56,15 +56,14 @@ class OSGVIEWER_EXPORT View : public osg::View, public osgGA::GUIActionAdapter
         virtual void setStartTick(osg::Timer_t tick);
         osg::Timer_t getStartTick() const { return _startTick; }
 
-        void setFrameStamp(osg::FrameStamp* fs) { _frameStamp = fs; }
-        osg::FrameStamp* getFrameStamp() { return _frameStamp.get(); }
-        const osg::FrameStamp* getFrameStamp() const { return _frameStamp.get(); }
-
         Scene* getScene() { return _scene.get(); }
         const Scene* getScene() const { return _scene.get(); }
 
         /** Set the scene graph that the View will use.*/
-        virtual void setSceneData(osg::Node* node);
+        inline void setSceneData(osg::Node* node) { setSceneData(osg::ref_ptr<osg::Node>(node)); }
+
+        /** Set the scene graph that the View will use.*/
+        virtual void setSceneData(osg::ref_ptr<osg::Node> node);
 
         /** Get the View's scene graph.*/
         osg::Node* getSceneData() { return _scene.valid() ? _scene->getSceneData() : 0; }
@@ -81,7 +80,7 @@ class OSGVIEWER_EXPORT View : public osg::View, public osgGA::GUIActionAdapter
         /** Get the const View's database pager.*/
         const osgDB::DatabasePager* getDatabasePager() const;
 
-        /* Set the EventQueue that View uses to intregrate external non window related events.*/
+        /* Set the EventQueue that View uses to integrate external non window related events.*/
         void setEventQueue(osgGA::EventQueue* eventQueue) { _eventQueue = eventQueue; }
 
         /* Get the View's EventQueue.*/
@@ -151,21 +150,21 @@ class OSGVIEWER_EXPORT View : public osg::View, public osgGA::GUIActionAdapter
         float getFusionDistanceValue() const { return _fusionDistanceValue; }
 
         
-        /** Convinience method for creating slave Cameras and associated GraphicsWindows across all screens.*/
+        /** Convenience method for creating slave Cameras and associated GraphicsWindows across all screens.*/
         void setUpViewAcrossAllScreens();
 
-        /** Convinience method for a single Camara on a single window.*/
+        /** Convenience method for a single camera on a single window.*/
         void setUpViewInWindow(int x, int y, int width, int height, unsigned int screenNum=0);
 
-        /** Convinience method for a single Camara associated with a single full screen GraphicsWindow.*/
+        /** Convenience method for a single camera associated with a single full screen GraphicsWindow.*/
         void setUpViewOnSingleScreen(unsigned int screenNum=0);
         
 
-        /** Convinience method for spherical display using 6 slave cameras rendering the 6 sides of a cube map, and 7th camera doing distortion correction to present on a spherical display.*/
-        void setUpViewFor3DSphericalDisplay(double radius=1.0, double collar=0.45, unsigned int screenNum=0, osg::Image* intensityMap=0);
+        /** Convenience method for spherical display using 6 slave cameras rendering the 6 sides of a cube map, and 7th camera doing distortion correction to present on a spherical display.*/
+        void setUpViewFor3DSphericalDisplay(double radius=1.0, double collar=0.45, unsigned int screenNum=0, osg::Image* intensityMap=0, const osg::Matrixd& projectorMatrix = osg::Matrixd());
 
-        /** Convinience method for spherical display by rendering main scene to as panoramic 2:1 texture and then doing distortion correction to present onto a spherical display.*/
-        void setUpViewForPanoramicSphericalDisplay(double radius=1.0, double collar=0.45, unsigned int screenNum=0, osg::Image* intensityMap=0);
+        /** Convenience method for spherical display by rendering main scene to as panoramic 2:1 texture and then doing distortion correction to present onto a spherical display.*/
+        void setUpViewForPanoramicSphericalDisplay(double radius=1.0, double collar=0.45, unsigned int screenNum=0, osg::Image* intensityMap=0, const osg::Matrixd& projectorMatrix = osg::Matrixd());
 
         
         /** Return true if this view contains a specified camera.*/
@@ -207,7 +206,6 @@ class OSGVIEWER_EXPORT View : public osg::View, public osgGA::GUIActionAdapter
 
 
         osg::Timer_t                            _startTick;
-        osg::ref_ptr<osg::FrameStamp>           _frameStamp;
 
         osg::ref_ptr<osgViewer::Scene>          _scene;
         osg::ref_ptr<osgGA::EventQueue>         _eventQueue;

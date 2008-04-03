@@ -98,7 +98,7 @@ class ReaderWriterAC : public osgDB::ReaderWriter
                 local_opt = static_cast<Options*>(options->clone(osg::CopyOp::DEEP_COPY_ALL));
             else
                 local_opt = new Options;
-            local_opt->setDatabasePath(osgDB::getFilePath(fileName));
+            local_opt->getDatabasePathList().push_back(osgDB::getFilePath(fileName));
 
             ReadResult result = readNode(fin, local_opt.get());
             if (result.validNode())
@@ -1120,14 +1120,16 @@ readObject(std::istream& stream, FileData& fileData, const osg::Matrix& parentTr
         else if (token == "texture") {
             // read the texture name
             std::string texname = readString(stream);
-            
-            // strip the path to the texture, just look in the directory we read the ac file
-            std::string::size_type p = texname.rfind('\\');
-            if (p != std::string::npos)
-                texname = texname.substr(p+1, std::string::npos);
-            p = texname.rfind('/');
-            if (p != std::string::npos)
-                texname = texname.substr(p+1, std::string::npos);
+
+            // strip absolute paths
+            if (texname[0] == '/' || isalpha(texname[0]) && texname[1] == ':') {
+                std::string::size_type p = texname.rfind('\\');
+                if (p != std::string::npos)
+                    texname = texname.substr(p+1, std::string::npos);
+                p = texname.rfind('/');
+                if (p != std::string::npos)
+                    texname = texname.substr(p+1, std::string::npos);
+            }
         
             textureData  = fileData.toTextureData(texname);
         }

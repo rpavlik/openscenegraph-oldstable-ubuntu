@@ -16,6 +16,7 @@
 #include <osg/GraphicsContext>
 #include <osg/Camera>
 #include <osg/View>
+#include <osg/GLObjects>
 
 #include <osg/FrameBufferObject>
 #include <osg/Program>
@@ -34,28 +35,45 @@
 using namespace osg;
 
 /////////////////////////////////////////////////////////////////////////////
-//
-//  GraphicsContext static method implementations
-//
 
-static ref_ptr<GraphicsContext::WindowingSystemInterface> s_WindowingSystemInterface;
+
+// Use a static reference pointer to hold the window system interface.
+// Wrap this within a function, in order to control the order in which
+// the static pointer's constructor is executed. 
+
+static ref_ptr<GraphicsContext::WindowingSystemInterface> &windowingSystemInterfaceRef()
+{
+    static ref_ptr<GraphicsContext::WindowingSystemInterface> s_WindowingSystemInterface;
+    return s_WindowingSystemInterface;
+}
+
+
+//  GraphicsContext static method implementations
 
 void GraphicsContext::setWindowingSystemInterface(WindowingSystemInterface* callback)
 {
-    s_WindowingSystemInterface = callback;
-    osg::notify(osg::INFO)<<"GraphicsContext::setWindowingSystemInterface() "<<s_WindowingSystemInterface.get()<<"\t"<<&s_WindowingSystemInterface<<std::endl;
+    ref_ptr<GraphicsContext::WindowingSystemInterface> &wsref = windowingSystemInterfaceRef();
+    wsref = callback;
+    osg::notify(osg::INFO)<<"GraphicsContext::setWindowingSystemInterface() "<<wsref.get()<<"\t"<<&wsref<<std::endl;
 }
 
 GraphicsContext::WindowingSystemInterface* GraphicsContext::getWindowingSystemInterface()
 {
-    osg::notify(osg::INFO)<<"GraphicsContext::getWindowingSystemInterface() "<<s_WindowingSystemInterface.get()<<"\t"<<&s_WindowingSystemInterface<<std::endl;
-    return s_WindowingSystemInterface.get();
+    ref_ptr<GraphicsContext::WindowingSystemInterface> &wsref = windowingSystemInterfaceRef();
+    osg::notify(osg::INFO)<<"GraphicsContext::getWindowingSystemInterface() "<<wsref.get()<<"\t"<<&wsref<<std::endl;
+    return wsref.get();
 }
 
 GraphicsContext* GraphicsContext::createGraphicsContext(Traits* traits)
 {
-    if (s_WindowingSystemInterface.valid())
-        return s_WindowingSystemInterface->createGraphicsContext(traits);
+    ref_ptr<GraphicsContext::WindowingSystemInterface> &wsref = windowingSystemInterfaceRef();
+    if ( wsref.valid())
+    {
+        // catch any undefined values.
+        if (traits) traits->setUndefinedScreenDetailsToDefaultScreen();
+        
+        return wsref->createGraphicsContext(traits);
+    }
     else
         return 0;    
 }
@@ -196,8 +214,15 @@ unsigned int GraphicsContext::createNewContextID()
     
     osg::notify(osg::INFO)<<"GraphicsContext::createNewContextID() creating contextID="<<contextID<<std::endl;
     
+#if 1    
+    // always update, consitent with how osgProducer used to work.
+    bool updateContextID = true;
+#else
+    // update if new contextID exceeds only one.
+    bool updateContextID = (contextID+1) > osg::DisplaySettings::instance()->getMaxNumberOfGraphicsContexts();
+#endif
 
-    if ( (contextID+1) > osg::DisplaySettings::instance()->getMaxNumberOfGraphicsContexts() )
+    if (updateContextID)
     {
         osg::notify(osg::INFO)<<"Updating the MaxNumberOfGraphicsContexts to "<<contextID+1<<std::endl;
 
@@ -337,7 +362,7 @@ GraphicsContext* GraphicsContext::getOrCreateCompileContext(unsigned int context
     {    
         OpenThreads::ScopedLock<OpenThreads::Mutex> lock(s_contextIDMapMutex);
         s_contextIDMap[contextID]._compileContext = gc;
-        osg::notify(osg::INFO)<<"   succeded GraphicsContext::createCompileContext."<<std::endl;
+        osg::notify(osg::INFO)<<"   succeeded GraphicsContext::createCompileContext."<<std::endl;
         return gc.release();
     }
     else
@@ -436,7 +461,7 @@ void GraphicsContext::close(bool callCloseImplementation)
         if (s_contextIDMap[_state->getContextID()]._numContexts>1) sharedContextExists = true;
     }
 
-    // release all the OpenGL objects in the scene graphs associted with this 
+    // release all the OpenGL objects in the scene graphs associated with this 
     for(Cameras::iterator itr = _cameras.begin();
         itr != _cameras.end();
         ++itr)
@@ -454,32 +479,37 @@ void GraphicsContext::close(bool callCloseImplementation)
     {
         osg::notify(osg::INFO)<<"Closing still viable window "<<sharedContextExists<<" _state->getContextID()="<<_state->getContextID()<<std::endl;
 
-        makeCurrent();
+        if (makeCurrent())
+        {
         
-        osg::notify(osg::INFO)<<"Doing Flush"<<std::endl;
+            osg::notify(osg::INFO)<<"Doing Flush"<<std::endl;
 
-        // flush all the OpenGL object buffer for this context.
-        double availableTime = 100.0f;
-        double currentTime = _state->getFrameStamp()?_state->getFrameStamp()->getReferenceTime():0.0;
+            osg::flushAllDeletedGLObjects(_state->getContextID());
 
-        osg::FrameBufferObject::flushDeletedFrameBufferObjects(_state->getContextID(),currentTime,availableTime);
-        osg::RenderBuffer::flushDeletedRenderBuffers(_state->getContextID(),currentTime,availableTime);
-        osg::Texture::flushAllDeletedTextureObjects(_state->getContextID());
-        osg::Drawable::flushAllDeletedDisplayLists(_state->getContextID());
-        osg::Drawable::flushDeletedVertexBufferObjects(_state->getContextID(),currentTime,availableTime);
-        osg::VertexProgram::flushDeletedVertexProgramObjects(_state->getContextID(),currentTime,availableTime);
-        osg::FragmentProgram::flushDeletedFragmentProgramObjects(_state->getContextID(),currentTime,availableTime);
-        osg::Program::flushDeletedGlPrograms(_state->getContextID(),currentTime,availableTime);
-        osg::Shader::flushDeletedGlShaders(_state->getContextID(),currentTime,availableTime);
+            osg::notify(osg::INFO)<<"Done Flush "<<std::endl;
 
-        osg::notify(osg::INFO)<<"Done Flush "<<availableTime<<std::endl;
+            _state->reset();
 
-        _state->reset();
-        
-        releaseContext();
+            releaseContext();
+        }
+        else
+        {
+            osg::notify(osg::INFO)<<"makeCurrent did not succeed, could not do flush/deletion of OpenGL objects."<<std::endl;
+        }
     }
     
     if (callCloseImplementation) closeImplementation();
+
+
+    // now discard any deleted deleted OpenGL objects that the are still hanging around - such as due to 
+    // the the flushDelete*() methods not being invoked, such as when using GraphicContextEmbedded where makeCurrent
+    // does not work.
+    if (_state.valid())
+    {
+        osg::notify(osg::INFO)<<"Doing discard of deleted OpenGL objects."<<std::endl;
+
+        osg::discardAllDeletedGLObjects(_state->getContextID());
+    }
 
     if (_state.valid())
     {
@@ -498,7 +528,7 @@ bool GraphicsContext::makeCurrent()
     {
         _threadOfLastMakeCurrent = OpenThreads::Thread::CurrentThread();
 
-        // initialize extension proces, not only initializes on first
+        // initialize extension process, not only initializes on first
         // call, will be a non-op on subsequent calls.        
         getState()->initializeExtensionProcs();
     }
@@ -514,7 +544,7 @@ bool GraphicsContext::makeContextCurrent(GraphicsContext* readContext)
     {
         _threadOfLastMakeCurrent = OpenThreads::Thread::CurrentThread();
 
-        // initialize extension proces, not only initializes on first
+        // initialize extension process, not only initializes on first
         // call, will be a non-op on subsequent calls.        
         getState()->initializeExtensionProcs();
     }
@@ -584,7 +614,7 @@ void GraphicsContext::add(Operation* operation)
 {
     osg::notify(osg::INFO)<<"Doing add"<<std::endl;
 
-    // aquire the lock on the operations queue to prevent anyone else for modifying it at the same time
+    // acquire the lock on the operations queue to prevent anyone else for modifying it at the same time
     OpenThreads::ScopedLock<OpenThreads::Mutex> lock(_operationsMutex);
 
     // add the operation to the end of the list
@@ -597,7 +627,7 @@ void GraphicsContext::remove(Operation* operation)
 {
     osg::notify(osg::INFO)<<"Doing remove operation"<<std::endl;
 
-    // aquire the lock on the operations queue to prevent anyone else for modifying it at the same time
+    // acquire the lock on the operations queue to prevent anyone else for modifying it at the same time
     OpenThreads::ScopedLock<OpenThreads::Mutex> lock(_operationsMutex);
 
     for(OperationQueue::iterator itr = _operations.begin();
@@ -617,10 +647,10 @@ void GraphicsContext::remove(const std::string& name)
 {
     osg::notify(osg::INFO)<<"Doing remove named operation"<<std::endl;
     
-    // aquire the lock on the operations queue to prevent anyone else for modifying it at the same time
+    // acquire the lock on the operations queue to prevent anyone else for modifying it at the same time
     OpenThreads::ScopedLock<OpenThreads::Mutex> lock(_operationsMutex);
 
-    // find the remove all operations with specificed name
+    // find the remove all operations with specified name
     for(OperationQueue::iterator itr = _operations.begin();
         itr!=_operations.end();)
     {
@@ -741,6 +771,10 @@ void GraphicsContext::resizedImplementation(int x, int y, int width, int height)
         ++itr)
     {
         Camera* camera = (*itr);
+        
+        // resize doesn't affect Cameras set up with FBO's.
+        if (camera->getRenderTargetImplementation()==osg::Camera::FRAME_BUFFER_OBJECT) continue;
+        
         Viewport* viewport = camera->getViewport();
         if (viewport)
         {

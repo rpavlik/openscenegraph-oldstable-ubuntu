@@ -148,7 +148,7 @@ class NetReader : public osgDB::ReaderWriter
         {
             osg::Timer_t start = osg::Timer::instance()->tick();
 
-            //osg::notify(osg::NOTICE) << "osgPlugin .net: start load" << inFileName << std::endl;
+            osg::notify(osg::NOTICE) << "osgPlugin .net: start load" << inFileName << std::endl;
 
 
             std::string hostname;
@@ -208,6 +208,7 @@ class NetReader : public osgDB::ReaderWriter
                              opt.substr( 0, index ) == "LOCAL_CACHE_DIR" )
                     {
                         localCacheDir = opt.substr(index+1);
+                        osg::notify(osg::INFO)<<"LOCAL_CACHE_DIR="<<localCacheDir<<std::endl;
                     }
                     else if( opt.substr( 0, index ) == "cache_mode" ||
                              opt.substr( 0, index ) == "CACHE_MODE" )
@@ -301,10 +302,16 @@ class NetReader : public osgDB::ReaderWriter
                     readResult = readFile(objectType, reader, in, options );
 
                     in.close();
-                    osg::notify(osg::DEBUG_INFO) << "osgPlugin .net: " << fileName << 
+                    osg::notify(osg::NOTICE) << "osgPlugin .net: " << fileName << 
                                          " fetched from local cache." << std::endl;
                     return readResult;
                 }
+                else
+                {
+                    osg::notify(osg::NOTICE) << "osgPlugin .net: " << fileName << 
+                                         " could not be found in local cache." << std::endl;
+                }
+            
             }
 
             // Fetch from the network
@@ -376,35 +383,35 @@ class NetReader : public osgDB::ReaderWriter
                     else if( directive == "400" )
                     {
                         osg::notify(osg::WARN) << 
-                            "osgPlugin .net: http server response 400 - Bad Request" << std::endl;
+                            "osgPlugin .net: http server response 400 - Bad Request : "<<requestAdd << std::endl;
                         return ReadResult::FILE_NOT_FOUND;
                     }
                     // Code 401 Bad Request
                     else if( directive == "401" )
                     {
                         osg::notify(osg::WARN) << 
-                            "osgPlugin .net: http server response 401 - Unauthorized Access" << std::endl;
+                            "osgPlugin .net: http server response 401 - Unauthorized Access : "<<requestAdd << std::endl;
                         return ReadResult::FILE_NOT_FOUND;
                     }
                     // Code 403 Bad Request
                     else if( directive == "403" )
                     {
                         osg::notify(osg::WARN) << 
-                            "osgPlugin .net: http server response 403 - Access Forbidden" << std::endl;
+                            "osgPlugin .net: http server response 403 - Access forbidden : "<<requestAdd << std::endl;
                         return ReadResult::FILE_NOT_FOUND;
                     }
                     // Code 404 File not found
                     else if( directive == "404" )
                     {
                         osg::notify(osg::WARN) << 
-                            "osgPlugin .net: http server response 404 - File Not Found" << std::endl;
+                            "osgPlugin .net: http server response 404 - File not found : "<<requestAdd<< std::endl;
                         return ReadResult::FILE_NOT_FOUND;
                     }
                     // Code 405 Method not allowed
                     else if( directive == "405" )
                     {
                         osg::notify(osg::WARN) << 
-                            "osgPlugin .net: http server response 405 - Method Not Allowed" << std::endl;
+                            "osgPlugin .net: http server response 405 - Method Not Allowed : " <<requestAdd<< std::endl;
                         return ReadResult::FILE_NOT_FOUND;
                     }
                     // There's more....
@@ -430,8 +437,8 @@ class NetReader : public osgDB::ReaderWriter
 
             double ms = osg::Timer::instance()->delta_m(start,osg::Timer::instance()->tick());
 
-            osg::notify(osg::DEBUG_INFO) << "osgPlugin .net: " << fileName << 
-                                         " fetched from server. in" << ms <<" ms"<< std::endl;
+            osg::notify(osg::NOTICE) << "osgPlugin .net: " << fileName << 
+                                         " fetched from server. in " << ms <<" ms"<< std::endl;
 
             if (objectType==ARCHIVE && readResult.validArchive())
             {
@@ -448,15 +455,15 @@ class NetReader : public osgDB::ReaderWriter
  
                     switch(objectType)
                     {
-                    case(OBJECT): osgDB::writeObjectFile( *(readResult.getObject()), cacheFile );
-                    case(IMAGE): osgDB::writeImageFile( *(readResult.getImage()), cacheFile );
-                    case(HEIGHTFIELD): osgDB::writeHeightFieldFile( *(readResult.getHeightField()), cacheFile );
-                    case(NODE): osgDB::writeNodeFile( *(readResult.getNode()), cacheFile );;
+                    case(OBJECT): osgDB::writeObjectFile( *(readResult.getObject()), cacheFile ); break;
+                    case(IMAGE): osgDB::writeImageFile( *(readResult.getImage()), cacheFile ); break;
+                    case(HEIGHTFIELD): osgDB::writeHeightFieldFile( *(readResult.getHeightField()), cacheFile ); break;
+                    case(NODE): osgDB::writeNodeFile( *(readResult.getNode()), cacheFile );  break;
                     default: break;
                     }
  
                      
-                    osg::notify(osg::DEBUG_INFO) << "osgPlugin .net: " << fileName << 
+                    osg::notify(osg::NOTICE) << "osgPlugin .net: " << fileName << 
                                          " stored to local cache." << std::endl;
                 }
             }

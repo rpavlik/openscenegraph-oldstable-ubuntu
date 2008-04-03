@@ -1,7 +1,20 @@
+/* -*-c++-*- OpenSceneGraph - Copyright (C) 1998-2006 Robert Osfield 
+ *
+ * This library is open source and may be redistributed and/or modified under  
+ * the terms of the OpenSceneGraph Public License (OSGPL) version 0.0 or 
+ * (at your option) any later version.  The full license is in LICENSE file
+ * included with this distribution, and on the openscenegraph.org website.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
+ * OpenSceneGraph Public License for more details.
+*/
+
 //
 // OpenFlight® loader for OpenSceneGraph
 //
-//  Copyright (C) 2005-2006  Brede Johansen
+//  Copyright (C) 2005-2007  Brede Johansen
 //
 
 #ifndef FLT_ATTRDATA_H
@@ -9,7 +22,7 @@
 
 #include <string>
 #include <osg/Object>
-#include "types.h"
+#include "Types.h"
 
 namespace flt {
 
@@ -99,7 +112,7 @@ class AttrData : public osg::Object
         };
   
         int32   texels_u;               // Number of texels in u direction
-        int32   textel_v;               // Number of texels in v direction
+        int32   texels_v;               // Number of texels in v direction
         int32   direction_u;            // Real world size u direction
         int32   direction_v;            // Real world size v direction
         int32   x_up;                   // x component of up vector
@@ -315,6 +328,7 @@ class AttrData : public osg::Object
                                         // definition measured in texels.
         }
     #endif
+        int32   numSubtextures;             // # of subtextures
 
 };
 

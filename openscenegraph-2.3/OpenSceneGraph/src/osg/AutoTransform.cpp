@@ -23,6 +23,9 @@ AutoTransform::AutoTransform():
     _autoScaleToScreen(false),
     _scale(1.0f,1.0f,1.0f),
     _firstTimeToInitEyePoint(true),
+    _minimumScale(0.0f),
+    _maximumScale(FLT_MAX),
+    _autoScaleTransitionWidthRatio(0.25f),
     _matrixDirty(true)
 {
 //    setNumChildrenRequiringUpdateTraversal(1);
@@ -38,10 +41,29 @@ AutoTransform::AutoTransform(const AutoTransform& pat,const CopyOp& copyop):
     _rotation(pat._rotation),
     _scale(pat._scale),
     _firstTimeToInitEyePoint(true),
+    _minimumScale(pat._minimumScale),
+    _maximumScale(pat._maximumScale),
+    _autoScaleTransitionWidthRatio(pat._autoScaleTransitionWidthRatio),
     _matrixDirty(true)
 {
 //    setNumChildrenRequiringUpdateTraversal(getNumChildrenRequiringUpdateTraversal()+1);            
 }
+
+void AutoTransform::setScale(const Vec3& scale)
+{
+    _scale = scale; 
+    if (_scale.x()<_minimumScale) _scale.x() = _minimumScale;
+    if (_scale.y()<_minimumScale) _scale.y() = _minimumScale;
+    if (_scale.z()<_minimumScale) _scale.z() = _minimumScale;
+    
+    if (_scale.x()>_maximumScale) _scale.x() = _maximumScale;
+    if (_scale.y()>_maximumScale) _scale.y() = _maximumScale;
+    if (_scale.z()>_maximumScale) _scale.z() = _maximumScale;
+    
+    _matrixDirty=true; 
+    dirtyBound();
+}
+
 
 bool AutoTransform::computeLocalToWorldMatrix(Matrix& matrix,NodeVisitor*) const
 {
@@ -158,6 +180,40 @@ void AutoTransform::accept(NodeVisitor& nv)
                     if (getAutoScaleToScreen())
                     {
                         float size = 1.0f/cs->pixelSize(getPosition(),0.48f);
+
+                        if (_autoScaleTransitionWidthRatio>0.0f)
+                        { 
+                            if (_minimumScale>0.0f)
+                            {
+                                float j = _minimumScale;
+                                float i = (_maximumScale<FLT_MAX) ? 
+                                            _minimumScale+(_maximumScale-_minimumScale)*_autoScaleTransitionWidthRatio :
+                                            _minimumScale*(1.0f+_autoScaleTransitionWidthRatio);
+                                float c = 1.0f/(4.0f*(i-j));
+                                float b = 1.0f - 2.0f*c*i;
+                                float a = j + b*b / (4.0f*c);
+                                float k = -b / (2.0f*c);
+
+                                if (size<k) size = _minimumScale;
+                                else if (size<i) size = a + b*size + c*(size*size);
+                            }
+
+                            if (_maximumScale<FLT_MAX)
+                            {
+                                float n = _maximumScale;
+                                float m = (_minimumScale>0.0) ?
+                                            _maximumScale+(_minimumScale-_maximumScale)*_autoScaleTransitionWidthRatio :
+                                            _maximumScale*(1.0f-_autoScaleTransitionWidthRatio);
+                                float c = 1.0f / (4.0f*(m-n));
+                                float b = 1.0f - 2.0f*c*m;
+                                float a = n + b*b/(4.0f*c);
+                                float p = -b / (2.0f*c);
+
+                                if (size>p) size = _maximumScale;
+                                else if (size>m) size = a + b*size + c*(size*size);
+                            }        
+                        }
+                        
                         setScale(size);
                     }
 

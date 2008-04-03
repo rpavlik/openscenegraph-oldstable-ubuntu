@@ -16,6 +16,8 @@
 #include <osg/Uniform>
 #include <osgDB/ReaderWriter>
 
+#include <osgTerrain/TerrainTile>
+
 #include "IveVersion.h"
 #include "DataTypeSize.h"
 #include "Exception.h"
@@ -77,7 +79,10 @@ public:
     void writeVec4sArray(const osg::Vec4sArray* a);    
     void writeVec2bArray(const osg::Vec2bArray* a);
     void writeVec3bArray(const osg::Vec3bArray* a);
-    void writeVec4bArray(const osg::Vec4bArray* a);    
+    void writeVec4bArray(const osg::Vec4bArray* a);
+    void writeVec2dArray(const osg::Vec2dArray* a);
+    void writeVec3dArray(const osg::Vec3dArray* a);
+    void writeVec4dArray(const osg::Vec4dArray* a);  
     void writeMatrixf(const osg::Matrixf& mat);
     void writeMatrixd(const osg::Matrixd& mat);
 
@@ -89,6 +94,10 @@ public:
     void writeShape(const osg::Shape* sa);
     void writeNode(const osg::Node* sa);
     void writeImage(IncludeImageMode mode, osg::Image *image);
+
+    void writeLayer(const osgTerrain::Layer* layer);
+    void writeLocator(const osgTerrain::Locator* locator);
+
 
     void setWriteDirectory(const std::string& directoryName) { _writeDirectory = directoryName; }
     const std::string& getWriteDirectory() const { return _writeDirectory; }
@@ -112,16 +121,19 @@ public:
     bool                _verboseOutput;
 
 private:
+
     std::ostream* _ostream;
 
      // Container to map stateset uniques to their respective stateset.
-    typedef std::map<const osg::StateSet*,int>        StateSetMap;
-    typedef std::map<const osg::StateAttribute*,int>  StateAttributeMap;
-    typedef std::map<const osg::Uniform*,int>         UniformMap;
-    typedef std::map<const osg::Shader*,int>          ShaderMap;
-    typedef std::map<const osg::Drawable*,int>        DrawableMap;
-    typedef std::map<const osg::Shape*,int>           ShapeMap;
-    typedef std::map<const osg::Node*,int>            NodeMap;
+    typedef std::map<const osg::StateSet*,int>          StateSetMap;
+    typedef std::map<const osg::StateAttribute*,int>    StateAttributeMap;
+    typedef std::map<const osg::Uniform*,int>           UniformMap;
+    typedef std::map<const osg::Shader*,int>            ShaderMap;
+    typedef std::map<const osg::Drawable*,int>          DrawableMap;
+    typedef std::map<const osg::Shape*,int>             ShapeMap;
+    typedef std::map<const osg::Node*,int>              NodeMap;
+    typedef std::map<const osgTerrain::Layer*,int>      LayerMap;
+    typedef std::map<const osgTerrain::Locator*,int>    LocatorMap;
         
     StateSetMap         _stateSetMap;
     StateAttributeMap   _stateAttributeMap;
@@ -130,6 +142,8 @@ private:
     DrawableMap         _drawableMap;
     ShapeMap            _shapeMap;
     NodeMap             _nodeMap;
+    LayerMap            _layerMap;
+    LocatorMap          _locatorMap;
 
     std::string         _writeDirectory;
     bool                _includeExternalReferences;

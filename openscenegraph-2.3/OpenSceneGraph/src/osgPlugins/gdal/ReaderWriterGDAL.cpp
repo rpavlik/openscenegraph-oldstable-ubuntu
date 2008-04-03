@@ -1,3 +1,18 @@
+/* -*-c++-*- OpenSceneGraph - Copyright (C) 1998-2007 Robert Osfield 
+ *
+ * This library is open source and may be redistributed and/or modified under  
+ * the terms of the OpenSceneGraph Public License (OSGPL) version 0.0 or 
+ * (at your option) any later version.  The full license is in LICENSE file
+ * included with this distribution, and on the openscenegraph.org website.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
+ * OpenSceneGraph Public License for more details.
+*/
+
+
+
 #include <osg/Image>
 #include <osg/Notify>
 #include <osg/Geode>
@@ -10,6 +25,8 @@
 
 #include <OpenThreads/ScopedLock>
 #include <OpenThreads/ReentrantMutex>
+
+#include <memory>
 
 #include <gdal_priv.h>
 
@@ -663,7 +680,7 @@ class ReaderWriterGDAL : public osgDB::ReaderWriter
 
             double TopLeft[2],BottomLeft[2],BottomRight[2],TopRight[2];
             TopLeft[0] = geoTransform[0];
-            TopLeft[1] = geoTransform[1];
+            TopLeft[1] = geoTransform[3];
             BottomLeft[0] = TopLeft[0]+geoTransform[2]*(dataHeight-1);
             BottomLeft[1] = TopLeft[1]+geoTransform[5]*(dataHeight-1);
             BottomRight[0] = BottomLeft[0]+geoTransform[1]*(dataWidth-1);
@@ -671,6 +688,9 @@ class ReaderWriterGDAL : public osgDB::ReaderWriter
             TopRight[0] = TopLeft[0]+geoTransform[1]*(dataWidth-1);
             TopRight[1] = TopLeft[1]+geoTransform[4]*(dataWidth-1);
             
+
+            double rotation = atan2(geoTransform[2], geoTransform[1]);
+            osg::notify(osg::INFO)<<"GDAL rotation = "<<rotation<<std::endl;
             
             osg::notify(osg::INFO) << "TopLeft     "<<TopLeft[0]<<"\t"<<TopLeft[1]<<std::endl;
             osg::notify(osg::INFO) << "BottomLeft  "<<BottomLeft[0]<<"\t"<<BottomLeft[1]<<std::endl;
@@ -735,8 +755,8 @@ class ReaderWriterGDAL : public osgDB::ReaderWriter
                 bandSelected->RasterIO(GF_Read,windowX,windowY,windowWidth,windowHeight,(void*)(&(hf->getHeightList().front())),destWidth,destHeight,GDT_Float32,0,0);
 
                 // now need to flip since the OSG's origin is in lower left corner.
-                        osg::notify(osg::INFO)<<"flipping"<<std::endl;
-                        unsigned int copy_r = hf->getNumRows()-1;
+                osg::notify(osg::INFO)<<"flipping"<<std::endl;
+                unsigned int copy_r = hf->getNumRows()-1;
                 for(unsigned int r=0;r<copy_r;++r,--copy_r)
                 {
                     for(unsigned int c=0;c<hf->getNumColumns();++c)
@@ -746,9 +766,13 @@ class ReaderWriterGDAL : public osgDB::ReaderWriter
                         hf->setHeight(c,copy_r,temp);
                     }
                 }
-                hf->setOrigin(osg::Vec3(BottomLeft[0],-BottomLeft[1],0));
-                hf->setXInterval((BottomRight[0]-BottomLeft[0])/destWidth);
-                hf->setYInterval((TopLeft[1]-BottomLeft[1])/destHeight);
+                hf->setOrigin(osg::Vec3(BottomLeft[0],BottomLeft[1],0));
+                
+                hf->setXInterval(sqrt(geoTransform[1]*geoTransform[1] + geoTransform[2]*geoTransform[2]));
+                hf->setYInterval(sqrt(geoTransform[4]*geoTransform[4] + geoTransform[5]*geoTransform[5]));
+                
+                hf->setRotation(osg::Quat(rotation, osg::Vec3d(0.0, 0.0, 1.0)));
+
                 return hf;
             }
                    

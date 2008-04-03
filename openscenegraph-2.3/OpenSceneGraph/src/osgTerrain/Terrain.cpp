@@ -12,106 +12,92 @@
 */
 
 #include <osgTerrain/Terrain>
+#include <OpenThreads/ScopedLock>
 
 using namespace osg;
 using namespace osgTerrain;
 
-Terrain::Terrain():
-    _requiresNormals(true),
-    _treatBoundariesToValidDataAsDefaultValue(false)
+Terrain::Terrain()
 {
-    setNumChildrenRequiringUpdateTraversal(1);
-    setThreadSafeRefUnref(true);
 }
 
-Terrain::Terrain(const Terrain& terrain,const osg::CopyOp& copyop):
-    Group(terrain,copyop),
-    _elevationLayer(terrain._elevationLayer),
-    _colorLayers(terrain._colorLayers),
-    _requiresNormals(terrain._requiresNormals),
-    _treatBoundariesToValidDataAsDefaultValue(terrain._treatBoundariesToValidDataAsDefaultValue)
+Terrain::Terrain(const Terrain& ts, const osg::CopyOp& copyop):
+    osg::Group(ts,copyop)
 {
-    setNumChildrenRequiringUpdateTraversal(getNumChildrenRequiringUpdateTraversal()+1);
-    
-    if (terrain.getTerrainTechnique()) setTerrainTechnique(dynamic_cast<TerrainTechnique*>(terrain.getTerrainTechnique()->cloneType()));
 }
+
 
 Terrain::~Terrain()
 {
+    OpenThreads::ScopedLock<OpenThreads::Mutex> lock(_mutex);
+
+    for(TerrainTileSet::iterator itr = _terrainTileSet.begin();
+        itr != _terrainTileSet.end();
+        ++itr)
+    {
+        const_cast<TerrainTile*>(*itr)->_terrain = 0;
+    }
+    
+    _terrainTileSet.clear();
+    _terrainTileMap.clear();
 }
 
 void Terrain::traverse(osg::NodeVisitor& nv)
 {
-    if (_terrainTechnique.valid())
+    Group::traverse(nv);
+}
+
+TerrainTile* Terrain::getTile(const TileID& tileID)
+{
+    OpenThreads::ScopedLock<OpenThreads::Mutex> lock(_mutex);
+
+    TerrainTileMap::iterator itr = _terrainTileMap.find(tileID);
+    if (itr != _terrainTileMap.end()) return 0;
+    
+    return itr->second;
+}
+
+const TerrainTile* Terrain::getTile(const TileID& tileID) const
+{
+    OpenThreads::ScopedLock<OpenThreads::Mutex> lock(_mutex);
+
+    TerrainTileMap::const_iterator itr = _terrainTileMap.find(tileID);
+    if (itr != _terrainTileMap.end()) return 0;
+    
+    return itr->second;
+}
+
+static unsigned int s_maxNumTiles = 0;
+void Terrain::registerTerrainTile(TerrainTile* tile)
+{
+    if (!tile) return;
+
+    OpenThreads::ScopedLock<OpenThreads::Mutex> lock(_mutex);
+    
+    if (tile->getTileID().valid())
     {
-        _terrainTechnique->traverse(nv);
+        _terrainTileMap[tile->getTileID()] = tile;
     }
-    else
+    
+    _terrainTileSet.insert(tile);
+
+    if (_terrainTileSet.size() > s_maxNumTiles) s_maxNumTiles = _terrainTileSet.size();
+
+    // osg::notify(osg::NOTICE)<<"Terrain::registerTerrainTile "<<tile<<" total number of tile "<<_terrainTileSet.size()<<" max = "<<s_maxNumTiles<<std::endl;
+}
+
+void Terrain::unregisterTerrainTile(TerrainTile* tile)
+{
+    if (!tile) return;
+
+    OpenThreads::ScopedLock<OpenThreads::Mutex> lock(_mutex);
+
+    if (tile->getTileID().valid())
     {
-        osg::Group::traverse(nv);
+        _terrainTileMap.erase(tile->getTileID());
     }
-}
-
-void Terrain::init()
-{
-    if (_terrainTechnique.valid() && _terrainTechnique->isDirty())
-    {
-        _terrainTechnique->init();
-    }    
-}
-
-
-void Terrain::setTerrainTechnique(osgTerrain::TerrainTechnique* terrainTechnique)
-{
-    if (_terrainTechnique == terrainTechnique) return; 
-
-    if (_terrainTechnique.valid()) _terrainTechnique->_terrain = 0;
-
-    _terrainTechnique = terrainTechnique;
     
-    if (_terrainTechnique.valid()) _terrainTechnique->_terrain = this;
-    
-}
+    _terrainTileSet.erase(tile);
 
-
-void Terrain::setElevationLayer(osgTerrain::Layer* layer)
-{
-    _elevationLayer = layer;
-}
-
-void Terrain::setColorLayer(unsigned int i, osgTerrain::Layer* layer)
-{
-    if (_colorLayers.size() <= i) _colorLayers.resize(i+1);
-    
-    _colorLayers[i].layer = layer;
-}
-
-void Terrain::setColorTransferFunction(unsigned int i, osg::TransferFunction* tf)
-{
-    if (_colorLayers.size() <= i) _colorLayers.resize(i+1);
-    
-    _colorLayers[i].transferFunction = tf;
-}
-
-void Terrain::setColorFilter(unsigned int i, Filter filter)
-{
-    if (_colorLayers.size() <= i) _colorLayers.resize(i+1);
-    
-    _colorLayers[i].filter = filter;
-}
-
-osg::BoundingSphere Terrain::computeBound() const
-{
-    osg::BoundingSphere bs;
-    
-    if (_elevationLayer.valid()) bs.expandBy(_elevationLayer->computeBound());
-
-    for(Layers::const_iterator itr = _colorLayers.begin();
-        itr != _colorLayers.end();
-        ++itr)
-    {
-        if (itr->layer.valid()) bs.expandBy(itr->layer->computeBound());
-    }
-
-    return bs;
+    // osg::notify(osg::NOTICE)<<"Terrain::unregisterTerrainTile "<<tile<<" total number of tile "<<_terrainTileSet.size()<<" max = "<<s_maxNumTiles<<std::endl;
 }

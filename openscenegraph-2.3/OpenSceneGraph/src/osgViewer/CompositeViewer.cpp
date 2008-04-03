@@ -658,10 +658,18 @@ void CompositeViewer::eventTraversal()
                                     {
                                         setCameraWithFocus(camera);
 
-                                        const osg::GraphicsContext::Traits* traits = gw ? gw->getTraits() : 0;
-                                        if (traits) 
+                                        // If this camera is not a slave camera
+                                        if (camera->getView()->getCamera() == camera)
                                         {
-                                            eventState->setInputRange( 0, 0, traits->width, traits->height);
+                                            const osg::GraphicsContext::Traits* traits = gw ? gw->getTraits() : 0;
+                                            if (traits) 
+                                            {
+                                                eventState->setInputRange( 0, 0, traits->width, traits->height);
+                                            }
+                                            else
+                                            {
+                                                eventState->setInputRange(-1.0, -1.0, 1.0, 1.0);
+                                            }
                                         }
                                         else
                                         {
@@ -908,6 +916,10 @@ void CompositeViewer::updateTraversal()
     
     double beginUpdateTraversal = osg::Timer::instance()->delta_s(_startTick, osg::Timer::instance()->tick());
 
+    _updateVisitor->reset();
+    _updateVisitor->setFrameStamp(getFrameStamp());
+    _updateVisitor->setTraversalNumber(getFrameStamp()->getFrameNumber());
+
     Scenes scenes;
     getScenes(scenes);
     for(Scenes::iterator sitr = scenes.begin();
@@ -922,7 +934,7 @@ void CompositeViewer::updateTraversal()
 
         if (scene->getDatabasePager())
         {    
-            // syncronize changes required by the DatabasePager thread to the scene graph
+            // synchronize changes required by the DatabasePager thread to the scene graph
             scene->getDatabasePager()->updateSceneGraph(_frameStamp->getReferenceTime());
         }
 

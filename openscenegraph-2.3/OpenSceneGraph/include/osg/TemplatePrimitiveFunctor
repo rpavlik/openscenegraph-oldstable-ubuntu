@@ -71,6 +71,21 @@ namespace osg {
             notify(WARN)<<"Triangle Functor does not support Vec4* vertex arrays"<<std::endl;
         }
 
+        virtual void setVertexArray(unsigned int,const Vec2d*)
+        {
+            notify(WARN)<<"Triangle Functor does not support Vec2d* vertex arrays"<<std::endl;
+        }
+
+        virtual void setVertexArray(unsigned int count,const Vec3d* vertices)
+        {
+            notify(WARN)<<"Triangle Functor does not support Vec3d* vertex arrays"<<std::endl;
+        }
+
+        virtual void setVertexArray(unsigned int,const Vec4d* )
+        {
+            notify(WARN)<<"Triangle Functor does not support Vec4d* vertex arrays"<<std::endl;
+        }
+
 
         virtual void drawArrays(GLenum mode,GLint first,GLsizei count)
         {
@@ -260,7 +275,7 @@ namespace osg {
         /** Note:
          * begin(..),vertex(..) & end() are convenience methods for adapting
          * non vertex array primitives to vertex array based primitives.
-         * This is done to simplify the implementation of primtive functor
+         * This is done to simplify the implementation of primitive functor
          * subclasses - users only need override drawArray and drawElements.
          */
         virtual void begin(GLenum mode)

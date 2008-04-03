@@ -130,7 +130,7 @@ class OSG_EXPORT FragmentProgram : public StateAttribute
             // used by the COMPARE_StateAttribute_Paramter macro's below.
             COMPARE_StateAttribute_Types(FragmentProgram,sa)
 
-            // compare each paramter in turn against the rhs.
+            // compare each parameter in turn against the rhs.
             COMPARE_StateAttribute_Parameter(_fragmentProgram)
 
             return 0; // passed all the above comparison macro's, must be equal.
@@ -216,6 +216,12 @@ class OSG_EXPORT FragmentProgram : public StateAttribute
           * in the OpenGL context related to contextID.*/
         static void flushDeletedFragmentProgramObjects(unsigned int contextID,double currentTime, double& availableTime);
 
+        /** discard all the cached fragment programs which need to be deleted
+          * in the OpenGL context related to contextID.
+          * Note, unlike flush no OpenGL calls are made, instead the handles are all removed.
+          * this call is useful for when an OpenGL context has been destroyed. */
+        static void discardDeletedFragmentProgramObjects(unsigned int contextID);
+
         virtual void apply(State& state) const;
 
         virtual void compileGLObjects(State& state) const { apply(state); }
@@ -224,7 +230,7 @@ class OSG_EXPORT FragmentProgram : public StateAttribute
         virtual void resizeGLObjectBuffers(unsigned int maxSize);
 
         /** release an OpenGL objects in specified graphics context if State
-            object is passed, otherwise release OpenGL objexts for all graphics context if
+            object is passed, otherwise release OpenGL objects for all graphics context if
             State object pointer == NULL.*/
         virtual void releaseGLObjects(State* state=0) const;
 

@@ -764,9 +764,6 @@ bool SceneView::cullStage(const osg::Matrixd& projection,const osg::Matrixd& mod
 
     cullVisitor->inheritCullSettings(*this);
 
-
-    cullVisitor->setClearNode(NULL); // reset earth sky on each frame.
-    
     cullVisitor->setStateGraph(rendergraph);
     cullVisitor->setRenderStage(renderStage);
 
@@ -783,7 +780,10 @@ bool SceneView::cullStage(const osg::Matrixd& projection,const osg::Matrixd& mod
     rendergraph->clean();
 
     renderStage->setViewport(getViewport());
-    renderStage->setClearColor(getClearColor());
+    renderStage->setClearColor(_camera->getClearColor());
+    renderStage->setClearDepth(_camera->getClearDepth());
+    renderStage->setClearAccum(_camera->getClearAccum());
+    renderStage->setClearStencil(_camera->getClearStencil());
     renderStage->setClearMask(_camera->getClearMask());
     
 #if 1    
@@ -828,22 +828,6 @@ bool SceneView::cullStage(const osg::Matrixd& projection,const osg::Matrixd& mod
     if (_localStateSet.valid()) cullVisitor->popStateSet();
     if (_globalStateSet.valid()) cullVisitor->popStateSet();
     
-
-    const osg::ClearNode* clearNode = cullVisitor->getClearNode();
-    if (clearNode)
-    {
-        if (clearNode->getRequiresClear())
-        {
-            renderStage->setClearColor(clearNode->getClearColor());
-            renderStage->setClearMask(clearNode->getClearMask());
-        }
-        else
-        {
-            // we have an earth sky implementation to do the work for use
-            // so we don't need to clear.
-            renderStage->setClearMask(0);
-        }
-    }
 
     renderStage->sort();
 

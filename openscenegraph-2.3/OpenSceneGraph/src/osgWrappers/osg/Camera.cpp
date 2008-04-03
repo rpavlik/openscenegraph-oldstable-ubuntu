@@ -24,10 +24,12 @@
 #include <osg/NodeVisitor>
 #include <osg/Object>
 #include <osg/OperationThread>
+#include <osg/RenderInfo>
 #include <osg/State>
 #include <osg/Stats>
 #include <osg/Texture>
-#include <osg/Vec3>
+#include <osg/Vec3d>
+#include <osg/Vec3f>
 #include <osg/Vec4>
 #include <osg/View>
 #include <osg/Viewport>
@@ -182,16 +184,6 @@ BEGIN_OBJECT_REFLECTOR(osg::Camera)
 	          __C5_osg_DisplaySettings_P1__getDisplaySettings,
 	          "Set the DsplaySettings object associated with this view. ",
 	          "");
-	I_Method1(void, setClearColor, IN, const osg::Vec4 &, color,
-	          Properties::NON_VIRTUAL,
-	          __void__setClearColor__C5_Vec4_R1,
-	          "Sets the clear color. ",
-	          "");
-	I_Method0(const osg::Vec4 &, getClearColor,
-	          Properties::NON_VIRTUAL,
-	          __C5_Vec4_R1__getClearColor,
-	          "Returns the clear color. ",
-	          "");
 	I_Method1(void, setClearMask, IN, GLbitfield, mask,
 	          Properties::NON_VIRTUAL,
 	          __void__setClearMask__GLbitfield,
@@ -201,6 +193,46 @@ BEGIN_OBJECT_REFLECTOR(osg::Camera)
 	          Properties::NON_VIRTUAL,
 	          __GLbitfield__getClearMask,
 	          "Get the clear mask. ",
+	          "");
+	I_Method1(void, setClearColor, IN, const osg::Vec4 &, color,
+	          Properties::NON_VIRTUAL,
+	          __void__setClearColor__C5_osg_Vec4_R1,
+	          "Set the clear color used in glClearColor(. ",
+	          ".). glClearColor is only called if mask & GL_COLOR_BUFFER_BIT is true ");
+	I_Method0(const osg::Vec4 &, getClearColor,
+	          Properties::NON_VIRTUAL,
+	          __C5_osg_Vec4_R1__getClearColor,
+	          "Get the clear color. ",
+	          "");
+	I_Method1(void, setClearAccum, IN, const osg::Vec4 &, color,
+	          Properties::NON_VIRTUAL,
+	          __void__setClearAccum__C5_osg_Vec4_R1,
+	          "Set the clear accum used in glClearAccum(. ",
+	          ".). glClearAcumm is only called if mask & GL_ACCUM_BUFFER_BIT is true. ");
+	I_Method0(const osg::Vec4 &, getClearAccum,
+	          Properties::NON_VIRTUAL,
+	          __C5_osg_Vec4_R1__getClearAccum,
+	          "Get the clear accum value. ",
+	          "");
+	I_Method1(void, setClearDepth, IN, double, depth,
+	          Properties::NON_VIRTUAL,
+	          __void__setClearDepth__double,
+	          "Set the clear depth used in glClearDepth(. ",
+	          ".). Defaults to 1.0 glClearDepth is only called if mask & GL_DEPTH_BUFFER_BIT is true. ");
+	I_Method0(double, getClearDepth,
+	          Properties::NON_VIRTUAL,
+	          __double__getClearDepth,
+	          "Get the clear depth value. ",
+	          "");
+	I_Method1(void, setClearStencil, IN, int, stencil,
+	          Properties::NON_VIRTUAL,
+	          __void__setClearStencil__int,
+	          "Set the clear stencil value used in glClearStencil(). ",
+	          "Defaults to 0; glClearStencil is only called if mask & GL_STENCIL_BUFFER_BIT is true ");
+	I_Method0(int, getClearStencil,
+	          Properties::NON_VIRTUAL,
+	          __int__getClearStencil,
+	          "Get the clear stencil value. ",
 	          "");
 	I_Method1(void, setColorMask, IN, osg::ColorMask *, colorMask,
 	          Properties::NON_VIRTUAL,
@@ -255,12 +287,12 @@ BEGIN_OBJECT_REFLECTOR(osg::Camera)
 	I_Method1(void, setProjectionResizePolicy, IN, osg::Camera::ProjectionResizePolicy, policy,
 	          Properties::NON_VIRTUAL,
 	          __void__setProjectionResizePolicy__ProjectionResizePolicy,
-	          "Set the policy used to determin if and how the projection matrix should be adjusted on window resizes. ",
+	          "Set the policy used to determine if and how the projection matrix should be adjusted on window resizes. ",
 	          "");
 	I_Method0(osg::Camera::ProjectionResizePolicy, getProjectionResizePolicy,
 	          Properties::NON_VIRTUAL,
 	          __ProjectionResizePolicy__getProjectionResizePolicy,
-	          "Get the policy used to determin if and how the projection matrix should be adjusted on window resizes. ",
+	          "Get the policy used to determine if and how the projection matrix should be adjusted on window resizes. ",
 	          "");
 	I_Method1(void, setProjectionMatrix, IN, const osg::Matrixf &, matrix,
 	          Properties::NON_VIRTUAL,
@@ -305,7 +337,7 @@ BEGIN_OBJECT_REFLECTOR(osg::Camera)
 	I_Method6(bool, getProjectionMatrixAsOrtho, IN, double &, left, IN, double &, right, IN, double &, bottom, IN, double &, top, IN, double &, zNear, IN, double &, zFar,
 	          Properties::NON_VIRTUAL,
 	          __bool__getProjectionMatrixAsOrtho__double_R1__double_R1__double_R1__double_R1__double_R1__double_R1,
-	          "Get the othographic settings of the orthographic projection matrix. ",
+	          "Get the orthographic settings of the orthographic projection matrix. ",
 	          "Returns false if matrix is not an orthographic matrix, where parameter values are undefined. ");
 	I_Method6(bool, getProjectionMatrixAsFrustum, IN, double &, left, IN, double &, right, IN, double &, bottom, IN, double &, top, IN, double &, zNear, IN, double &, zFar,
 	          Properties::NON_VIRTUAL,
@@ -327,11 +359,6 @@ BEGIN_OBJECT_REFLECTOR(osg::Camera)
 	          __void__setViewMatrix__C5_osg_Matrixd_R1,
 	          "Set the view matrix. ",
 	          "Can be thought of as setting the position of the world relative to the camera in camera coordinates. ");
-	I_Method3(void, setViewMatrixAsLookAt, IN, const osg::Vec3 &, eye, IN, const osg::Vec3 &, center, IN, const osg::Vec3 &, up,
-	          Properties::NON_VIRTUAL,
-	          __void__setViewMatrixAsLookAt__C5_osg_Vec3_R1__C5_osg_Vec3_R1__C5_osg_Vec3_R1,
-	          "Set to the position and orientation of view matrix, using the same convention as gluLookAt. ",
-	          "");
 	I_Method0(osg::Matrixd &, getViewMatrix,
 	          Properties::NON_VIRTUAL,
 	          __osg_Matrixd_R1__getViewMatrix,
@@ -342,9 +369,19 @@ BEGIN_OBJECT_REFLECTOR(osg::Camera)
 	          __C5_osg_Matrixd_R1__getViewMatrix,
 	          "Get the const view matrix. ",
 	          "");
-	I_MethodWithDefaults4(void, getViewMatrixAsLookAt, IN, osg::Vec3 &, eye, , IN, osg::Vec3 &, center, , IN, osg::Vec3 &, up, , IN, float, lookDistance, 1.0f,
+	I_Method3(void, setViewMatrixAsLookAt, IN, const osg::Vec3d &, eye, IN, const osg::Vec3d &, center, IN, const osg::Vec3d &, up,
+	          Properties::NON_VIRTUAL,
+	          __void__setViewMatrixAsLookAt__C5_osg_Vec3d_R1__C5_osg_Vec3d_R1__C5_osg_Vec3d_R1,
+	          "Set to the position and orientation of view matrix, using the same convention as gluLookAt. ",
+	          "");
+	I_MethodWithDefaults4(void, getViewMatrixAsLookAt, IN, osg::Vec3d &, eye, , IN, osg::Vec3d &, center, , IN, osg::Vec3d &, up, , IN, double, lookDistance, 1.0,
 	                      Properties::NON_VIRTUAL,
-	                      __void__getViewMatrixAsLookAt__osg_Vec3_R1__osg_Vec3_R1__osg_Vec3_R1__float,
+	                      __void__getViewMatrixAsLookAt__osg_Vec3d_R1__osg_Vec3d_R1__osg_Vec3d_R1__double,
+	                      "Get to the position and orientation of a modelview matrix, using the same convention as gluLookAt. ",
+	                      "");
+	I_MethodWithDefaults4(void, getViewMatrixAsLookAt, IN, osg::Vec3f &, eye, , IN, osg::Vec3f &, center, , IN, osg::Vec3f &, up, , IN, float, lookDistance, 1.0f,
+	                      Properties::NON_VIRTUAL,
+	                      __void__getViewMatrixAsLookAt__osg_Vec3f_R1__osg_Vec3f_R1__osg_Vec3f_R1__float,
 	                      "Get to the position and orientation of a modelview matrix, using the same convention as gluLookAt. ",
 	                      "");
 	I_Method0(osg::Matrixd, getInverseViewMatrix,
@@ -507,10 +544,25 @@ BEGIN_OBJECT_REFLECTOR(osg::Camera)
 	          __C5_osg_Object_P1__getRenderingCache,
 	          "Get the const Rendering cache that is used for cached objects associated with rendering of subgraphs. ",
 	          "");
+	I_Method1(void, setIntialDrawCallback, IN, osg::Camera::DrawCallback *, cb,
+	          Properties::NON_VIRTUAL,
+	          __void__setIntialDrawCallback__DrawCallback_P1,
+	          "Set the initial draw callback for custom operations to be done before the drawing of the camera's subgraph and pre render stages. ",
+	          "");
+	I_Method0(osg::Camera::DrawCallback *, getInitialDrawCallback,
+	          Properties::NON_VIRTUAL,
+	          __DrawCallback_P1__getInitialDrawCallback,
+	          "Get the initial draw callback. ",
+	          "");
+	I_Method0(const osg::Camera::DrawCallback *, getInitialDrawCallback,
+	          Properties::NON_VIRTUAL,
+	          __C5_DrawCallback_P1__getInitialDrawCallback,
+	          "Get the const initial draw callback. ",
+	          "");
 	I_Method1(void, setPreDrawCallback, IN, osg::Camera::DrawCallback *, cb,
 	          Properties::NON_VIRTUAL,
 	          __void__setPreDrawCallback__DrawCallback_P1,
-	          "Set the pre draw callback for custom operations to be done before the drawing of the camera's subgraph has been completed. ",
+	          "Set the pre draw callback for custom operations to be done before the drawing of the camera's subgraph but after any pre render stages have been completed. ",
 	          "");
 	I_Method0(osg::Camera::DrawCallback *, getPreDrawCallback,
 	          Properties::NON_VIRTUAL,
@@ -525,7 +577,7 @@ BEGIN_OBJECT_REFLECTOR(osg::Camera)
 	I_Method1(void, setPostDrawCallback, IN, osg::Camera::DrawCallback *, cb,
 	          Properties::NON_VIRTUAL,
 	          __void__setPostDrawCallback__DrawCallback_P1,
-	          "Set the post draw callback for custom operations to be done after the drawing of the camera's subgraph has been completed. ",
+	          "Set the post draw callback for custom operations to be done after the drawing of the camera's subgraph but before the any post render stages have been completed. ",
 	          "");
 	I_Method0(osg::Camera::DrawCallback *, getPostDrawCallback,
 	          Properties::NON_VIRTUAL,
@@ -536,6 +588,21 @@ BEGIN_OBJECT_REFLECTOR(osg::Camera)
 	          Properties::NON_VIRTUAL,
 	          __C5_DrawCallback_P1__getPostDrawCallback,
 	          "Get the const post draw callback. ",
+	          "");
+	I_Method1(void, setFinalDrawCallback, IN, osg::Camera::DrawCallback *, cb,
+	          Properties::NON_VIRTUAL,
+	          __void__setFinalDrawCallback__DrawCallback_P1,
+	          "Set the final draw callback for custom operations to be done after the drawing of the camera's subgraph and all of the post render stages has been completed. ",
+	          "");
+	I_Method0(osg::Camera::DrawCallback *, getFinalDrawCallback,
+	          Properties::NON_VIRTUAL,
+	          __DrawCallback_P1__getFinalDrawCallback,
+	          "Get the final draw callback. ",
+	          "");
+	I_Method0(const osg::Camera::DrawCallback *, getFinalDrawCallback,
+	          Properties::NON_VIRTUAL,
+	          __C5_DrawCallback_P1__getFinalDrawCallback,
+	          "Get the const final draw callback. ",
 	          "");
 	I_Method0(OpenThreads::Mutex *, getDataChangeMutex,
 	          Properties::NON_VIRTUAL,
@@ -571,12 +638,21 @@ BEGIN_OBJECT_REFLECTOR(osg::Camera)
 	I_SimpleProperty(osg::OperationThread *, CameraThread, 
 	                 __OperationThread_P1__getCameraThread, 
 	                 __void__setCameraThread__OperationThread_P1);
+	I_SimpleProperty(const osg::Vec4 &, ClearAccum, 
+	                 __C5_osg_Vec4_R1__getClearAccum, 
+	                 __void__setClearAccum__C5_osg_Vec4_R1);
 	I_SimpleProperty(const osg::Vec4 &, ClearColor, 
-	                 __C5_Vec4_R1__getClearColor, 
-	                 __void__setClearColor__C5_Vec4_R1);
+	                 __C5_osg_Vec4_R1__getClearColor, 
+	                 __void__setClearColor__C5_osg_Vec4_R1);
+	I_SimpleProperty(double, ClearDepth, 
+	                 __double__getClearDepth, 
+	                 __void__setClearDepth__double);
 	I_SimpleProperty(GLbitfield, ClearMask, 
 	                 __GLbitfield__getClearMask, 
 	                 __void__setClearMask__GLbitfield);
+	I_SimpleProperty(int, ClearStencil, 
+	                 __int__getClearStencil, 
+	                 __void__setClearStencil__int);
 	I_SimpleProperty(osg::ColorMask *, ColorMask, 
 	                 __ColorMask_P1__getColorMask, 
 	                 __void__setColorMask__osg_ColorMask_P1);
@@ -589,9 +665,18 @@ BEGIN_OBJECT_REFLECTOR(osg::Camera)
 	I_SimpleProperty(GLenum, DrawBuffer, 
 	                 __GLenum__getDrawBuffer, 
 	                 __void__setDrawBuffer__GLenum);
+	I_SimpleProperty(osg::Camera::DrawCallback *, FinalDrawCallback, 
+	                 __DrawCallback_P1__getFinalDrawCallback, 
+	                 __void__setFinalDrawCallback__DrawCallback_P1);
 	I_SimpleProperty(osg::GraphicsContext *, GraphicsContext, 
 	                 __GraphicsContext_P1__getGraphicsContext, 
 	                 __void__setGraphicsContext__GraphicsContext_P1);
+	I_SimpleProperty(osg::Camera::DrawCallback *, InitialDrawCallback, 
+	                 __DrawCallback_P1__getInitialDrawCallback, 
+	                 0);
+	I_SimpleProperty(osg::Camera::DrawCallback *, IntialDrawCallback, 
+	                 0, 
+	                 __void__setIntialDrawCallback__DrawCallback_P1);
 	I_SimpleProperty(osg::Matrixd, InverseViewMatrix, 
 	                 __Matrixd__getInverseViewMatrix, 
 	                 0);

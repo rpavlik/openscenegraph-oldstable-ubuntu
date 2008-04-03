@@ -35,7 +35,8 @@ class GraphicsWindowCarbon : public osgViewer::GraphicsWindow
             _valid(false),
             _initialized(false),
             _realized(false),
-            _ownsWindow(true)
+            _ownsWindow(true),
+            _currentCursor(RightArrowCursor)
         {
             _traits = traits;
 
@@ -101,25 +102,32 @@ class GraphicsWindowCarbon : public osgViewer::GraphicsWindow
         
         virtual void resizedImplementation(int x, int y, int width, int height);
         
+        virtual void setWindowName (const std::string & name);
+        virtual void useCursor(bool cursorOn);
+        virtual void setCursor(MouseCursor mouseCursor);
+        
         WindowRef getNativeWindowRef() { return _window; }
         
         bool handleMouseEvent(EventRef theEvent);
         bool handleKeyboardEvent(EventRef theEvent);
+        bool handleModifierKeys(EventRef theEvent);
 
         /** WindowData is used to pass in the Carbon window handle attached the GraphicsContext::Traits structure. */
         class WindowData : public osg::Referenced
         {
             public:
-                WindowData(WindowRef window):
-                    _window(window), _installEventHandler(false) {}
+                WindowData(WindowRef window, AGLDrawable* drawable=NULL ): //ADEGLI
+                    _window(window), _AGLDrawable(drawable) ,_installEventHandler(false) {} //ADEGLI
                 
                 WindowRef getNativeWindowRef() { return _window; }
                 void setInstallEventHandler(bool flag) { _installEventHandler = flag; }
                 bool installEventHandler() { return _installEventHandler; }
-            
+                AGLDrawable* getAGLDrawable() { return _AGLDrawable; } //ADEGLI
+                
             private:
-                WindowRef   _window;
-                bool        _installEventHandler;
+                WindowRef    _window;
+                AGLDrawable* _AGLDrawable; //ADEGLI
+                bool         _installEventHandler;
             
         };
         
@@ -156,9 +164,12 @@ class GraphicsWindowCarbon : public osgViewer::GraphicsWindow
     private:        
         /// computes the window attributes
         WindowAttributes computeWindowAttributes(bool useWindowDecoration, bool supportsResize);
-    
+        void handleModifierKey(UInt32 modifierKey, UInt32 modifierMask, osgGA::GUIEventAdapter::KeySymbol keySymbol);
+
         
-        bool _closeRequested;
+        bool            _closeRequested;
+        UInt32          _lastModifierKeys;
+        MouseCursor     _currentCursor;
 };
 
 }

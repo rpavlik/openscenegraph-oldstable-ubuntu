@@ -1,7 +1,20 @@
+/* -*-c++-*- OpenSceneGraph - Copyright (C) 1998-2006 Robert Osfield 
+ *
+ * This library is open source and may be redistributed and/or modified under  
+ * the terms of the OpenSceneGraph Public License (OSGPL) version 0.0 or 
+ * (at your option) any later version.  The full license is in LICENSE file
+ * included with this distribution, and on the openscenegraph.org website.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
+ * OpenSceneGraph Public License for more details.
+*/
+
 //
 // OpenFlight® loader for OpenSceneGraph
 //
-//  Copyright (C) 2005-2006  Brede Johansen
+//  Copyright (C) 2005-2007  Brede Johansen
 //
 
 #include <osgSim/MultiSwitch>
@@ -100,7 +113,7 @@ public:
 
     META_setID(_lpn)
     META_setComment(_lpn)
-    META_setMatrix(_lpn)
+    META_dispose(_lpn)
 
     // Add lightpoint, add two if bidirectional.
     virtual void addVertex(Vertex& vertex)
@@ -250,7 +263,7 @@ public:
 
     META_setID(_lpn)
     META_setComment(_lpn)
-    META_setMatrix(_lpn)
+    META_dispose(_lpn)
 
     // Add lightpoint, add two if bidirectional.
     virtual void addVertex(Vertex& vertex)
@@ -468,8 +481,16 @@ protected:
             _parent->addChild(*((osg::Group*)_switch.get()));
     }
 
-    virtual void popLevel(Document& document)
+    virtual void dispose(Document& document)
     {
+        if (!_switch.valid()) return;
+
+        // Insert transform(s)
+        if (_matrix.valid())
+        {
+            insertMatrixTransform(*_switch,*_matrix,_numberOfReplications);
+        }
+
         // Set default sets: 0 for all off, 1 for all on
         _switch->setAllChildrenOff( 0 );
         _switch->setAllChildrenOn( 1 );

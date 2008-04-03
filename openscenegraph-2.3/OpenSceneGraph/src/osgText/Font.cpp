@@ -32,12 +32,6 @@ static osg::ApplicationUsageProxy Font_e0(osg::ApplicationUsage::ENVIRONMENTAL_V
 
 static OpenThreads::ReentrantMutex s_FontFileMutex;
 
-Font::FontMutex* osgText::Font::getSerializeFontCallsMutex()
-{
-    static OpenThreads::Mutex s_FontCallsMutex;
-    return &s_FontCallsMutex;
-}
-
 std::string osgText::findFontFile(const std::string& str)
 {
     // try looking in OSGFILEPATH etc first for fonts.
@@ -151,11 +145,62 @@ osgText::Font* osgText::readFontStream(std::istream& stream, const osgDB::Reader
     return 0;
 }
 
+osg::ref_ptr<Font> osgText::readRefFontFile(const std::string& filename, const osgDB::ReaderWriter::Options* userOptions)
+{
+    if (filename=="") return 0;
+
+    std::string foundFile = findFontFile(filename);
+    if (foundFile.empty()) return 0;
+    
+    OpenThreads::ScopedLock<OpenThreads::Mutex> lock(s_FontFileMutex);
+
+    osg::ref_ptr<osgDB::ReaderWriter::Options> localOptions;
+    if (!userOptions)
+    {
+        localOptions = new osgDB::ReaderWriter::Options;
+        localOptions->setObjectCacheHint(osgDB::ReaderWriter::Options::CACHE_OBJECTS);
+    }
+
+    osg::ref_ptr<osg::Object> object = osgDB::readRefObjectFile(foundFile, userOptions ? userOptions : localOptions.get());
+
+    // if the object is a font then return it.
+    osgText::Font* font = dynamic_cast<osgText::Font*>(object.get());
+    if (font) return osg::ref_ptr<Font>(font);
+
+    return 0;
+}
+
+osg::ref_ptr<Font> osgText::readRefFontStream(std::istream& stream, const osgDB::ReaderWriter::Options* userOptions)
+{
+    OpenThreads::ScopedLock<OpenThreads::Mutex> lock(s_FontFileMutex);
+
+    osg::ref_ptr<osgDB::ReaderWriter::Options> localOptions;
+    if (!userOptions)
+    {
+        localOptions = new osgDB::ReaderWriter::Options;
+        localOptions->setObjectCacheHint(osgDB::ReaderWriter::Options::CACHE_OBJECTS);
+    }
+
+    // there should be a better way to get the FreeType ReaderWriter by name...
+    osgDB::ReaderWriter *reader = osgDB::Registry::instance()->getReaderWriterForExtension("ttf");
+    if (reader == 0) return 0;
+    osgDB::ReaderWriter::ReadResult rr = reader->readObject(stream, userOptions ? userOptions : localOptions.get());
+    if (rr.error())
+    {
+        osg::notify(osg::WARN) << rr.message() << std::endl;
+        return 0;
+    }
+    if (!rr.validObject()) return 0;
+    
+    // if the object is a font then return it.
+    osgText::Font* font = dynamic_cast<osgText::Font*>(rr.getObject());
+    if (font) return osg::ref_ptr<Font>(font);
+
+    return 0;
+}
 
 Font::Font(FontImplementation* implementation):
     osg::Object(true),
-    _width(16),
-    _height(16),
     _margin(1),
     _marginRatio(0.02),
     _textureWidthHint(1024),
@@ -206,21 +251,6 @@ std::string Font::getFileName() const
 {
     if (_implementation.valid()) return _implementation->getFileName();
     return "";
-}
-
-void Font::setFontResolution(unsigned int width, unsigned int height)
-{
-    if (_implementation.valid()) _implementation->setFontResolution(width, height);
-}
-
-unsigned int Font::getFontWidth() const
-{
-    return _width;
-}
-
-unsigned int Font::getFontHeight() const
-{
-    return _height;
 }
 
 void Font::setGlyphImageMargin(unsigned int margin)
@@ -292,17 +322,20 @@ osg::Texture::FilterMode Font::getMagFilterHint() const
 }
 
 
-Font::Glyph* Font::getGlyph(unsigned int charcode)
+Font::Glyph* Font::getGlyph(const FontResolution& fontRes, unsigned int charcode)
 {
-    SizeGlyphMap::iterator itr = _sizeGlyphMap.find(SizePair(_width,_height));
-    if (itr!=_sizeGlyphMap.end())
     {
-        GlyphMap& glyphmap = itr->second;    
-        GlyphMap::iterator gitr = glyphmap.find(charcode);
-        if (gitr!=glyphmap.end()) return gitr->second.get();
+        OpenThreads::ScopedLock<OpenThreads::Mutex> lock(_glyphMapMutex);
+        FontSizeGlyphMap::iterator itr = _sizeGlyphMap.find(fontRes);
+        if (itr!=_sizeGlyphMap.end())
+        {
+            GlyphMap& glyphmap = itr->second;    
+            GlyphMap::iterator gitr = glyphmap.find(charcode);
+            if (gitr!=glyphmap.end()) return gitr->second.get();
+        }
     }
-
-    if (_implementation.valid()) return _implementation->getGlyph(charcode);
+    
+    if (_implementation.valid()) return _implementation->getGlyph(fontRes, charcode);
     else return 0;
 }
 
@@ -348,9 +381,9 @@ void Font::releaseGLObjects(osg::State* state) const
     // const_cast<Font*>(this)->_sizeGlyphMap.clear();
 }
 
-osg::Vec2 Font::getKerning(unsigned int leftcharcode,unsigned int rightcharcode, KerningType kerningType)
+osg::Vec2 Font::getKerning(const FontResolution& fontRes, unsigned int leftcharcode,unsigned int rightcharcode, KerningType kerningType)
 {
-    if (_implementation.valid()) return _implementation->getKerning(leftcharcode,rightcharcode,kerningType);
+    if (_implementation.valid()) return _implementation->getKerning(fontRes, leftcharcode,rightcharcode,kerningType);
     else return osg::Vec2(0.0f,0.0f);
 }
 
@@ -362,9 +395,11 @@ bool Font::hasVertical() const
 
 
 
-void Font::addGlyph(unsigned int width, unsigned int height, unsigned int charcode, Glyph* glyph)
+void Font::addGlyph(const FontResolution& fontRes, unsigned int charcode, Glyph* glyph)
 {
-    _sizeGlyphMap[SizePair(width,height)][charcode]=glyph;
+    OpenThreads::ScopedLock<OpenThreads::Mutex> lock(_glyphMapMutex);
+
+    _sizeGlyphMap[fontRes][charcode]=glyph;
     
     int posX=0,posY=0;
     
@@ -630,9 +665,17 @@ void Font::GlyphTexture::apply(osg::State& state) const
         
         if (s_renderer && 
             (strstr((const char*)s_renderer,"Radeon")!=0) || 
-            (strstr((const char*)s_renderer,"RADEON")!=0))
+            (strstr((const char*)s_renderer,"RADEON")!=0) ||
+            (strstr((const char*)s_renderer,"ALL-IN-WONDER")!=0))
         {
             // we're running on an ATI, so need to work around its
+            // subloading bugs by loading all at once.
+            s_subloadAllGlyphsTogether = true;
+        }
+
+        if (s_renderer && strstr((const char*)s_renderer,"Sun")!=0)
+        {
+            // we're running on an solaris x server, so need to work around its
             // subloading bugs by loading all at once.
             s_subloadAllGlyphsTogether = true;
         }
@@ -640,7 +683,7 @@ void Font::GlyphTexture::apply(osg::State& state) const
         const char* str = getenv("OSG_TEXT_INCREMENTAL_SUBLOADING");
         if (str)
         {
-            s_subloadAllGlyphsTogether = strcmp(str,"OFF")==0 || strcmp(str,"Off")==0 || strcmp(str,"Off")==0;
+            s_subloadAllGlyphsTogether = strcmp(str,"OFF")==0 || strcmp(str,"Off")==0 || strcmp(str,"off")==0;
         }
     }
 
@@ -759,8 +802,25 @@ void Font::GlyphTexture::resizeGLObjectBuffers(unsigned int maxSize)
 
 
 // all the methods in Font::Glyph have been made non inline because VisualStudio6.0 is STUPID, STUPID, STUPID PILE OF JUNK.
-Font::Glyph::Glyph() {}
-Font::Glyph::~Glyph() {}
+Font::Glyph::Glyph():
+    _font(0),
+    _glyphCode(0),
+    _horizontalBearing(0.0f,0.f),
+    _horizontalAdvance(0.f),
+    _verticalBearing(0.0f,0.f),
+    _verticalAdvance(0.f),
+    _texture(0),
+    _texturePosX(0),
+    _texturePosY(0),
+    _minTexCoord(0.0f,0.0f),
+    _maxTexCoord(0.0f,0.0f)
+{
+    setThreadSafeRefUnref(true);
+}
+
+Font::Glyph::~Glyph()
+{
+}
 
 unsigned int Font::Glyph::getGlyphCode() const { return _glyphCode; }
 
@@ -799,6 +859,12 @@ void Font::Glyph::subload() const
     if (errorNo!=GL_NO_ERROR)
     {
         osg::notify(osg::WARN)<<"before Font::Glyph::subload(): detected OpenGL error '"<<gluErrorString(errorNo)<<std::endl;
+    }
+
+    if(s() <= 0 || t() <= 0)
+    {
+        osg::notify(osg::INFO)<<"Font::Glyph::subload(): texture sub-image width and/or height of 0, ignoring operation."<<std::endl;      
+        return;
     }
 
     glPixelStorei(GL_UNPACK_ALIGNMENT,getPacking());

@@ -21,7 +21,11 @@ StateSetManipulator::StateSetManipulator(osg::StateSet* stateset):
     _backface(false),
     _lighting(false),
     _texture(false),
-    _maxNumOfTextureUnits(4)
+    _maxNumOfTextureUnits(4),
+    _keyEventToggleBackfaceCulling('b'),
+    _keyEventToggleLighting('l'),
+    _keyEventToggleTexturing('t'),
+    _keyEventCyclePolygonMode('w')
 {
     setStateSet(stateset);
 }
@@ -52,6 +56,35 @@ const StateSet *StateSetManipulator::getStateSet() const
     return _stateset.get();
 }
 
+void StateSetManipulator::clone()
+{
+    if (!_stateset) return;
+    
+    // we clone the StateSet so that any draw traversals that might be running at the time of the
+    // event traversal won't change the same StateSet that is being read.  One could just set the 
+    // DataVariance to DYNAMIC to avoid this overlap, but this would introduce a performance penalty.
+    
+    StateSet::ParentList parents = _stateset->getParents();
+    osg::ref_ptr<osg::StateSet> newStateSet = dynamic_cast<osg::StateSet*>(_stateset->clone(osg::CopyOp::SHALLOW_COPY));
+
+    // change the parents of the original StateSet to point to the new stateset
+    for(StateSet::ParentList::iterator itr = parents.begin();
+        itr !=  parents.end();
+        ++itr)
+    {
+        osg::Object* object = *itr;
+        osg::Node* node = dynamic_cast<osg::Node*>(object);
+        if (node) node->setStateSet(newStateSet.get());
+        else
+        {
+            osg::Drawable* drawable = dynamic_cast<osg::Drawable*>(object);
+            if (drawable) drawable->setStateSet(newStateSet.get());
+        }
+    }
+    
+    _stateset = newStateSet;
+}
+
 bool StateSetManipulator::handle(const GUIEventAdapter& ea,GUIActionAdapter& aa)
 {
     if(!_stateset.valid()) return false;
@@ -72,67 +105,53 @@ bool StateSetManipulator::handle(const GUIEventAdapter& ea,GUIActionAdapter& aa)
 
     if (ea.getHandled()) return false;
 
-    if(ea.getEventType()==GUIEventAdapter::KEYDOWN)
+    if (ea.getEventType()==osgGA::GUIEventAdapter::KEYDOWN)
     {
 
-        switch( ea.getKey() )
+        if ( ea.getKey() == _keyEventToggleBackfaceCulling )
         {
-
-            case 'b' :
-                setBackfaceEnabled(!getBackfaceEnabled());
-                aa.requestRedraw();
-                return true;
-                break;
-
-            case 'l' :
+            setBackfaceEnabled(!getBackfaceEnabled());
+            aa.requestRedraw();
+            return true;
+        }
+        if ( ea.getKey() == _keyEventToggleLighting )
+        {
                 setLightingEnabled(!getLightingEnabled());
                 aa.requestRedraw();
                 return true;
-                break;
-
-            case 't' :
+        }
+        if ( ea.getKey() == _keyEventToggleTexturing )
+        {
                 setTextureEnabled(!getTextureEnabled());
                 aa.requestRedraw();
                 return true;
-            break;
-
-            case 'w' :
+        }
+        if ( ea.getKey() == _keyEventCyclePolygonMode )
+        {
                 cyclePolygonMode();
                 aa.requestRedraw();
-                break;
-
-#if COMPILE_TEXENVFILTER_USAGE
-            case 'm' :
-                {
-                    osg::TexEnvFilter* texenvfilter = dynamic_cast<osg::TexEnvFilter*>(_stateset->getTextureAttribute(0,osg::StateAttribute::TEXENVFILTER));
-                    if (!texenvfilter) 
-                    {
-                        texenvfilter = new osg::TexEnvFilter;
-                        _stateset->setTextureAttribute(0,texenvfilter);
-                    }
-
-                    // cycle through the available modes.
-                    texenvfilter->setLodBias(texenvfilter->getLodBias()+0.1);
-                    aa.requestRedraw();
-                }
-                break;
-#endif
+                return true;
         }
     }
+
     return false;
 }
 
 void StateSetManipulator::getUsage(osg::ApplicationUsage& usage) const
 {
-    usage.addKeyboardMouseBinding("b","Toggle backface culling");
-    usage.addKeyboardMouseBinding("l","Toggle lighting");
-    usage.addKeyboardMouseBinding("t","Toggle texturing");
-    usage.addKeyboardMouseBinding("w","Toggle polygon fill mode between fill, line (wire frame) and points");
+    usage.addKeyboardMouseBinding(reinterpret_cast<const char*>(&_keyEventToggleBackfaceCulling),"Toggle backface culling");
+    usage.addKeyboardMouseBinding(reinterpret_cast<const char*>(&_keyEventToggleLighting),"Toggle lighting");
+    usage.addKeyboardMouseBinding(reinterpret_cast<const char*>(&_keyEventToggleTexturing),"Toggle texturing");
+    usage.addKeyboardMouseBinding(reinterpret_cast<const char*>(&_keyEventCyclePolygonMode),"Toggle polygon fill mode between fill, line (wire frame) and points");
 }
 
 
 void StateSetManipulator::setBackfaceEnabled(bool newbackface)
 {
+    if (_backface == newbackface) return;
+    
+    clone();
+    
     _backface = newbackface;
     if( _backface ) _stateset->setMode(GL_CULL_FACE,osg::StateAttribute::ON);
     else _stateset->setMode(GL_CULL_FACE,osg::StateAttribute::OVERRIDE|osg::StateAttribute::OFF);
@@ -140,6 +159,10 @@ void StateSetManipulator::setBackfaceEnabled(bool newbackface)
 
 void StateSetManipulator::setLightingEnabled(bool newlighting)
 {
+    if (_lighting == newlighting) return;
+    
+    clone();
+
     _lighting = newlighting;
     if( _lighting ) _stateset->setMode(GL_LIGHTING,osg::StateAttribute::ON);
     else _stateset->setMode(GL_LIGHTING,osg::StateAttribute::OVERRIDE|osg::StateAttribute::OFF);
@@ -147,6 +170,10 @@ void StateSetManipulator::setLightingEnabled(bool newlighting)
 
 void StateSetManipulator::setTextureEnabled(bool newtexture)
 {
+    if (_texture==newtexture) return;
+    
+    clone();
+
     _texture = newtexture;
 //    osg::ref_ptr< osg::Texture > tex = dynamic_cast<osg::Texture*>
 //        ( _stateset->getAttribute( osg::StateAttribute::TEXTURE ) );
@@ -166,6 +193,8 @@ void StateSetManipulator::setTextureEnabled(bool newtexture)
 
 void StateSetManipulator::setPolygonMode(osg::PolygonMode::Mode newpolygonmode)
 {
+    clone();
+
     osg::PolygonMode* polyModeObj = getOrCreatePolygonMode();
 
     polyModeObj->setMode(osg::PolygonMode::FRONT_AND_BACK,newpolygonmode);
@@ -173,6 +202,8 @@ void StateSetManipulator::setPolygonMode(osg::PolygonMode::Mode newpolygonmode)
 
 void StateSetManipulator::cyclePolygonMode()
 {
+    clone();
+
     osg::PolygonMode* polyModeObj = getOrCreatePolygonMode();
 
     osg::PolygonMode::Mode currentMode = getPolygonMode();

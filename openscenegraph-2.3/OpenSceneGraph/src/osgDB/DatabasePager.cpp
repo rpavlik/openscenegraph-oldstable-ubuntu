@@ -10,6 +10,8 @@
 #include <OpenThreads/ScopedLock>
 
 #include <algorithm>
+#include <functional>
+#include <set>
 
 #ifdef WIN32
 #include <windows.h>
@@ -25,6 +27,57 @@ static osg::ApplicationUsageProxy DatabasePager_e1(osg::ApplicationUsage::ENVIRO
 static osg::ApplicationUsageProxy DatabasePager_e2(osg::ApplicationUsage::ENVIRONMENTAL_VARIABLE,"OSG_MAXIMUM_OBJECTS_TO_COMPILE_PER_FRAME <int>","maximum number of OpenGL objects to compile per frame in database pager.");
 static osg::ApplicationUsageProxy DatabasePager_e3(osg::ApplicationUsage::ENVIRONMENTAL_VARIABLE,"OSG_DATABASE_PAGER_DRAWABLE <mode>","Set the drawable policy for setting of loaded drawable to specified type.  mode can be one of DoNotModify, DisplayList, VBO or VertexArrays>.");
 static osg::ApplicationUsageProxy DatabasePager_e4(osg::ApplicationUsage::ENVIRONMENTAL_VARIABLE,"OSG_DATABASE_PAGER_PRIORITY <mode>", "Set the thread priority to DEFAULT, MIN, LOW, NOMINAL, HIGH or MAX.");
+static osg::ApplicationUsageProxy DatabasePager_e7(osg::ApplicationUsage::ENVIRONMENTAL_VARIABLE,"OSG_EXPIRY_DELAY <float> ","Set the length of time a PagedLOD child is kept in memory, without being used, before its tagged as expired, and ear marked to deletion.");
+// Convert function objects that take pointer args into functions that a
+// reference to an osg::ref_ptr. This is quite useful for doing STL
+// operations on lists of ref_ptr. This code assumes that a function
+// with an argument const Foo* should be composed into a function of
+// argument type ref_ptr<Foo>&, not ref_ptr<const Foo>&. Some support
+// for that should be added to make this more general.
+
+namespace
+{
+template <typename U>
+struct PointerTraits
+{
+    typedef class NullType {} PointeeType;
+};
+
+template <typename U>
+struct PointerTraits<U*>
+{
+    typedef U PointeeType;
+};
+
+template <typename U>
+struct PointerTraits<const U*>
+{
+    typedef U PointeeType;
+};
+
+template <typename FuncObj>
+class RefPtrAdapter
+    : public std::unary_function<const osg::ref_ptr<typename PointerTraits<typename FuncObj::argument_type>::PointeeType>,
+                                 typename FuncObj::result_type>
+{
+public:
+    typedef typename PointerTraits<typename FuncObj::argument_type>::PointeeType PointeeType;
+    typedef osg::ref_ptr<PointeeType> RefPtrType;
+    explicit RefPtrAdapter(const FuncObj& funcObj) : _func(funcObj) {}
+    typename FuncObj::result_type operator()(const RefPtrType& refPtr) const
+    {
+        return _func(refPtr.get());
+    }
+protected:
+        FuncObj _func;
+};
+
+template <typename FuncObj>
+RefPtrAdapter<FuncObj> refPtrAdapt(const FuncObj& func)
+{
+    return RefPtrAdapter<FuncObj>(func);
+}
+}
 
 DatabasePager::DatabasePager()
 {
@@ -105,15 +158,24 @@ DatabasePager::DatabasePager()
     _valueAnisotropy = 1.0f;
 
 
-#if 1
-    _deleteRemovedSubgraphsInDatabaseThread = true;
-#else
-    _deleteRemovedSubgraphsInDatabaseThread = false;
-#endif
     
-    _expiryDelay = 10;
-
     const char* ptr=0;
+
+    _deleteRemovedSubgraphsInDatabaseThread = true;
+    if( (ptr = getenv("OSG_DELETE_IN_DATABASE_THREAD")) != 0)
+    {
+        _deleteRemovedSubgraphsInDatabaseThread = strcmp(ptr,"yes")==0 || strcmp(ptr,"YES")==0 ||
+                        strcmp(ptr,"on")==0 || strcmp(ptr,"ON")==0;
+
+    }
+
+    _expiryDelay = 10.0;
+    if( (ptr = getenv("OSG_EXPIRY_DELAY")) != 0)
+    {
+        _expiryDelay = atof(ptr);
+        osg::notify(osg::NOTICE)<<"Expiry delay = "<<_expiryDelay<<std::endl;
+    }
+
     _doPreCompile = true;
     if( (ptr = getenv("OSG_DO_PRE_COMPILE")) != 0)
     {
@@ -133,7 +195,6 @@ DatabasePager::DatabasePager()
     {
         _maximumNumOfObjectsToCompilePerFrame = atoi(ptr);
     }
-
 
     // initialize the stats variables
     resetStats();
@@ -211,7 +272,7 @@ int DatabasePager::cancel()
         // result = Thread::cancel();
         //join();
 
-        // release the frameBlock and _databasePagerThreadBlock incase its holding up thread cancelation.
+        // release the frameBlock and _databasePagerThreadBlock in case its holding up thread cancellation.
         _databasePagerThreadBlock->release();
 
         // then wait for the the thread to stop running.
@@ -251,10 +312,9 @@ void DatabasePager::clear()
         _dataToMergeList.clear();
     }
 
-    // no mutex??
-    _activePagedLODList.clear();
-    _inactivePagedLODList.clear();
-    
+    // note, no need to use a mutex as the list is only accessed from the update thread.
+    _pagedLODList.clear();
+
     // ??
     // _activeGraphicsContexts
 }
@@ -402,12 +462,13 @@ public:
     FindCompileableGLObjectsVisitor(DatabasePager::DataToCompile& dataToCompile, 
                                bool changeAutoUnRef, bool valueAutoUnRef,
                                bool changeAnisotropy, float valueAnisotropy,
-                               DatabasePager::DrawablePolicy drawablePolicy):
+                               DatabasePager::DrawablePolicy drawablePolicy,
+                               const DatabasePager* pager):
             osg::NodeVisitor(osg::NodeVisitor::TRAVERSE_ALL_CHILDREN),
             _dataToCompile(dataToCompile),
             _changeAutoUnRef(changeAutoUnRef), _valueAutoUnRef(valueAutoUnRef),
             _changeAnisotropy(changeAnisotropy), _valueAnisotropy(valueAnisotropy),
-            _drawablePolicy(drawablePolicy)
+            _drawablePolicy(drawablePolicy), _pager(pager)
     {
     }
     
@@ -434,30 +495,55 @@ public:
     {
         if (stateset)
         {
-            // search for the existance of any texture object attributes
-            bool foundTextureState = false;
+            // search for the existance of any texture object
+            // attributes
+            // if texture object attributes exist and need to be
+            // compiled, add the state to the list for later
+            // compilation.
+            bool compileStateSet = false;
             for(unsigned int i=0;i<stateset->getTextureAttributeList().size();++i)
             {
                 osg::Texture* texture = dynamic_cast<osg::Texture*>(stateset->getTextureAttribute(i,osg::StateAttribute::TEXTURE));
-                if (texture)
+                // Has this texture already been encountered?
+                if (texture && !_textureSet.count(texture))
                 {
+                    _textureSet.insert(texture);
                     if (_changeAutoUnRef) texture->setUnRefImageDataAfterApply(_valueAutoUnRef);
-                    if (_changeAnisotropy) texture->setMaxAnisotropy(_valueAnisotropy);
-                    foundTextureState = true;
+                    if ((_changeAnisotropy
+                         && texture->getMaxAnisotropy() != _valueAnisotropy))
+                    {
+                        if (_changeAnisotropy)
+                            texture->setMaxAnisotropy(_valueAnisotropy);
+                    }
+                    
+                    if (!_pager->isCompiled(texture))
+                    {
+                        compileStateSet = true;
+                        if (osg::getNotifyLevel() >= osg::DEBUG_INFO)
+                        {
+                            osg::notify(osg::DEBUG_INFO)
+                                <<"Found compilable texture " << texture << " ";
+                            osg::Image* image = texture->getImage(0);
+                            if (image) osg::notify(osg::DEBUG_INFO) << image->getFileName();
+                            osg::notify(osg::DEBUG_INFO) << std:: endl;
+                        }
+                        break;
+                    }
                 }
             }
-
-            // if texture object attributes exist add the state to the list for later compilation.
-            if (foundTextureState)
+            if (compileStateSet)
             {
-                //osg::notify(osg::DEBUG_INFO)<<"Found compilable texture state"<<std::endl;
                 _dataToCompile.first.insert(stateset);
             }
+
         }
     }
     
     inline void apply(osg::Drawable* drawable)
     {
+        if (_drawableSet.count(drawable))
+            return;
+        
         apply(drawable->getStateSet());
         
         switch(_drawablePolicy)
@@ -481,8 +567,12 @@ public:
              // osg::notify(osg::NOTICE)<<"USE_VERTEX_ARRAYS"<<std::endl;
              break;
         }
-        
-        if (drawable->getUseDisplayList() || drawable->getUseVertexBufferObjects())
+        // Don't compile if already compiled. This can happen if the
+        // subgraph is shared with already-loaded nodes.
+        //
+        // XXX This "compiles" VBOs too, but compilation doesn't do
+        // anything for VBOs, does it?
+        if (drawable->getUseDisplayList() && _pager->isCompiled(drawable))
         {
             // osg::notify(osg::NOTICE)<<"  Found compilable drawable"<<std::endl;
             _dataToCompile.second.push_back(drawable);
@@ -495,6 +585,9 @@ public:
     bool                            _changeAnisotropy;
     float                           _valueAnisotropy;
     DatabasePager::DrawablePolicy   _drawablePolicy;
+    const DatabasePager*            _pager;
+    std::set<osg::ref_ptr<osg::Texture> > _textureSet;
+    std::set<osg::ref_ptr<osg::Drawable> > _drawableSet;
 };
 
 
@@ -519,11 +612,19 @@ void DatabasePager::run()
 {
     osg::notify(osg::INFO)<<"DatabasePager::run()"<<std::endl;
 
+#if 1
     // need to set the texture object manager to be able to reuse textures
     osg::Texture::setMinimumNumberOfTextureObjectsToRetainInCache(100);
     
+    // need to set the display list manager to be able to reuse display lists
+    osg::Drawable::setMinimumNumberOfDisplayListsToRetainInCache(100);
+#else
     // need to set the texture object manager to be able to reuse textures
-    osg::Drawable::setMinimumNumberOfDisplayListsToRetainInCache(500);
+    osg::Texture::setMinimumNumberOfTextureObjectsToRetainInCache(0);
+    
+    // need to set the display list manager to be able to reuse display lists
+    osg::Drawable::setMinimumNumberOfDisplayListsToRetainInCache(0);
+#endif
 
     bool firstTime = true;
     
@@ -587,13 +688,13 @@ void DatabasePager::run()
                     // do *not* assume that we only have one DatabasePager, or that reaNodeFile is thread safe...
                     static OpenThreads::Mutex s_serialize_readNodeFile_mutex;
                     OpenThreads::ScopedLock<OpenThreads::Mutex> lock(s_serialize_readNodeFile_mutex);
-                    databaseRequest->_loadedModel = osgDB::readNodeFile(databaseRequest->_fileName,
+                    databaseRequest->_loadedModel = osgDB::readRefNodeFile(databaseRequest->_fileName,
                         databaseRequest->_loadOptions.get());
                 }
                 else
                 {
                     // assume that we only have one DatabasePager, or that readNodeFile is thread safe...
-                    databaseRequest->_loadedModel = osgDB::readNodeFile(databaseRequest->_fileName,
+                    databaseRequest->_loadedModel = osgDB::readRefNodeFile(databaseRequest->_fileName,
                         databaseRequest->_loadOptions.get());
                 }
                     
@@ -617,7 +718,23 @@ void DatabasePager::run()
                     FindCompileableGLObjectsVisitor frov(dtc, 
                                                          _changeAutoUnRef, _valueAutoUnRef,
                                                          _changeAnisotropy, _valueAnisotropy,
-                                                         _drawablePolicy);
+                                                         _drawablePolicy, this);
+                    
+                    // push the soon to be parent on the nodepath of the NodeVisitor so that 
+                    // during traversal one can test for where it'll be in the overall scene graph                
+                    osg::NodePathList nodePathList = databaseRequest->_groupForAddingLoadedSubgraph->getParentalNodePaths();
+                    if (!nodePathList.empty())
+                    {
+                        osg::NodePath& nodePath = nodePathList.front();
+                        for(osg::NodePath::iterator nitr = nodePath.begin();
+                            nitr != nodePath.end();
+                            ++nitr)
+                        {
+                            frov.pushOntoNodePath(*nitr);
+                        }
+                    }
+                    
+                    frov.pushOntoNodePath(databaseRequest->_groupForAddingLoadedSubgraph.get());
 
                     databaseRequest->_loadedModel->accept(frov);
 
@@ -662,33 +779,51 @@ void DatabasePager::run()
 
                     updateDatabasePagerThreadBlock();
                 }
-                
+                // Prepare and prune the to-be-compiled list here in
+                // the pager thread rather than in the draw or
+                // graphics context thread(s).
                 if (loadedObjectsNeedToBeCompiled)
                 {
-                    for(ActiveGraphicsContexts::iterator itr = _activeGraphicsContexts.begin();
-                        itr != _activeGraphicsContexts.end();
-                        ++itr)
+                    OpenThreads::ScopedLock<OpenThreads::Mutex> lock(_dataToCompileListMutex);
+                    std::sort(_dataToCompileList.begin(),
+                         _dataToCompileList.end(), SortFileRequestFunctor());
+                    // Prune all the old entries.
+                    DatabaseRequestList::iterator tooOld
+                        = std::find_if(_dataToCompileList.begin(),
+                                  _dataToCompileList.end(),
+                                  refPtrAdapt(std::not1(std::bind2nd(std::mem_fun(&DatabaseRequest
+                                                                   ::isRequestCurrent),
+                                                           _frameNumber))));
+                    // This is the database thread, so just delete
+                    _dataToCompileList.erase(tooOld, _dataToCompileList.end());
+
+                    if (!_dataToCompileList.empty())
                     {
-                        osg::GraphicsContext* gc = osg::GraphicsContext::getCompileContext(*itr);
-                        if (gc)
-                        {   
-                            osg::GraphicsThread* gt = gc->getGraphicsThread();
-                            if (gt)
-                            {
-                                gt->add(new DatabasePager::CompileOperation(this));
-                            }
-                            else
-                            {
-                                gc->makeCurrent();
+                        for(ActiveGraphicsContexts::iterator itr = _activeGraphicsContexts.begin();
+                            itr != _activeGraphicsContexts.end();
+                            ++itr)
+                        {
+                            osg::GraphicsContext* gc = osg::GraphicsContext::getCompileContext(*itr);
+                            if (gc)
+                            {   
+                                osg::GraphicsThread* gt = gc->getGraphicsThread();
+                                if (gt)
+                                {
+                                    gt->add(new DatabasePager::CompileOperation(this));
+                                }
+                                else
+                                {
+                                    gc->makeCurrent();
                                 
-                                compileAllGLObjects(*(gc->getState()));
+                                    compileAllGLObjects(*(gc->getState()));
                                 
-                                gc->releaseContext();
+                                    gc->releaseContext();
+                                }
                             }
                         }
-                    }
 
-                    // osg::notify(osg::NOTICE)<<"Done compiling in paging thread"<<std::endl;                   
+                        // osg::notify(osg::NOTICE)<<"Done compiling in paging thread"<<std::endl;                   
+                    }
                 }
                 
             }
@@ -711,7 +846,7 @@ void DatabasePager::run()
         if (firstTime)
         {
             // do a yield to get round a peculiar thread hang when testCancel() is called 
-            // in certain cirumstances - of which there is no particular pattern.
+            // in certain circumstances - of which there is no particular pattern.
             YieldCurrentThread();
             firstTime = false;
         }
@@ -786,121 +921,53 @@ void DatabasePager::addLoadedDataToSceneGraph(double timeStamp)
     
 }
 
+class DatabasePager::MarkPagedLODsVisitor : public osg::NodeVisitor
+{
+public:
+    MarkPagedLODsVisitor(const std::string& marker):
+        osg::NodeVisitor(osg::NodeVisitor::TRAVERSE_ALL_CHILDREN),
+        _marker(marker)
+    {
+    }
+
+    virtual void apply(osg::PagedLOD& plod)
+    {
+        plod.setName(_marker);
+    
+        traverse(plod);
+    }
+    
+    std::string _marker;
+};
 
 void DatabasePager::removeExpiredSubgraphs(double currentFrameTime)
 {
-    //osg::notify(osg::NOTICE)<<"DatabasePager::removeExpiredSubgraphs()"<<std::endl;
-
-    // osg::Timer_t before = osg::Timer::instance()->tick();
+//    osg::notify(osg::NOTICE)<<"DatabasePager::new_removeExpiredSubgraphs()"<<std::endl;
 
     double expiryTime = currentFrameTime - _expiryDelay;
 
     osg::NodeList childrenRemoved;
     
-
-    for(PagedLODList::iterator active_itr = _activePagedLODList.begin();
-        active_itr!=_activePagedLODList.end();
-        )
+    for(PagedLODList::iterator itr = _pagedLODList.begin();
+        itr!=_pagedLODList.end();
+        ++itr)
     {
-        const osg::PagedLOD* plod = active_itr->get();
-        bool remove_plod = false;
-        if (plod->referenceCount()<=1)
-        {
-            // prune PageLOD's that are no longer externally referenced
-            childrenRemoved.push_back(const_cast<osg::PagedLOD*>(plod));
-            //osg::notify(osg::NOTICE)<<"_activePagedLODList : pruning no longer externally referenced"<<std::endl;
-            remove_plod = true;
-        }
-        else if (plod->getFrameNumberOfLastTraversal()<_frameNumber)
-        {                
-            // osg::notify(osg::NOTICE)<<"_activePagedLODList : moving PageLOD to inactive list"<<std::endl;
-            _inactivePagedLODList.push_back(*active_itr);
-            remove_plod = true;
-        }
-        
-        if (remove_plod)
-        {
-            PagedLODList::iterator itr_to_erase = active_itr;
-            ++active_itr;
-            
-            _activePagedLODList.erase(itr_to_erase);            
-        }
-        else
-        {
-            ++active_itr;
-        }
+        osg::PagedLOD* plod = itr->get();
+        plod->removeExpiredChildren(expiryTime,childrenRemoved);
     }
     
-    unsigned int i = 0;
-    // unsigned int numberOfPagedLODToTest = _inactivePagedLODList.size();
-    unsigned int targetNumOfInActivePagedLODs = 100;
-    unsigned int targetNumOfRemovedChildPagedLODs = 0;
-    if (_inactivePagedLODList.size()>targetNumOfInActivePagedLODs) targetNumOfRemovedChildPagedLODs = _inactivePagedLODList.size()-targetNumOfInActivePagedLODs;
-    
-    if (targetNumOfRemovedChildPagedLODs>1) targetNumOfRemovedChildPagedLODs=1;
-    
-
-    // filter out singly referenced PagedLOD and move reactivated PagedLOD into the active list
-    for(PagedLODList::iterator inactive_itr = _inactivePagedLODList.begin();
-        inactive_itr!=_inactivePagedLODList.end();
-        )
-    {
-        const osg::PagedLOD* plod = inactive_itr->get();
-        bool remove_plod = false;
-        if (plod->referenceCount()<=1)
-        {
-            // prune PageLOD's that are no longer externally referenced
-            childrenRemoved.push_back(const_cast<osg::PagedLOD*>(plod));
-            //osg::notify(osg::NOTICE)<<"_activePagedLODList : pruning no longer externally referenced"<<std::endl;
-            remove_plod = true;
-        }
-        else if (plod->getFrameNumberOfLastTraversal()>=_frameNumber)
-        {
-            // osg::notify(osg::NOTICE)<<"_inactivePagedLODList : moving PageLOD to active list"<<std::endl;
-            // found a reactivated pagedLOD's need to put it back in the active list.                
-            _activePagedLODList.push_back(*inactive_itr);
-            remove_plod = true;
-        }
-        
-        if (remove_plod)
-        {
-            PagedLODList::iterator itr_to_erase = inactive_itr;
-            ++inactive_itr;
-            
-            _inactivePagedLODList.erase(itr_to_erase);            
-        }
-        else
-        {
-//            if (i<numberOfPagedLODToTest)
-            if (childrenRemoved.size()<targetNumOfRemovedChildPagedLODs)
-            {
-                // check for removing expired children.
-                if (const_cast<osg::PagedLOD*>(plod)->removeExpiredChildren(expiryTime,childrenRemoved))
-                {
-                    //osg::notify(osg::NOTICE)<<"Some children removed from PLod"<<std::endl;
-                }
-                else
-                {
-                    // osg::notify(osg::NOTICE)<<"no children removed from PLod"<<std::endl;
-                }
-            }
-        
-            ++inactive_itr;
-            ++i;
-        }
-    }
-
-    //osg::notify(osg::NOTICE)<<"_activePagedLODList.size()="<<_activePagedLODList.size()<<"\t_inactivePagedLODList.size()="<<_inactivePagedLODList.size()<<std::endl;
-
-
-    // osg::notify(osg::NOTICE)<<"   number stale "<<numberStale<<"  number active "<<_pagedLODList.size()-numberStale<<std::endl;
-
-    //double t = osg::Timer::instance()->delta_m(before,osg::Timer::instance()->tick());
-    //osg::notify(osg::NOTICE)<<"   time 1 "<<t<<" ms "<<_pagedLODList.size()<<" pagedLOD's"<<std::endl;
-    //osg::notify(osg::NOTICE)<<"   average time = "<<t/(double)_pagedLODList.size()<<" ms/per PagedLOD"<<std::endl;
-
     if (!childrenRemoved.empty())
     { 
+        MarkPagedLODsVisitor markerVistor("NeedToRemove");
+        for(osg::NodeList::iterator critr = childrenRemoved.begin();
+            critr!=childrenRemoved.end();
+            ++critr)
+        {
+            (*critr)->accept(markerVistor);
+        }    
+    
+        // osg::notify(osg::NOTICE)<<"Children to remove "<<childrenRemoved.size()<<std::endl;
+    
         // pass the objects across to the database pager delete list
         if (_deleteRemovedSubgraphsInDatabaseThread)
         {
@@ -911,13 +978,32 @@ void DatabasePager::removeExpiredSubgraphs(double currentFrameTime)
             {
                 _childrenToDeleteList.push_back(critr->get());
             }
+
             updateDatabasePagerThreadBlock();
         }
 
-        childrenRemoved.clear();
-    }
+        // osg::notify(osg::NOTICE)<<"   time 2 "<<osg::Timer::instance()->delta_m(before,osg::Timer::instance()->tick())<<" ms "<<std::endl;
+        for(PagedLODList::iterator itr = _pagedLODList.begin();
+            itr!=_pagedLODList.end();
+            )
+        {
+            osg::PagedLOD* plod = itr->get();
+            if (plod && plod->getName() != markerVistor._marker)
+            {
+                ++itr;
+            }
+            else
+            {
+                PagedLODList::iterator itr_to_erase = itr;
+                ++itr;
 
-    // osg::notify(osg::NOTICE)<<"   time 2 "<<osg::Timer::instance()->delta_m(before,osg::Timer::instance()->tick())<<" ms "<<std::endl;
+                _pagedLODList.erase(itr_to_erase);            
+            }
+        }
+
+        childrenRemoved.clear();
+
+    }
 
     
     if (osgDB::Registry::instance()->getSharedStateManager()) 
@@ -928,14 +1014,12 @@ void DatabasePager::removeExpiredSubgraphs(double currentFrameTime)
     osgDB::Registry::instance()->removeExpiredObjectsInCache(expiryTime);
 
 
-    // osg::notify(osg::NOTICE)<<"Done DatabasePager::removeExpiredSubgraphs() "<<osg::Timer::instance()->delta_m(before,osg::Timer::instance()->tick())<<" ms "<<std::endl;
-
 }
-
 
 class DatabasePager::FindPagedLODsVisitor : public osg::NodeVisitor
 {
 public:
+
     FindPagedLODsVisitor(DatabasePager::PagedLODList& pagedLODList):
         osg::NodeVisitor(osg::NodeVisitor::TRAVERSE_ALL_CHILDREN),
         _pagedLODList(pagedLODList)
@@ -954,8 +1038,10 @@ public:
 
 void DatabasePager::registerPagedLODs(osg::Node* subgraph)
 {
-    FindPagedLODsVisitor fplv(_activePagedLODList);
-    if (subgraph) subgraph->accept(fplv);
+    if (!subgraph) return;
+    
+    FindPagedLODsVisitor fplv(_pagedLODList);
+    subgraph->accept(fplv);
 }
 
 bool DatabasePager::requiresCompileGLObjects() const
@@ -1015,6 +1101,8 @@ void DatabasePager::compileGLObjects(osg::State& state, double& availableTime)
 
     bool compileAll = (availableTime==DBL_MAX);
 
+    SharedStateManager *sharedManager
+        = Registry::instance()->getSharedStateManager();
     osg::RenderInfo renderInfo;
     renderInfo.setState(&state);
 
@@ -1029,43 +1117,12 @@ void DatabasePager::compileGLObjects(osg::State& state, double& availableTime)
 
         osg::ref_ptr<DatabaseRequest> databaseRequest;
 
-        // get the first compileable entry.
+        // get the first compilable entry.
         {
             OpenThreads::ScopedLock<OpenThreads::Mutex> lock(_dataToCompileListMutex);
-            if (!_dataToCompileList.empty())
-            {
-                std::sort(_dataToCompileList.begin(),_dataToCompileList.end(),SortFileRequestFunctor());
-
-                // prune all the old entries.
-                DatabaseRequestList::iterator litr;
-                int i=0;
-                for(litr = _dataToCompileList.begin();
-                    (litr != _dataToCompileList.end()) && (_frameNumber-(*litr)->_frameNumberLastRequest)<=1;
-                    ++litr,i++)
-                {
-                    //osg::notify(osg::NOTICE)<<"Compile "<<_frameNumber-(*litr)->_frameNumberLastRequest<<std::endl;
-                }
-                if (litr != _dataToCompileList.end())
-                {
-                    if (_deleteRemovedSubgraphsInDatabaseThread)
-                    {
-                        OpenThreads::ScopedLock<OpenThreads::Mutex> lock(_childrenToDeleteListMutex);
-
-                        for(DatabaseRequestList::iterator ditr=litr;
-                            ditr!=_dataToCompileList.end();
-                            ++ditr)
-                        {
-                            _childrenToDeleteList.push_back((*ditr)->_loadedModel.get());
-                        }
-                    }
-                    //osg::notify(osg::NOTICE)<<"Pruning "<<_dataToCompileList.size()-i<<std::endl;
-                    _dataToCompileList.erase(litr,_dataToCompileList.end());
-                }
-
-                // advance to the next entry to compile if one is available.
-                databaseRequest = _dataToCompileList.empty() ? 0 : _dataToCompileList.front();
-            
-            }
+        
+            // advance to the next entry to compile if one is available.
+            databaseRequest = _dataToCompileList.empty() ? 0 : _dataToCompileList.front();
         };
 
         unsigned int numObjectsCompiled = 0;
@@ -1085,12 +1142,18 @@ void DatabasePager::compileGLObjects(osg::State& state, double& availableTime)
                 StateSetList& sslist = dtc.first;
                 //osg::notify(osg::INFO)<<"Compiling statesets"<<std::endl;
                 StateSetList::iterator itr=sslist.begin();
+                unsigned int objTemp = numObjectsCompiled;
                 for(;
                     itr!=sslist.end() && (elapsedTime+estimatedTextureDuration)<availableTime && numObjectsCompiled<_maximumNumOfObjectsToCompilePerFrame;
                     ++itr)
                 {
                     //osg::notify(osg::INFO)<<"    Compiling stateset "<<(*itr).get()<<std::endl;
-
+                    if (isCompiled(itr->get(), state.getContextID())
+                        || (sharedManager && sharedManager->isShared(itr->get())))
+                    {
+                        elapsedTime = timer.delta_s(start_tick,timer.tick());
+                        continue;
+                    }
                     double startCompileTime = timer.delta_s(start_tick,timer.tick());
 
                     (*itr)->compileGLObjects(state);
@@ -1106,7 +1169,12 @@ void DatabasePager::compileGLObjects(osg::State& state, double& availableTime)
 
                     ++numObjectsCompiled;
                 }
-                // remove the compiled stateset from the list.
+                if (osg::getNotifyLevel() >= osg::DEBUG_INFO
+                    && numObjectsCompiled > objTemp)
+                    osg::notify(osg::DEBUG_INFO)<< _frameNumber << " compiled "
+                                                << numObjectsCompiled - objTemp
+                                                << " StateSets" << std::endl;
+                // remove the compiled statesets from the list.
                 sslist.erase(sslist.begin(),itr);
             }
 
@@ -1116,11 +1184,17 @@ void DatabasePager::compileGLObjects(osg::State& state, double& availableTime)
                 //osg::notify(osg::INFO)<<"Compiling drawables"<<std::endl;
                 DrawableList& dwlist = dtc.second;
                 DrawableList::iterator itr=dwlist.begin();
+                unsigned int objTemp = numObjectsCompiled;
                 for(;
                     itr!=dwlist.end() && (compileAll || ((elapsedTime+estimatedDrawableDuration)<availableTime && numObjectsCompiled<_maximumNumOfObjectsToCompilePerFrame));
                     ++itr)
                 {
                     //osg::notify(osg::INFO)<<"    Compiling drawable "<<(*itr).get()<<std::endl;
+                    if (isCompiled(itr->get(), state.getContextID()))
+                    {
+                        elapsedTime = timer.delta_s(start_tick,timer.tick());
+                        continue;
+                    }
                     double startCompileTime = timer.delta_s(start_tick,timer.tick());
                     (*itr)->compileGLObjects(renderInfo);
                     elapsedTime = timer.delta_s(start_tick,timer.tick());
@@ -1131,6 +1205,11 @@ void DatabasePager::compileGLObjects(osg::State& state, double& availableTime)
                     ++numObjectsCompiled;
 
                 }
+                if (osg::getNotifyLevel() >= osg::DEBUG_INFO
+                    && numObjectsCompiled > objTemp)
+                    osg::notify(osg::DEBUG_INFO)<< _frameNumber << " compiled "
+                                                << numObjectsCompiled - objTemp
+                                                << " Drawables" << std::endl;
                 // remove the compiled drawables from the list.
                 dwlist.erase(dwlist.begin(),itr);
             }
@@ -1138,7 +1217,9 @@ void DatabasePager::compileGLObjects(osg::State& state, double& availableTime)
             //osg::notify(osg::INFO)<<"Checking if compiled"<<std::endl;
 
             // now check the to compile entries for all active graphics contexts
-            // to make sure that all have been compiled.
+            // to make sure that all have been compiled. They won't be
+            // if we ran out of time or if another thread is still
+            // compiling for its graphics context.
             bool allCompiled = true;
             for(DataToCompileMap::iterator itr=dcm.begin();
                 itr!=dcm.end() && allCompiled;
@@ -1148,27 +1229,39 @@ void DatabasePager::compileGLObjects(osg::State& state, double& availableTime)
                 if (!(itr->second.second.empty())) allCompiled=false;
             }
 
-
+            //if (numObjectsCompiled > 0)
+            //osg::notify(osg::NOTICE)<< _frameNumber << "compiled " << numObjectsCompiled << " objects" << std::endl;
+            
             if (allCompiled)
             {
-                // we've compile all of the current databaseRequest so we can now pop it off the
+                // we've compiled all of the current databaseRequest so we can now pop it off the
+                // to compile list and place it on the merge list.
                 // osg::notify(osg::NOTICE)<<"All compiled"<<std::endl;
 
-                // to compile list and place it on the merge list.
+
                 OpenThreads::ScopedLock<OpenThreads::Mutex> lock(_dataToCompileListMutex);
 
+                // The request might have been removed from the
+                // _dataToCompile list by another graphics thread, in
+                // which case it's already on the merge list, or by
+                // the pager, which means that the request has
+                // expired. Also, the compile list might have been
+                // shuffled by the pager, so the current request is
+                // not guaranteed to still be at the beginning of the
+                // list.
+                DatabaseRequestList::iterator requestIter
+                    = std::find(_dataToCompileList.begin(), _dataToCompileList.end(),
+                           databaseRequest);
+                if (requestIter != _dataToCompileList.end())
                 {
-                    OpenThreads::ScopedLock<OpenThreads::Mutex> lock(_dataToMergeListMutex);
-                    _dataToMergeList.push_back(databaseRequest);
+                    {
+                        OpenThreads::ScopedLock<OpenThreads::Mutex> lock(_dataToMergeListMutex);
+                        _dataToMergeList.push_back(databaseRequest);
+                    }
+                    _dataToCompileList.erase(requestIter);
                 }
-
-                if (!_dataToCompileList.empty()) _dataToCompileList.erase(_dataToCompileList.begin());
-
-                if (!_dataToCompileList.empty())
-                {
-                    std::sort(_dataToCompileList.begin(),_dataToCompileList.end(),SortFileRequestFunctor());
-                    databaseRequest = _dataToCompileList.front();
-                }
+                
+                if (!_dataToCompileList.empty()) databaseRequest = _dataToCompileList.front();
                 else databaseRequest = 0;
 
             }

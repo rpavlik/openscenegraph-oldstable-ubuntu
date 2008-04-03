@@ -43,6 +43,11 @@ PolygonStipple::PolygonStipple()
     setMask(defaultPolygonStippleMask);
 }
 
+PolygonStipple::PolygonStipple(const GLubyte* mask)
+{
+    setMask(mask);
+}
+
 PolygonStipple::PolygonStipple(const PolygonStipple& ps,const CopyOp& copyop):
     StateAttribute(ps,copyop)
 {
@@ -56,7 +61,7 @@ PolygonStipple::~PolygonStipple()
 int PolygonStipple::compare(const StateAttribute& sa) const
 {
     // check the types are equal and then create the rhs variable
-    // used by the COMPARE_StateAttribute_Paramter macro's below.
+    // used by the COMPARE_StateAttribute_Parameter macro's below.
     COMPARE_StateAttribute_Types(PolygonStipple,sa)
 
     // compare each parameter in turn against the rhs.

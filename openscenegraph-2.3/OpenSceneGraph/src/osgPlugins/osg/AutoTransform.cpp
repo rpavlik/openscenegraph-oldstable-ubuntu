@@ -69,6 +69,28 @@ bool AutoTransform_readLocalData(Object& obj, Input& fr)
         iteratorAdvanced = true;
     }
 
+    if (fr.matchSequence("minimumScale %f"))
+    {
+        float scale;
+        fr[1].getFloat(scale);
+        
+        transform.setMinimumScale(scale);
+
+        fr += 2;
+        iteratorAdvanced = true;
+    }
+
+    if (fr.matchSequence("maximumScale %f"))
+    {
+        float scale;
+        fr[1].getFloat(scale);
+        
+        transform.setMaximumScale(scale);
+
+        fr += 2;
+        iteratorAdvanced = true;
+    }
+
     if (fr.matchSequence("pivotPoint %f %f %f"))
     {
         osg::Vec3 pivot;
@@ -118,6 +140,18 @@ bool AutoTransform_readLocalData(Object& obj, Input& fr)
         iteratorAdvanced = true;
     }
 
+    if (fr.matchSequence("autoScaleTransistionWidthRatio %f"))
+    {
+        float ratio;
+        fr[1].getFloat(ratio);
+        
+        transform.setAutoScaleTransistionWidthRatio(ratio);
+
+        fr += 2;
+        iteratorAdvanced = true;
+    }
+
+
     return iteratorAdvanced;
 }
 
@@ -129,6 +163,11 @@ bool AutoTransform_writeLocalData(const Object& obj, Output& fw)
     fw.indent()<<"position "<<transform.getPosition()<<std::endl;
     fw.indent()<<"rotation "<<transform.getRotation()<<std::endl;
     fw.indent()<<"scale "<<transform.getScale()<<std::endl;
+
+    if (transform.getMinimumScale()>0.0) fw.indent()<<"minimumScale "<<transform.getMinimumScale()<<std::endl;
+    if (transform.getMaximumScale()<FLT_MAX) fw.indent()<<"maximumScale "<<transform.getMaximumScale()<<std::endl;
+    
+    
     fw.indent()<<"pivotPoint "<<transform.getPivotPoint()<<std::endl;
     fw.indent()<<"autoUpdateEyeMovementTolerance "<<transform.getAutoUpdateEyeMovementTolerance()<<std::endl;
     fw.indent()<<"autoRotateMode ";
@@ -140,8 +179,12 @@ bool AutoTransform_writeLocalData(const Object& obj, Output& fw)
       default: fw<<"NO_ROTATION"<<std::endl; break;
     }
 
-
     fw.indent()<<"autoScaleToScreen "<<(transform.getAutoScaleToScreen()?"TRUE":"FALSE")<<std::endl;
-
+    
+    if (transform.getAutoScaleTransistionWidthRatio()!=0.25) 
+    {
+            fw.indent()<<"autoScaleTransistionWidthRatio "<<transform.getAutoScaleTransistionWidthRatio()<<std::endl;
+    }
+    
     return true;
 }

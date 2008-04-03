@@ -71,6 +71,7 @@
 #include "Transform.h"
 #include "Switch.h"
 #include "OccluderNode.h"
+#include "OcclusionQueryNode.h"
 #include "Impostor.h"
 #include "CoordinateSystemNode.h"
 #include "Uniform.h"
@@ -87,6 +88,12 @@
 #include "Shape.h"
 
 #include "Text.h"
+
+#include "TerrainTile.h"
+#include "Locator.h"
+#include "ImageLayer.h"
+#include "HeightFieldLayer.h"
+#include "CompositeLayer.h"
 
 #include <osg/Endian>
 #include <osg/Notify>
@@ -475,7 +482,10 @@ osg::Array* DataInputStream::readArray(){
         case 11:   return readVec4sArray();
         case 12:   return readVec2bArray();        
         case 13:   return readVec3bArray();        
-        case 14:   return readVec4bArray();        
+        case 14:   return readVec4bArray();
+        case 15:   return readVec2dArray();
+        case 16:   return readVec3dArray();
+        case 17:   return readVec4dArray();        
         default: throw Exception("Unknown array type in DataInputStream::readArray()");
     }
 }
@@ -803,6 +813,80 @@ osg::Vec4sArray* DataInputStream::readVec4sArray()
        }
     }
 
+    return a;
+}
+
+osg::Vec2dArray* DataInputStream::readVec2dArray()
+{
+    int size = readInt();
+    if (size == 0)
+        return NULL;
+
+    osg::Vec2dArray* a = new osg::Vec2dArray(size);
+    
+    _istream->read((char*)&((*a)[0]), DOUBLESIZE*2*size);
+
+    if (_istream->rdstate() & _istream->failbit)
+        throw Exception("DataInputStream::readVec2dArray(): Failed to read Vec2d array.");
+
+    if (_verboseOutput) std::cout<<"read/writeVec2dArray() ["<<size<<"]"<<std::endl;
+    
+    if (_byteswap)
+    {
+       double *ptr = (double*)&((*a)[0]) ;
+       for (int i = 0 ; i < size*2 ; i++ )
+       {
+          osg::swapBytes((char *)&(ptr[i]), DOUBLESIZE) ;
+       }
+    }
+    return a;
+}
+
+osg::Vec3dArray* DataInputStream::readVec3dArray()
+{
+    int size = readInt();
+    if (size == 0)
+        return NULL;
+    osg::Vec3dArray* a = new osg::Vec3dArray(size);
+
+    _istream->read((char*)&((*a)[0]), DOUBLESIZE*3*size);
+    
+    if (_istream->rdstate() & _istream->failbit)
+        throw Exception("DataInputStream::readVec3dArray(): Failed to read Vec3d array.");
+
+    if (_verboseOutput) std::cout<<"read/writeVec3dArray() ["<<size<<"]"<<std::endl;
+    
+
+    if (_byteswap)
+    {
+       double *ptr = (double*)&((*a)[0]) ;
+       for (int i = 0 ; i < size*3 ; i++ )
+       {
+          osg::swapBytes((char *)&(ptr[i]),DOUBLESIZE) ;
+       }
+    }
+    return a;
+}
+
+osg::Vec4dArray* DataInputStream::readVec4dArray(){
+    int size = readInt();
+    if (size == 0)
+        return NULL;
+    osg::Vec4dArray* a = new osg::Vec4dArray(size);
+
+    _istream->read((char*)&((*a)[0]), DOUBLESIZE*4*size);
+
+    if (_istream->rdstate() & _istream->failbit)
+        throw Exception("DataInputStream::readVec4dArray(): Failed to read Vec4d array.");
+
+    if (_verboseOutput) std::cout<<"read/writeVec4dArray() ["<<size<<"]"<<std::endl;
+    
+    if (_byteswap) {
+       double *ptr = (double*)&((*a)[0]) ;
+       for (int i = 0 ; i < size*4 ; i++ ) {
+          osg::swapBytes((char *)&(ptr[i]),DOUBLESIZE) ;
+       }
+    }
     return a;
 }
 
@@ -1341,6 +1425,10 @@ osg::Node* DataInputStream::readNode()
         node = new osg::OccluderNode();
         ((ive::OccluderNode*)(node))->read(this);
     }
+    else if(nodeTypeID== IVEOCCLUSIONQUERYNODE){
+        node = new osg::OcclusionQueryNode();
+        ((ive::OcclusionQueryNode*)(node))->read(this);
+    }
     else if(nodeTypeID== IVEVISIBILITYGROUP){
         node = new osgSim::VisibilityGroup();
         ((ive::VisibilityGroup*)(node))->read(this);
@@ -1369,6 +1457,10 @@ osg::Node* DataInputStream::readNode()
         node = new osgFX::MultiTextureControl();
         ((ive::MultiTextureControl*)(node))->read(this);
     }
+    else if(nodeTypeID== IVETERRAINTILE){
+        node = new osgTerrain::TerrainTile();
+        ((ive::TerrainTile*)(node))->read(this);
+    }
     else{
         throw Exception("Unknown node identification in DataInputStream::readNode()");
     }
@@ -1382,4 +1474,93 @@ osg::Node* DataInputStream::readNode()
     return node;
 }
 
+osgTerrain::Layer* DataInputStream::readLayer()
+{
+    // Read node unique ID.
+    int id = readInt();
+    if (id<0) return 0;
+    
+    // See if layer is already in the list.
+    LayerMap::iterator itr= _layerMap.find(id);
+    if (itr!=_layerMap.end()) return itr->second.get();
+
+    // Layer is not in list.
+    // Create a new Layer,
+
+    osgTerrain::Layer* layer = 0;
+    int layerid = peekInt();
+    
+    if (layerid==IVEHEIGHTFIELDLAYER)
+    {
+        layer = new osgTerrain::HeightFieldLayer;
+        ((ive::HeightFieldLayer*)(layer))->read(this);
+    }
+    else if (layerid==IVEIMAGELAYER)
+    {
+        layer = new osgTerrain::ImageLayer;
+        ((ive::ImageLayer*)(layer))->read(this);
+    }
+    else if (layerid==IVECOMPOSITELAYER)
+    {
+        layer = new osgTerrain::CompositeLayer;
+        ((ive::CompositeLayer*)(layer))->read(this);
+    }
+    else if (layerid==IVEPROXYLAYER)
+    {
+        std::string filename = readString();
+        osg::ref_ptr<osg::Object> object = osgDB::readObjectFile(filename+".gdal");
+        osgTerrain::ProxyLayer* proxyLayer = dynamic_cast<osgTerrain::ProxyLayer*>(object.get());
+        
+        osg::ref_ptr<osgTerrain::Locator> locator = readLocator();
+        unsigned int minLevel = readUInt();
+        unsigned int maxLevel = readUInt();
+        
+        if (proxyLayer)
+        {
+            if (locator.valid()) proxyLayer->setLocator(locator.get());
+            
+            proxyLayer->setMinLevel(minLevel);
+            proxyLayer->setMaxLevel(maxLevel);
+        }
+        
+        layer = proxyLayer;
+    }
+    else{
+        throw Exception("Unknown layer identification in DataInputStream::readLayer()");
+    }
+
+    // and add it to the node map,
+    _layerMap[id] = layer;
+        
+
+    if (_verboseOutput) std::cout<<"read/writeLayer() ["<<id<<"]"<<std::endl;
+    
+    return layer;
+}
+
+
+osgTerrain::Locator* DataInputStream::readLocator()
+{
+    // Read statesets unique ID.
+    int id = readInt();
+    if (id<0) return 0;
+    
+    // See if stateset is already in the list.
+    LocatorMap::iterator itr= _locatorMap.find(id);
+    if (itr!=_locatorMap.end()) return itr->second.get();
+
+    // Locator is not in list.
+    // Create a new locator,
+    osgTerrain::Locator* locator = new osgTerrain::Locator();
+
+    // read its properties from stream
+    ((ive::Locator*)(locator))->read(this);
+        
+    // and add it to the locator map,
+    _locatorMap[id] = locator;
+
+    if (_verboseOutput) std::cout<<"read/writeLocator() ["<<id<<"]"<<std::endl;
+    
+    return locator;
+}
 

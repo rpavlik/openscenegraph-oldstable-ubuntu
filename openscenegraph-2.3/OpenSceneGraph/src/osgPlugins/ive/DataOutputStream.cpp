@@ -73,6 +73,7 @@
 #include "Transform.h"
 #include "Switch.h"
 #include "OccluderNode.h"
+#include "OcclusionQueryNode.h"
 #include "Impostor.h"
 #include "CoordinateSystemNode.h"
 
@@ -88,6 +89,12 @@
 #include "Shape.h"
 
 #include "Text.h"
+
+#include "TerrainTile.h"
+#include "Locator.h"
+#include "ImageLayer.h"
+#include "HeightFieldLayer.h"
+#include "CompositeLayer.h"
 
 #include <osg/Notify>
 #include <osg/io_utils>
@@ -400,7 +407,19 @@ void DataOutputStream::writeArray(const osg::Array* a){
          case osg::Array::Vec4bArrayType:
              writeChar((char)14);
              writeVec4bArray(static_cast<const osg::Vec4bArray*>(a));
-             break;            
+             break;
+         case osg::Array::Vec2dArrayType: 
+             writeChar((char)15);
+             writeVec2dArray(static_cast<const osg::Vec2dArray*>(a));
+             break;
+         case osg::Array::Vec3dArrayType: 
+             writeChar((char)16);
+             writeVec3dArray(static_cast<const osg::Vec3dArray*>(a));
+             break;
+          case osg::Array::Vec4dArrayType: 
+             writeChar((char)17);
+             writeVec4dArray(static_cast<const osg::Vec4dArray*>(a));
+             break;
         default: throw Exception("Unknown array type in DataOutputStream::writeArray()");
     }
 }
@@ -576,6 +595,39 @@ void DataOutputStream::writeVec4bArray(const osg::Vec4bArray* a)
     }
 
     if (_verboseOutput) std::cout<<"read/writeVec4bArray() ["<<size<<"]"<<std::endl;
+}
+
+void DataOutputStream::writeVec2dArray(const osg::Vec2dArray* a)
+{
+    int size = a->size();
+    writeInt(size);
+    for(int i=0;i<size;i++){
+        writeVec2d((*a)[i]);
+    }
+    
+    if (_verboseOutput) std::cout<<"read/writeVec2dArray() ["<<size<<"]"<<std::endl;
+}
+
+void DataOutputStream::writeVec3dArray(const osg::Vec3dArray* a)
+{
+    int size = a->size();
+    writeInt(size);
+    for(int i = 0; i < size; i++){
+        writeVec3d((*a)[i]);
+    }
+    
+    if (_verboseOutput) std::cout<<"read/writeVec3dArray() ["<<size<<"]"<<std::endl;
+}
+
+void DataOutputStream::writeVec4dArray(const osg::Vec4dArray* a)
+{
+    int size = a->size();
+    writeInt(size);
+    for(int i=0;i<size;i++){
+        writeVec4d((*a)[i]);
+    }
+    
+    if (_verboseOutput) std::cout<<"read/writeVec4dArray() ["<<size<<"]"<<std::endl;
 }
 
 void DataOutputStream::writeMatrixf(const osg::Matrixf& mat)
@@ -932,7 +984,7 @@ void DataOutputStream::writeNode(const osg::Node* node)
     else
     {
         // id doesn't exist so create a new ID and
-        // register the stateset.
+        // register the node.
 
         int id = _nodeMap.size();
         _nodeMap[node] = id;
@@ -993,6 +1045,9 @@ void DataOutputStream::writeNode(const osg::Node* node)
         else if(dynamic_cast<const osg::OccluderNode*>(node)){
             ((ive::OccluderNode*)(node))->write(this);
         }
+        else if(dynamic_cast<const osg::OcclusionQueryNode*>(node)){
+            ((ive::OcclusionQueryNode*)(node))->write(this);
+        }
         else if(dynamic_cast<const osg::Transform*>(node)){
             ((ive::Transform*)(node))->write(this);
         }
@@ -1004,6 +1059,9 @@ void DataOutputStream::writeNode(const osg::Node* node)
         }
         else if(dynamic_cast<const osgFX::MultiTextureControl*>(node)){
             ((ive::MultiTextureControl*)(node))->write(this);
+        }
+        else if(dynamic_cast<const osgTerrain::TerrainTile*>(node)){
+            ((ive::TerrainTile*)(node))->write(this);
         }
         else if(dynamic_cast<const osg::Group*>(node)){
             ((ive::Group*)(node))->write(this);
@@ -1128,5 +1186,101 @@ void DataOutputStream::writeImage(IncludeImageMode mode, osg::Image *image)
         default:
             throw Exception("DataOutputStream::writeImage(): Invalid IncludeImageMode value.");
             break;
+    }
+}
+
+
+void DataOutputStream::writeLayer(const osgTerrain::Layer* layer)
+{
+    if (layer==0)
+    {
+        writeInt(-1);
+        return;
+    }
+
+    LayerMap::iterator itr = _layerMap.find(layer);
+    if (itr!=_layerMap.end())
+    {
+        // Id already exists so just write ID.
+        writeInt(itr->second);
+
+        if (_verboseOutput) std::cout<<"read/writeLayer() ["<<itr->second<<"]"<<std::endl;
+    }
+    else
+    {
+        // id doesn't exist so create a new ID and
+        // register the stateset.
+
+        int id = _layerMap.size();
+        _layerMap[layer] = id;
+
+        // write the id.
+        writeInt(id);
+        
+        if (dynamic_cast<const osgTerrain::HeightFieldLayer*>(layer))
+        {
+            ((ive::HeightFieldLayer*)(layer))->write(this);
+        }
+        else if (dynamic_cast<const osgTerrain::ImageLayer*>(layer))
+        {
+            ((ive::ImageLayer*)(layer))->write(this);
+        }
+        else if (dynamic_cast<const osgTerrain::CompositeLayer*>(layer))
+        {
+            ((ive::CompositeLayer*)(layer))->write(this);
+        }
+        else if (dynamic_cast<const osgTerrain::ProxyLayer*>(layer))
+        {
+            writeInt(IVEPROXYLAYER);
+            writeString(layer->getFileName());
+
+            const osgTerrain::Locator* locator = layer->getLocator();
+            bool writeOutLocator = locator && !locator->getDefinedInFile();
+            writeLocator(writeOutLocator ? locator : 0 );
+
+            writeUInt(layer->getMinLevel());
+            writeUInt(layer->getMaxLevel());
+        }
+        else
+        {
+            throw Exception("Unknown layer in DataOutputStream::writeLayer()");
+        }
+        if (_verboseOutput) std::cout<<"read/writeLayer() ["<<id<<"]"<<std::endl;
+    }
+}
+
+
+void DataOutputStream::writeLocator(const osgTerrain::Locator* locator)
+{
+    if (locator==0)
+    {
+        writeInt(-1);
+        return;
+    }
+
+    LocatorMap::iterator itr = _locatorMap.find(locator);
+    if (itr!=_locatorMap.end())
+    {
+        // Id already exists so just write ID.
+        writeInt(itr->second);
+
+        if (_verboseOutput) std::cout<<"read/writeLocator() ["<<itr->second<<"]"<<std::endl;
+    }
+    else
+    {
+        // id doesn't exist so create a new ID and
+        // register the locator.
+
+        int id = _locatorMap.size();
+        _locatorMap[locator] = id;
+
+        // write the id.
+        writeInt(id);
+
+        // write the locator.
+        ((ive::Locator*)(locator))->write(this);
+
+        if (_verboseOutput) std::cout<<"read/writeLocator() ["<<id<<"]"<<std::endl;
+
     }
 }

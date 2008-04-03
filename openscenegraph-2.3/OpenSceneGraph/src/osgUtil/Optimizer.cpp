@@ -2059,7 +2059,7 @@ bool Optimizer::MergeGeometryVisitor::mergeGeode(osg::Geode& geode)
                 {
                     // now need to clean up primitiveset so it no longer contains the rhs combined primitives.
 
-                    // first swap with a empty primtiveSet to empty it completely.
+                    // first swap with a empty primitiveSet to empty it completely.
                     osg::Geometry::PrimitiveSetList oldPrimitives;
                     primitives.swap(oldPrimitives);
                     
@@ -2162,7 +2162,7 @@ bool Optimizer::MergeGeometryVisitor::geometryContainsSharedArrays(osg::Geometry
         if (tex && tex->referenceCount()>1) return true;
     }
     
-    // shift the indices of the incomming primitives to account for the pre exisiting geometry.
+    // shift the indices of the incoming primitives to account for the pre existing geometry.
     for(osg::Geometry::PrimitiveSetList::iterator primItr=geom.getPrimitiveSetList().begin();
         primItr!=geom.getPrimitiveSetList().end();
         ++primItr)
@@ -2233,6 +2233,11 @@ class MergeArrayVisitor : public osg::ArrayVisitor
         virtual void apply(osg::Vec2Array& rhs) { _merge(rhs); }
         virtual void apply(osg::Vec3Array& rhs) { _merge(rhs); }
         virtual void apply(osg::Vec4Array& rhs) { _merge(rhs); }
+        
+        virtual void apply(osg::DoubleArray& rhs) { _merge(rhs); }
+        virtual void apply(osg::Vec2dArray& rhs) { _merge(rhs); }
+        virtual void apply(osg::Vec3dArray& rhs) { _merge(rhs); }
+        virtual void apply(osg::Vec4dArray& rhs) { _merge(rhs); }
         
         virtual void apply(osg::Vec2bArray&  rhs) { _merge(rhs); }
         virtual void apply(osg::Vec3bArray&  rhs) { _merge(rhs); }
@@ -2382,7 +2387,7 @@ bool Optimizer::MergeGeometryVisitor::mergeGeometry(osg::Geometry& lhs,osg::Geom
     }
 
 
-    // shift the indices of the incomming primitives to account for the pre exisiting geometry.
+    // shift the indices of the incoming primitives to account for the pre existing geometry.
     for(osg::Geometry::PrimitiveSetList::iterator primItr=rhs.getPrimitiveSetList().begin();
         primItr!=rhs.getPrimitiveSetList().end();
         ++primItr)
@@ -2836,9 +2841,10 @@ struct LessGeode
 {
     bool operator() (const osg::Geode* lhs,const osg::Geode* rhs) const
     {
-        if (lhs->getStateSet()<rhs->getStateSet()) return true;
         if (lhs->getNodeMask()<rhs->getNodeMask()) return true;
-        return false;
+        if (lhs->getNodeMask()>rhs->getNodeMask()) return false;
+
+        return (lhs->getStateSet()<rhs->getStateSet());
     }
 };
 

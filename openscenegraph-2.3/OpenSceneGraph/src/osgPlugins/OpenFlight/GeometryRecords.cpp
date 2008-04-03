@@ -1,7 +1,20 @@
+/* -*-c++-*- OpenSceneGraph - Copyright (C) 1998-2006 Robert Osfield 
+ *
+ * This library is open source and may be redistributed and/or modified under  
+ * the terms of the OpenSceneGraph Public License (OSGPL) version 0.0 or 
+ * (at your option) any later version.  The full license is in LICENSE file
+ * included with this distribution, and on the openscenegraph.org website.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
+ * OpenSceneGraph Public License for more details.
+*/
+
 //
 // OpenFlight® loader for OpenSceneGraph
 //
-//  Copyright (C) 2005-2006  Brede Johansen
+//  Copyright (C) 2005-2007  Brede Johansen
 //
 
 #include <assert.h>
@@ -59,7 +72,6 @@ public:
 
     META_setID(_geode)
     META_setComment(_geode)
-    META_setMatrix(_geode)
     META_setMultitexture(_geode)
 
     // draw mode
@@ -421,10 +433,17 @@ protected:
         return osg::PrimitiveSet::POLYGON;
     }
 
-    virtual void popLevel(Document& document)
+    virtual void dispose(Document& document)
     {
         if (_geode.valid())
         {
+            // Insert transform(s)
+            if (_matrix.valid())
+            {
+                insertMatrixTransform(*_geode,*_matrix,_numberOfReplications);
+            }
+
+            // Add primitives, set bindings etc.
             for (unsigned int i=0; i<_geode->getNumDrawables(); ++i)
             {
                 osg::Geometry* geometry = dynamic_cast<osg::Geometry*>(_geode->getDrawable(i));
@@ -715,7 +734,6 @@ public:
 
     META_setID(_geode)
     META_setComment(_geode)
-    META_setMatrix(_geode)
     META_setMultitexture(_geode)
 
     // draw mode
@@ -951,10 +969,16 @@ protected:
             _parent->addChild(*_geode);
     }
 
-    virtual void popLevel(Document& document)
+    virtual void dispose(Document& document)
     {
         if (_geode.valid())
         {
+            // Insert transform(s)
+            if (_matrix.valid())
+            {
+                insertMatrixTransform(*_geode,*_matrix,_numberOfReplications);
+            }
+
             osg::StateSet* stateset =  _geode->getOrCreateStateSet();
 
             // Translucent image?
