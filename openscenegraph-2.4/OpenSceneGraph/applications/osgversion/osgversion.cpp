@@ -1,6 +1,13 @@
 #include <osg/Version>
 #include <osg/ArgumentParser>
 #include <osg/ApplicationUsage>
+
+#include <osg/Matrix>
+#include <osg/Plane>
+#include <osg/BoundingBox>
+#include <osg/BoundingSphere>
+
+
 #include <OpenThreads/Version>
 
 #include <set>
@@ -210,6 +217,8 @@ bool validName(const std::string& first)
     if (first=="Quicktime") return false;
     if (first=="SceneGraphBuilder") return false;
     if (first=="LightPointNode") return false;
+    if (first=="GeometryTechnique") return false;
+    if (first=="GeoemtryTechnique") return false;
     return true;
 }
 
@@ -323,13 +332,12 @@ std::string typoCorrection(const std::string& name)
     if (name=="Skinnder") return "Skinner";
     if (name=="Mihair")  return "Mihai";
     if (name=="Mahai")  return "Mihai";
-    if (name=="Wojiech")  return "Wojciech";
-    if (name=="Leandowski")  return "Lewandowski";
+    if (name=="Wojiech" || name=="Wojchiech")  return "Wojciech";
+    if (name=="Leandowski" || name=="Lawandowski")  return "Lewandowski";
     if (name=="Aderian")  return "Adrian";
     if (name=="Callue")  return "Callu";
     if (name=="Waldrom")  return "Waldron";
     if (name=="Atr")  return "Art";
-    if (name=="Lawandowski") return "Lewandowski";
     if (name=="Sylvan") return "Sylvain";
     if (name=="Giatan") return "Gaitan";
     if (name=="Melchoir") return "Melchior";
@@ -337,11 +345,18 @@ std::string typoCorrection(const std::string& name)
     if (name=="Sokolwsky") return "Sokolowsky";
     if (name=="Cullu") return "Callu";
     if (name=="Comporesi") return "Camporesi";
+    if (name=="Machler") return "Mächler";
+    if (name=="Maechler") return "Mächler";
     return name;
 }
 
 void nameCorrection(NamePair& name)
 {
+    if ((name.first=="Jose" || name.first=="José") && name.second=="Delport")
+    {
+        name.first = "J.P.";
+        name.second = "Delport";
+    }
     if (name.first=="Franz" && name.second=="Melchior")
     {
         name.first = "Melchior";
@@ -719,6 +734,10 @@ int main( int argc, char **argv)
     arguments.getApplicationUsage()->addCommandLineOption("--so-number ","Print out shared object version number only");
     arguments.getApplicationUsage()->addCommandLineOption("--openthreads-version-number","Print out version number for OpenThreads only");
     arguments.getApplicationUsage()->addCommandLineOption("--openthreads-soversion-number","Print out shared object version number for OpenThreads only");
+    arguments.getApplicationUsage()->addCommandLineOption("Matrix::value_type","Print the value of Matrix::value_type");
+    arguments.getApplicationUsage()->addCommandLineOption("Plane::value_type","Print the value of Plane::value_type");
+    arguments.getApplicationUsage()->addCommandLineOption("BoundingSphere::value_type","Print the value of BoundingSphere::value_type");
+    arguments.getApplicationUsage()->addCommandLineOption("BoundingBox::value_type","Print the value of BoundingBox::value_type");
     arguments.getApplicationUsage()->addCommandLineOption("-r <file> or --read <file>","Read the ChangeLog to generate an estimated contributors list.");
 
     if (arguments.read("--version-number"))
@@ -776,11 +795,34 @@ int main( int argc, char **argv)
         std::cout<<OPENTHREADS_PATCH_VERSION<<std::endl;
         return 0;
     }
-    
 
     if (arguments.read("--openthreads-soversion-number"))
     {
         std::cout<<OpenThreadsGetSOVersion()<<std::endl;
+        return 0;
+    }
+
+
+    if (arguments.read("Matrix::value_type"))
+    {
+        std::cout<<((sizeof(osg::Matrix::value_type)==4)?"float":"double")<<std::endl;
+        return 0;
+    }
+
+    if (arguments.read("Plane::value_type"))
+    {
+        std::cout<<((sizeof(osg::Plane::value_type)==4)?"float":"double")<<std::endl;
+        return 0;
+    }
+
+    if (arguments.read("BoundingSphere::value_type"))
+    {
+        std::cout<<((sizeof(osg::BoundingSphere::value_type)==4)?"float":"double")<<std::endl;
+        return 0;
+    }
+    if (arguments.read("BoundingBox::value_type"))
+    {
+        std::cout<<((sizeof(osg::BoundingBox::value_type)==4)?"float":"double")<<std::endl;
         return 0;
     }
     

@@ -295,19 +295,36 @@ namespace osg
     class OSG_EXPORT FrameBufferObject: public StateAttribute
     {
     public:
-        typedef std::map<GLenum, FrameBufferAttachment> AttachmentMap;
+        typedef std::map<Camera::BufferComponent, FrameBufferAttachment> AttachmentMap;
+        typedef std::vector<GLenum> MultipleRenderingTargets;
+        
+        typedef Camera::BufferComponent BufferComponent;
 
         FrameBufferObject();
         FrameBufferObject(const FrameBufferObject& copy, const CopyOp& copyop = CopyOp::SHALLOW_COPY);
 
         META_StateAttribute(osg, FrameBufferObject, (StateAttribute::Type)0x101010/*FrameBufferObject*/);
 
-        inline const AttachmentMap &getAttachmentMap() const;
-        inline bool hasAttachment(GLenum attachment_point) const;
+        inline const AttachmentMap& getAttachmentMap() const;
+        
+
+        void setAttachment(GLenum attachment_point, const FrameBufferAttachment &attachment);
         inline const FrameBufferAttachment& getAttachment(GLenum attachment_point) const;
-        inline void setAttachment(GLenum attachment_point, const FrameBufferAttachment &attachment);
+        inline bool hasAttachment(GLenum attachment_point) const;
+
+        void setAttachment(BufferComponent attachment_point, const FrameBufferAttachment &attachment);
+        inline const FrameBufferAttachment& getAttachment(BufferComponent attachment_point) const;
+        inline bool hasAttachment(BufferComponent attachment_point) const;
+
+        GLenum convertBufferComponentToGLenum(BufferComponent attachment_point) const;
+        BufferComponent convertGLenumToBufferComponent(GLenum attachment_point) const;
+        
+
+        inline bool hasMultipleRenderingTargets() const { return !_drawBuffers.empty(); }
+        inline const MultipleRenderingTargets& getMultipleRenderingTargets() const { return _drawBuffers; }
 
         int compare(const StateAttribute &sa) const;
+        
         void apply(State &state) const;
 
         /** Mark internal FBO for deletion.
@@ -327,13 +344,20 @@ namespace osg
         virtual ~FrameBufferObject();
         FrameBufferObject& operator = (const FrameBufferObject&) { return *this; }
 
+        void updateDrawBuffers();
+        
         inline void dirtyAll();
 
     private:        
-        AttachmentMap _attachments;
-        mutable buffered_value<int> _dirtyAttachmentList;
-        mutable buffered_value<int> _unsupported;
-        mutable buffered_value<GLuint> _fboID;
+        AttachmentMap               _attachments;
+
+        // Buffers passed to glDrawBuffers when using multiple render targets.
+        MultipleRenderingTargets    _drawBuffers;
+
+        mutable buffered_value<int>         _dirtyAttachmentList;
+        mutable buffered_value<int>         _unsupported;
+        mutable buffered_value<GLuint>      _fboID;
+        
     };
 
     // INLINE METHODS
@@ -345,18 +369,22 @@ namespace osg
 
     inline bool FrameBufferObject::hasAttachment(GLenum attachment_point) const
     {
+        return hasAttachment(convertGLenumToBufferComponent(attachment_point));
+    }
+        
+    inline bool FrameBufferObject::hasAttachment(FrameBufferObject::BufferComponent attachment_point) const
+    {
         return _attachments.find(attachment_point) != _attachments.end();
     }
 
     inline const FrameBufferAttachment &FrameBufferObject::getAttachment(GLenum attachment_point) const
     {
-        return _attachments.find(attachment_point)->second;
+        return getAttachment(convertGLenumToBufferComponent(attachment_point));
     }
 
-    inline void FrameBufferObject::setAttachment(GLenum attachment_point, const FrameBufferAttachment &attachment)
+    inline const FrameBufferAttachment &FrameBufferObject::getAttachment(FrameBufferObject::BufferComponent attachment_point) const
     {
-        _attachments[attachment_point] = attachment;
-        dirtyAll();
+        return _attachments.find(attachment_point)->second;
     }
 
     inline void FrameBufferObject::dirtyAll()

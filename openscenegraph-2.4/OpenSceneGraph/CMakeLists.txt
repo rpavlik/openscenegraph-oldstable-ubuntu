@@ -15,9 +15,9 @@ ENDIF(WIN32)
 PROJECT(OpenSceneGraph)
 
 SET(OPENSCENEGRAPH_MAJOR_VERSION 2)
-SET(OPENSCENEGRAPH_MINOR_VERSION 3)
-SET(OPENSCENEGRAPH_PATCH_VERSION 7)
-SET(OPENSCENEGRAPH_SOVERSION 33)
+SET(OPENSCENEGRAPH_MINOR_VERSION 4)
+SET(OPENSCENEGRAPH_PATCH_VERSION 0)
+SET(OPENSCENEGRAPH_SOVERSION 35)
 
 SET(OPENSCENEGRAPH_VERSION ${OPENSCENEGRAPH_MAJOR_VERSION}.${OPENSCENEGRAPH_MINOR_VERSION}.${OPENSCENEGRAPH_PATCH_VERSION})
 
@@ -120,6 +120,14 @@ ENDIF(OSG_GLU_TESS_CALLBACK_TRIPLEDOT)
 
 
 IF(WIN32)
+
+    # This option is to enable the /MP switch for Visual Studio 2005 and above compilers
+    OPTION(WIN32_USE_MP "Set to ON to build OpenSceneGraph with the /MP option (Visual Studio 2005 and above)." OFF)
+    MARK_AS_ADVANCED(WIN32_USE_MP)
+    IF(WIN32_USE_MP)        
+        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
+    ENDIF(WIN32_USE_MP)        
+
     ADD_DEFINITIONS(-D_SCL_SECURE_NO_WARNINGS)
     ADD_DEFINITIONS(-D_CRT_SECURE_NO_DEPRECATE)
     #needed for net plugin
@@ -177,18 +185,29 @@ ENDIF(WIN32)
 #luigi#ENDIF(UNIX)
 ########################################################################################################
 
-OPTION(OSG_USE_FLOAT_MATRIX "Set to ON to build OpenSceneGraph with float matrix instead of double." OFF)
+OPTION(OSG_USE_FLOAT_MATRIX "Set to ON to build OpenSceneGraph with float Matrix instead of double." OFF)
 MARK_AS_ADVANCED(OSG_USE_FLOAT_MATRIX)
 IF(OSG_USE_FLOAT_MATRIX)        
     ADD_DEFINITIONS(-DOSG_USE_FLOAT_MATRIX)
 ENDIF(OSG_USE_FLOAT_MATRIX)        
 
-OPTION(OSG_USE_FLOAT_PLANE "Set to ON to build OpenSceneGraph with float matrix instead of double." OFF)
+OPTION(OSG_USE_FLOAT_PLANE "Set to ON to build OpenSceneGraph with float Plane instead of double." OFF)
 MARK_AS_ADVANCED(OSG_USE_FLOAT_PLANE)
 IF(OSG_USE_FLOAT_PLANE)        
     ADD_DEFINITIONS(-DOSG_USE_FLOAT_PLANE)
 ENDIF(OSG_USE_FLOAT_PLANE)        
 
+OPTION(OSG_USE_FLOAT_BOUNDINGSPHERE "Set to ON to build OpenSceneGraph with float BoundingSphere instead of double." ON)
+MARK_AS_ADVANCED(OSG_USE_FLOAT_BOUNDINGSPHERE)
+IF(NOT OSG_USE_FLOAT_BOUNDINGSPHERE)        
+    ADD_DEFINITIONS(-DOSG_USE_DOUBLE_BOUNDINGSPHERE)
+ENDIF(NOT OSG_USE_FLOAT_BOUNDINGSPHERE)        
+
+OPTION(OSG_USE_FLOAT_BOUNDINGBOX "Set to ON to build OpenSceneGraph with float BoundingBox instead of double." ON)
+MARK_AS_ADVANCED(OSG_USE_FLOAT_BOUNDINGBOX)
+IF(NOT OSG_USE_FLOAT_BOUNDINGBOX)      
+    ADD_DEFINITIONS(-DOSG_USE_DOUBLE_BOUNDINGBOX)
+ENDIF(NOT OSG_USE_FLOAT_BOUNDINGBOX)        
 
 ################################################################################
 # 3rd Party Dependency Stuff
@@ -447,7 +466,6 @@ IF(APPLE)
     OPTION(OSG_BUILD_APPLICATION_BUNDLES "Enable the building of applications and examples as OSX Bundles" OFF)
     
 ENDIF(APPLE)
-
 
 OPTION(BUILD_REF_DOCS "Build OpenSceneGraph reference documentation using doxygen (use: make DoxygenDoc)" OFF)
 

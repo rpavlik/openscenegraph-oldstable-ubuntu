@@ -1,6 +1,6 @@
-OpenSceneGraph Library 2.3.7
+OpenSceneGraph Library 2.4.0
 
-302 Contributors:
+307 Contributors:
 
 Firstname Surname
 -----------------
@@ -12,8 +12,8 @@ Paul Martz
 Eric Wing
 Brede Johansen
 Geoff Michel
-Farshid Lashkari
 Stephan Huber
+Farshid Lashkari
 Bob Kuehne
 Ulrich Hertlein
 Martin Lavery
@@ -21,33 +21,36 @@ Eric Sokolowsky
 Mathias Fröhlich
 Tree 
 David Callu
+Luigi Calori
 Trajce Nikolov
 Mike Wittman
-Luigi Calori
 Jean-Sebastien Guay
 Pavel Moloshtan
 Tom Jolley
 Andy Skinner
 Roger James
 Norman Vine
-Alberto Farre
 Colin McDonald
+Alberto Farre
 André Garneau
 Ruben Lopez
 Randall Hopper
+Wojciech Lewandowski
 Olaf Flebbe
 Gideon May
 Don Tidrow
-Wojciech Lewandowski
 Romano José Magacho da Silva
 Michael Gronager
 Daniel Sjölie
 Chris Hanson
 Per Fahlberg
 Jeremy Moles
+J.P. Delport
 David Spilling
-Joran Jessurun
 Art Tevs
+Sherman Wilcox
+Joran Jessurun
+Jason Beverage
 Paul Melis
 Jason Daly
 Frederic Marmond
@@ -55,32 +58,29 @@ David Fries
 Boris Bralo
 Yefei He
 Sondra Iverson
-Sherman Wilcox
 Serge Lages
 Rune Schmidt Jensen
 Rainer Oder
 Mike Connell
+Melchior Franz
 Joakim Simonsson
-Jason Beverage
 Carlo Camporesi
 Ben Discoe
 Andreas Ekstrand
 Adrian Egli
 Sasa Bistrovic
-Melchior Franz
 Martin Naylor
 Martin Aumueller
 Markus Trenkwalder
 Loic Dachary
-José Delport
 Joseph Steel
+John Shue
 Jan Peciva
 Jan Ciger
 Gordon Tomlinson
 Bryan Thrall
 Brad Colbert
 Vivek Rajan
-Stephane Simon
 Sean Spicer
 Ravi Mathur
 Nikolaus Hanekamp
@@ -89,13 +89,13 @@ Mihai Radu
 Michael Platings
 Michael Hartman
 Laurens Voerman
-John Shue
 David Guthrie
 Corbin Holtz
 Brad Christiansen
 Toshiyuki Takahei
 Thom DeCarlo
 Terry Welsh
+Stephane Lamoliatte
 Simon Julier
 Sebastien Grignard
 Romano Magacho
@@ -106,6 +106,7 @@ Leandro Motta Barros
 John Kelso
 Glenn Waldron
 Daniel Larimer
+Colin Dunlop
 Cedric Pinson
 Bruce Clay
 Alberto Luaces
@@ -113,6 +114,7 @@ Alberto Barbati
 Vladimir Shabanov
 Uwe Woessner
 Tony Horrobin
+Tim Moore
 Thibault Genessay
 Sohey Yamamoto
 Roland Smeenk
@@ -122,6 +124,7 @@ Phil Atkin
 Peter Hrenka
 Neil Hughes
 Mattias Linde
+Mattias Helsing
 Mathieu Marache
 Maria Ten
 Ken Sewell
@@ -131,7 +134,6 @@ James French
 Gabor Dorka
 Donn Mielcarek
 Domenico Mangieri
-Colin Dunlop
 Charles Cole
 Blake Williams
 Antoine Hue
@@ -140,11 +142,11 @@ Ali Botorabi
 Zach Deedler
 Yuzhong Shen
 Tugkan Calapoglu
-Tim Moore
 Tim Daoust
 Terrex 
 Sylvain Marie
 Steve Lunsford
+Stephane Simon
 Stephan Eilemann
 Stanislav Blinov
 Riccardo Corsi
@@ -209,6 +211,7 @@ Reinhard Sainitzer
 Rein Kadijk
 Qing Shen
 Philipp Siemoleit
+Philipp Mächler
 Paul Obermeier
 Paul Fredrikson
 Parag Chaudhur
@@ -285,6 +288,7 @@ Cyril Brulebois
 Clay Fowler
 Chuck Sembroski
 Chuck Seberion
+Christian Kaser
 Chris McGlone
 Carlos Garcea
 Bruno Herbelin
@@ -293,6 +297,7 @@ Brandon Hamm
 Brad Anderegg
 Bora Utka
 Blasius Czink
+Benoit Laniel
 Ben van Basten
 Bart Gallet
 Axel Volley

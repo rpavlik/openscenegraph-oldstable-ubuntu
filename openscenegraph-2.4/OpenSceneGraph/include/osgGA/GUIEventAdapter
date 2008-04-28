@@ -15,6 +15,7 @@
 #define OSGGA_EVENT 1 
 
 #include <osg/Object>
+#include <osg/Matrix>
 #include <osgGA/Export>
 
 namespace osgGA{
@@ -27,29 +28,30 @@ class OSGGA_EXPORT GUIEventAdapter : public osg::Object
 public:
 
         enum MouseButtonMask { 
-            LEFT_MOUSE_BUTTON=1,
-            MIDDLE_MOUSE_BUTTON=2,
-            RIGHT_MOUSE_BUTTON=4
+            LEFT_MOUSE_BUTTON    = 1<<0,
+            MIDDLE_MOUSE_BUTTON  = 1<<1,
+            RIGHT_MOUSE_BUTTON   = 1<<2
         };
 
         enum EventType {
-            NONE=0,
-            PUSH=1, 
-            RELEASE=2,
-            DOUBLECLICK=4,
-            DRAG=8,
-            MOVE=16,
-            KEYDOWN=32,
-            KEYUP=64,
-            FRAME=128,
-            RESIZE=256,
-            SCROLL=512,
-            PEN_PRESSURE=1024,
-            PEN_PROXIMITY_ENTER=2048,
-            PEN_PROXIMITY_LEAVE=4096,
-            CLOSE_WINDOW=8192,
-            QUIT_APPLICATION=16384,
-            USER=32768
+            NONE                = 0,
+            PUSH                = 1<<0, 
+            RELEASE             = 1<<1,
+            DOUBLECLICK         = 1<<2,
+            DRAG                = 1<<3,
+            MOVE                = 1<<4,
+            KEYDOWN             = 1<<5,
+            KEYUP               = 1<<6,
+            FRAME               = 1<<7,
+            RESIZE              = 1<<8,
+            SCROLL              = 1<<9,
+            PEN_PRESSURE        = 1<<10,
+            PEN_ORIENTATION     = 1<<11,
+            PEN_PROXIMITY_ENTER = 1<<12,
+            PEN_PROXIMITY_LEAVE = 1<<13,
+            CLOSE_WINDOW        = 1<<14,
+            QUIT_APPLICATION    = 1<<15,
+            USER                = 1<<16
         };
 
         enum KeySymbol
@@ -208,18 +210,24 @@ public:
         {
             MODKEY_LEFT_SHIFT  = 0x0001,
             MODKEY_RIGHT_SHIFT = 0x0002,
-            MODKEY_LEFT_CTRL   = 0x0040,
-            MODKEY_RIGHT_CTRL  = 0x0080,
-            MODKEY_LEFT_ALT    = 0x0100,
-            MODKEY_RIGHT_ALT   = 0x0200,
-            MODKEY_LEFT_META   = 0x0400,
-            MODKEY_RIGHT_META  = 0x0800,
+            MODKEY_LEFT_CTRL   = 0x0004,
+            MODKEY_RIGHT_CTRL  = 0x0008,
+            MODKEY_LEFT_ALT    = 0x0010,
+            MODKEY_RIGHT_ALT   = 0x0020,
+            MODKEY_LEFT_META   = 0x0040,
+            MODKEY_RIGHT_META  = 0x0080,
+            MODKEY_LEFT_SUPER  = 0x0100,
+            MODKEY_RIGHT_SUPER = 0x0200,
+            MODKEY_LEFT_HYPER  = 0x0400,
+            MODKEY_RIGHT_HYPER = 0x0800,
             MODKEY_NUM_LOCK    = 0x1000,
             MODKEY_CAPS_LOCK   = 0x2000,
             MODKEY_CTRL        = (MODKEY_LEFT_CTRL|MODKEY_RIGHT_CTRL),
             MODKEY_SHIFT       = (MODKEY_LEFT_SHIFT|MODKEY_RIGHT_SHIFT),
             MODKEY_ALT         = (MODKEY_LEFT_ALT|MODKEY_RIGHT_ALT),
-            MODKEY_META        = (MODKEY_LEFT_META|MODKEY_RIGHT_META)
+            MODKEY_META        = (MODKEY_LEFT_META|MODKEY_RIGHT_META),
+            MODKEY_SUPER       = (MODKEY_LEFT_SUPER|MODKEY_RIGHT_SUPER),
+            MODKEY_HYPER       = (MODKEY_LEFT_HYPER|MODKEY_RIGHT_HYPER)
         };
 
         enum MouseYOrientation
@@ -354,6 +362,20 @@ public:
         float getPenPressure()  const { return _pressure; }
         /// sets the pressure from a tablet
         void setPenPressure(float pressure) { _pressure = pressure; }
+        /// get the tiltX, from a tablet input device (range -1 - 1)
+        float getPenTiltX()  const { return _tiltX; }
+        /// sets the tiltX from a tablet
+        void setPenTiltX(float tiltX) { _tiltX = tiltX; }
+        /// get the tiltY, from a tablet input device (range -1 - 1)
+        float getPenTiltY()  const { return _tiltY; }
+        /// sets the tiltY from a tablet
+        void setPenTiltY(float tiltY) { _tiltY = tiltY; }
+        /// get the rotation, from a tablet input device (range 0 - 2PI)
+        float getPenRotation()  const { return _rotation; }
+        /// sets the rotation from a tablet
+        void setPenRotation(float rotation) { _rotation = rotation; }
+        /// get the orientation from a tablet input device as a matrix
+        const osg::Matrix getPenOrientation() const;
         /// get the current used tablet pointer type
         TabletPointerType getTabletPointerType() const { return _tabletPointerType; }
         /// set the current used tablet pointer type
@@ -418,6 +440,9 @@ public:
         float _mx;
         float _my;
         float _pressure;
+        float _tiltX;
+        float _tiltY;
+        float _rotation;
         unsigned int _buttonMask;
         unsigned int _modKeyMask;
         ScrollingMotion _scrollingMotion;

@@ -105,19 +105,23 @@ class X11KeyboardMap
             _keymap[XK_semicolon    ] = ';';
             _keymap[XK_apostrophe   ] = '\'';
             _keymap[XK_Return       ] = osgGA::GUIEventAdapter::KEY_Return;
-            _keymap[XK_Shift_L      ] = osgGA::GUIEventAdapter::KEY_Shift_L;
             _keymap[XK_comma        ] = ',';
             _keymap[XK_period       ] = '.';
             _keymap[XK_slash        ] = '/';
+            _keymap[XK_space        ] = ' ';
+            _keymap[XK_Shift_L      ] = osgGA::GUIEventAdapter::KEY_Shift_L;
             _keymap[XK_Shift_R      ] = osgGA::GUIEventAdapter::KEY_Shift_R;
             _keymap[XK_Control_L    ] = osgGA::GUIEventAdapter::KEY_Control_L;
-            _keymap[XK_Super_L      ] = osgGA::GUIEventAdapter::KEY_Super_L;
-            _keymap[XK_space        ] = ' ';
+            _keymap[XK_Control_R    ] = osgGA::GUIEventAdapter::KEY_Control_R;
+            _keymap[XK_Meta_L       ] = osgGA::GUIEventAdapter::KEY_Meta_L;
+            _keymap[XK_Meta_R       ] = osgGA::GUIEventAdapter::KEY_Meta_R;
             _keymap[XK_Alt_L        ] = osgGA::GUIEventAdapter::KEY_Alt_L;
             _keymap[XK_Alt_R        ] = osgGA::GUIEventAdapter::KEY_Alt_R;
+            _keymap[XK_Super_L      ] = osgGA::GUIEventAdapter::KEY_Super_L;
             _keymap[XK_Super_R      ] = osgGA::GUIEventAdapter::KEY_Super_R;
+            _keymap[XK_Hyper_L      ] = osgGA::GUIEventAdapter::KEY_Hyper_L;
+            _keymap[XK_Hyper_R      ] = osgGA::GUIEventAdapter::KEY_Hyper_R;
             _keymap[XK_Menu         ] = osgGA::GUIEventAdapter::KEY_Menu;
-            _keymap[XK_Control_R    ] = osgGA::GUIEventAdapter::KEY_Control_R;
             _keymap[XK_Print        ] = osgGA::GUIEventAdapter::KEY_Print;
             _keymap[XK_Scroll_Lock  ] = osgGA::GUIEventAdapter::KEY_Scroll_Lock;
             _keymap[XK_Pause        ] = osgGA::GUIEventAdapter::KEY_Pause;
@@ -1427,6 +1431,8 @@ void GraphicsWindowX11::requestWarpPointer(float x,float y)
 extern "C" 
 {
 
+typedef int (*X11ErrorHandler)(Display*, XErrorEvent*);
+
 int X11ErrorHandling(Display* display, XErrorEvent* event)
 {
     osg::notify(osg::NOTICE)<<"Got an X11ErrorHandling call display="<<display<<" event="<<event<<std::endl;
@@ -1543,12 +1549,37 @@ class X11WindowingSystemInterface : public osg::GraphicsContext::WindowingSystem
     }
 #endif
 
+protected:
+    bool _errorHandlerSet;
+    
+
 public:
     X11WindowingSystemInterface()
     {
         osg::notify(osg::INFO)<<"X11WindowingSystemInterface()"<<std::endl;
-    
-        XSetErrorHandler(X11ErrorHandling);
+
+
+        // Install an X11 error handler, if the application has not already done so.
+        
+        // Set default handler, and get pointer to current handler.
+        X11ErrorHandler currentHandler = XSetErrorHandler(NULL);
+        
+        // Set our handler, and get pointer to default handler.
+        X11ErrorHandler defHandler = XSetErrorHandler(X11ErrorHandling);
+
+        if ( currentHandler == defHandler )
+        {
+            // No application error handler, use ours.
+            // osg::notify(osg::INFO)<<"Set osgViewer X11 error handler"<<std::endl;
+            _errorHandlerSet = 1;
+        }
+        else
+        {
+            // Application error handler exists, leave it set.
+            // osg::notify(osg::INFO)<<"Existing application X11 error handler set"<<std::endl;
+            _errorHandlerSet = 0;
+            XSetErrorHandler(currentHandler);
+        }
     
 #if 0
         if (XInitThreads() == 0)
@@ -1572,7 +1603,23 @@ public:
         }
 
         //osg::notify(osg::NOTICE)<<"~X11WindowingSystemInterface()"<<std::endl;
-        XSetErrorHandler(0);
+
+        // Unset our X11 error handler, providing the application has not replaced it.
+
+        if ( _errorHandlerSet )
+        {
+            X11ErrorHandler currentHandler = XSetErrorHandler(NULL);
+            if ( currentHandler == X11ErrorHandling )
+            {
+                // osg::notify(osg::INFO)<<"osgViewer X11 error handler removed"<<std::endl;
+            }
+            else
+            {
+                // Not our error handler, leave it set.
+                // osg::notify(osg::INFO)<<"Application X11 error handler left"<<std::endl;
+                XSetErrorHandler(currentHandler);
+            }
+        }
     }
 
     virtual unsigned int getNumScreens(const osg::GraphicsContext::ScreenIdentifier& si) 

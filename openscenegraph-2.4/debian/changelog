@@ -1,3 +1,9 @@
+openscenegraph (2.4.0-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Mon, 28 Apr 2008 11:04:18 +0200
+
 openscenegraph (2.3.7-1) experimental; urgency=low
 
   * New upstream release.

@@ -245,7 +245,7 @@ BEGIN_VALUE_REFLECTOR(osg::CullSettings)
 	          __osg_Node_NodeMask__getCullMaskRight,
 	          "",
 	          "");
-	I_Method1(void, setLODScale, IN, float, bias,
+	I_Method1(void, setLODScale, IN, float, scale,
 	          Properties::NON_VIRTUAL,
 	          __void__setLODScale__float,
 	          "Set the LOD bias for the CullVisitor to use. ",
@@ -279,6 +279,11 @@ BEGIN_VALUE_REFLECTOR(osg::CullSettings)
 	          Properties::NON_VIRTUAL,
 	          __C5_ClampProjectionMatrixCallback_P1__getClampProjectionMatrixCallback,
 	          "get the const ClampProjectionMatrixCallback. ",
+	          "");
+	I_Method1(void, write, IN, std::ostream &, out,
+	          Properties::NON_VIRTUAL,
+	          __void__write__std_ostream_R1,
+	          "Write out internal settings of CullSettings. ",
 	          "");
 	I_SimpleProperty(osg::CullSettings::ClampProjectionMatrixCallback *, ClampProjectionMatrixCallback, 
 	                 __ClampProjectionMatrixCallback_P1__getClampProjectionMatrixCallback, 

@@ -13,6 +13,7 @@
 
 #include <osgTerrain/GeometryTechnique>
 #include <osgTerrain/TerrainTile>
+#include <osgTerrain/Terrain>
 
 #include <osgUtil/SmoothingVisitor>
 
@@ -228,22 +229,24 @@ void GeometryTechnique::generateGeometry(Locator* masterLocator, const osg::Vec3
         numRows = elevationLayer->getNumRows();
     }
     
+    float sampleRatio = _terrainTile->getTerrain() ? _terrainTile->getTerrain()->getSampleRatio() : 1.0f;
     
     double i_sampleFactor = 1.0;
     double j_sampleFactor = 1.0;
 
-    unsigned int targetSize = 32;
-    if (numColumns==64 && numColumns>targetSize)
+    if (sampleRatio!=1.0f)
     {
+    
         unsigned int originalNumColumns = numColumns;
         unsigned int originalNumRows = numRows;
     
-        numColumns = targetSize;
-        numRows = targetSize;
+        numColumns = std::max((unsigned int) (float(originalNumColumns)*sqrtf(sampleRatio)), 4u);
+        numRows = std::max((unsigned int) (float(originalNumRows)*sqrtf(sampleRatio)),4u);
 
         i_sampleFactor = double(originalNumColumns-1)/double(numColumns-1);
         j_sampleFactor = double(originalNumRows-1)/double(numRows-1);
     }
+    
     
 
     bool treatBoundariesToValidDataAsDefaultValue = _terrainTile->getTreatBoundariesToValidDataAsDefaultValue();
@@ -486,7 +489,7 @@ void GeometryTechnique::generateGeometry(Locator* masterLocator, const osg::Vec3
         // create bottom skirt vertices
         int r,c;
         r=0;
-        for(c=0;c<numColumns;++c)
+        for(c=0;c<static_cast<int>(numColumns);++c)
         {
             int orig_i = indices[(r)*numColumns+c]; // index of original vertex of grid
             if (orig_i>=0)
@@ -525,7 +528,7 @@ void GeometryTechnique::generateGeometry(Locator* masterLocator, const osg::Vec3
 
         // create right skirt vertices
         c=numColumns-1;
-        for(r=0;r<numRows;++r)
+        for(r=0;r<static_cast<int>(numRows);++r)
         {
             int orig_i = indices[(r)*numColumns+c]; // index of original vertex of grid
             if (orig_i>=0)

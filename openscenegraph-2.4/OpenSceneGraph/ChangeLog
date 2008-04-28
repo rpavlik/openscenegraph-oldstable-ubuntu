@@ -1,3 +1,436 @@
+2008-04-25 09:46 +0000 [r8225]  robert:
+
+	* Updated Version number for 2.4 stable release
+
+2008-04-25 09:35 +0000 [r8224]  robert:
+
+	* From Stephane Lamoliatte, "Here is the fix of a very little typed
+	  error in BoundingBox : I replace "doulbe" by "double"."
+
+2008-04-25 08:34 +0000 [r8222]  robert:
+
+	* Added cast to avoid warning
+
+2008-04-24 16:50 +0000 [r8218-8220]  robert:
+
+	* Updated date of 2.4 release
+
+	* Updated AUTHORS file for release
+
+	* Updated ChangeLog for 2.3.11 release
+
+2008-04-24 16:24 +0000 [r8217]  robert:
+
+	* From Wojchiech Lewandowski, add missing setDataVariance(DYNAMIC)
+	  and extra event handlers
+
+2008-04-24 14:46 +0000 [r8213]  robert:
+
+	* From Colin Dunlop, added alias for .live to quicktime plugin
+	  mapping.
+
+2008-04-24 11:34 +0000 [r8211]  robert:
+
+	* Reverted the changes for ill fated tweaks for Apple build
+
+2008-04-24 10:09 +0000 [r8210]  robert:
+
+	* From Mattias Helsing, "I just made Find3rdPartyDependencies
+	  search for curllib if it can't find libcurl. Mike's 3rdParty only
+	  has curllib. I realize now that the in appended file I have
+	  earlier removed searching for freetype219 since I have it but it
+	  will break the build of osg."
+
+2008-04-23 21:07 +0000 [r8205-8206]  robert:
+
+	* Updated authors file for 2.3.11 release
+
+	* Updated ChangeLog
+
+2008-04-23 20:54 +0000 [r8202]  robert:
+
+	* Updated version number 2.3.11
+
+2008-04-23 20:50 +0000 [r8200-8201]  robert:
+
+	* Refactored the inclusion of the headers in the ADD_LIBRARY so
+	  that they aren't added under OSX.
+
+	* Removed the mutable from the _image variable
+
+2008-04-23 14:10 +0000 [r8195]  robert:
+
+	* Added mutex to object creation to avoid a race condition when
+	  using threaded multiple graphics context
+
+2008-04-22 14:31 +0000 [r8193]  robert:
+
+	* Added return.
+
+2008-04-22 14:15 +0000 [r8192]  robert:
+
+	* From Stephan Huber, "the support for the new mightymouse and new
+	  touchpads was incomplete in GraphicsWindowCarbon. Attached is a
+	  fixed version."
+
+2008-04-22 13:00 +0000 [r8191]  robert:
+
+	* Updated AUTHORS file
+
+2008-04-22 12:52 +0000 [r8189]  robert:
+
+	* Updated ChangeLog, NEWS and READE for 2.3.10 pre release of 2.4.
+
+2008-04-22 11:47 +0000 [r8188]  robert:
+
+	* Updated version number for 2.3.10 dev release
+
+2008-04-22 11:41 +0000 [r8186-8187]  robert:
+
+	* Updated wrappers
+
+	* Removed hardware down sampling hack from GeoemtryTechnique and
+	  replaced with Terrain::g/setSampleRatio() usage.
+
+2008-04-22 10:10 +0000 [r8185]  robert:
+
+	* Updated authors
+
+2008-04-22 09:43 +0000 [r8184]  robert:
+
+	* Fixed name
+
+2008-04-21 16:31 +0000 [r8152]  robert:
+
+	* Updated NEWS for 2.4 release
+
+2008-04-21 14:51 +0000 [r8151]  robert:
+
+	* From Luigi Calori, Added CURL_IS_STATIC option to help hint to
+	  the libcurl's plugin build so that it can be select as static
+	  build
+
+2008-04-18 16:21 +0000 [r8144-8145]  robert:
+
+	* Updated AUTHORS file for release
+
+	* Updated ChangeLog
+
+2008-04-18 15:52 +0000 [r8143]  robert:
+
+	* Updated date on readem
+
+2008-04-18 15:01 +0000 [r8142]  robert:
+
+	* Updated wrappers
+
+2008-04-18 14:57 +0000 [r8141]  robert:
+
+	* Added support for COLOR_BUFFER entries up to 15
+
+2008-04-18 14:51 +0000 [r8140]  robert:
+
+	* Updated BufferComponent enum to list COLOR_BUFFERi entries up to
+	  15.
+
+2008-04-18 14:33 +0000 [r8139]  robert:
+
+	* Fixed bug in FBO colour attachement code
+
+2008-04-18 14:14 +0000 [r8138]  robert:
+
+	* Added optional compiled in debugging output to
+	  CullVisitor::apply(osg::Camera&)
+
+2008-04-18 13:57 +0000 [r8137]  robert:
+
+	* Added write(ostream&) method to allow one to print out the
+	  current state
+
+2008-04-18 13:25 +0000 [r8136]  robert:
+
+	* Changed the FrameBufferObject::setAttachment() methods so it now
+	  use osg::Camera::BufferComponent to enable it to distinguish
+	  between MRT and non MRT paths
+
+2008-04-18 11:09 +0000 [r8135]  robert:
+
+	* Introduce OSG_GL_ERROR_CHECKING env var checking to osg::State
+	  constructor so that you can enable fine grained check via env
+	  vars o.e. export OSG_GL_ERROR_CHECKING=ONCE_PER_ATTRIBUTE
+
+2008-04-17 15:30 +0000 [r8132]  robert:
+
+	* From Stephan Huber, "attached you'll find a refactored and
+	  improved quicktime-plugin. I moved all code related to the
+	  image-loading, swizzling etc into an extra class. The quicktime
+	  plugin supports now reading and writing images from/to streams
+	  and the code is less cluttered than previous versions. I removed
+	  QTtexture.h/.cpp and added QTImportExport.h/.cpp. I updated the
+	  CMake-files, I hope they are alright. I used the submitted code
+	  in my own apps since two months or so and it seems pretty stable,
+	  but as always the migration to the osg-quicktime plugin may have
+	  introduced new bugs, so perfect for developer release :)"
+
+2008-04-17 11:12 +0000 [r8127]  robert:
+
+	* From John Shue, build fix for QT 3.x
+
+2008-04-17 09:04 +0000 [r8122]  shuber:
+
+	* updated XCode project
+
+2008-04-16 18:13 +0000 [r8121]  robert:
+
+	* Added new computation of time to allocate to flushing deleted and
+	  compiling OpenGL objects per frame.
+
+2008-04-16 15:23 +0000 [r8118-8119]  robert:
+
+	* From Bob Kuehne, "he attached are conversions of the 3 main
+	  places i found in osg where tokens are used to represent bitmasks
+	  with 'magic' numbers, like 32. i've changed these to a more
+	  representative bitshift representation, showing clearly in which
+	  bit you can expect this token to manifest. ie, converted things
+	  like: from: DEEP_COPY_STATESETS = 8, to: DEEP_COPY_STATESETS =
+	  1<<3, showing clearly that this isn't the _value_ 8, but the
+	  _bit_ 8. this is an old pattern i see (and like to promulgate) to
+	  make code a bit more readable and maintainable. "
+
+	* Updated version number for nex dev release
+
+2008-04-16 10:01 +0000 [r8107]  robert:
+
+	* From Jason Beverage, cursor inheritance support
+
+2008-04-15 20:27 +0000 [r8105]  robert:
+
+	* Updated AUTHORS.txt for release
+
+2008-04-15 20:16 +0000 [r8104]  robert:
+
+	* Updated ChangeLog
+
+2008-04-15 19:46 +0000 [r8103]  robert:
+
+	* From Jason Beverage, "The following changes fix the flickering
+	  issue I'm seeing when trying to externally manage my cursor in
+	  Win32. If you set the cursor to InheritCursor,
+	  GraphicsWindowWin32 ignores WM_SETCURSOR and assumes you will set
+	  the cursor yourself."
+
+2008-04-15 19:36 +0000 [r8102]  robert:
+
+	* From Art Trevs, moved multile render targets support from
+	  RenderStage into FrameBufferObject. From Robert Osfield,
+	  refactored the FrameBufferObejcts::_drawBuffers set up so that
+	  its done within the setAttachment method to avoid potential
+	  threading/execution order issues.
+
+2008-04-15 12:52 +0000 [r8099]  robert:
+
+	* Updated wrappers
+
+2008-04-15 11:50 +0000 [r8096]  robert:
+
+	* From Tim Moore, compile fix for gcc 4.3
+
+2008-04-14 10:38 +0000 [r8095]  robert:
+
+	* Added docs explaining units
+
+2008-04-13 19:31 +0000 [r8094]  robert:
+
+	* Added subdivision of Goedes
+
+2008-04-13 14:32 +0000 [r8092-8093]  robert:
+
+	* From Christian Kaser, "I discovered a bug that lead to a space
+	  being displayed at the start of the new line after an automatic
+	  line break (through setMaximumWidth()). The fix simply skips all
+	  spaces at the end of the line, before skipping a line break which
+	  was done already. osgText/Text.cpp: Line 502 ... else { ++itr; }
+	  if (itr!=_text.end()) { // skip over spaces and return. while
+	  (*itr==' ') ++itr; // New if (*itr=='\n') ++itr; } // move to new
+	  line. switch(_layout) { .."
+
+	* From Paul Martz, added osgocclussionquery and osgthirdpersonview
+	  examples
+
+2008-04-12 10:02 +0000 [r8091]  robert:
+
+	* Changed bias parameter to scale
+
+2008-04-11 14:52 +0000 [r8090]  robert:
+
+	* Updadated authors file for dev release
+
+2008-04-11 14:43 +0000 [r8089]  robert:
+
+	* Updated wrappers, and version numbers in prep for next release
+
+2008-04-11 14:33 +0000 [r8088]  robert:
+
+	* Fixed J.P. Delports name
+
+2008-04-11 14:14 +0000 [r8087]  robert:
+
+	* Added --unit entry for controlling which texture unit the overlay
+	  works on.
+
+2008-04-11 13:43 +0000 [r8086]  robert:
+
+	* From Paul Martz,"Several misc changes, but the major fixes
+	  include: * Support for Vec4ubArray for color data * Support for
+	  material transparency Thanks to Neil Hughes, Jason Daly,
+	  yourself, and others for testing and reporting issues."
+
+2008-04-11 13:28 +0000 [r8085]  robert:
+
+	* From Philipp Machler, "We have extended the support for Wacom
+	  Tablet devices: - Mac OS X - not only pressure, but tilt and
+	  z-rotation is supported now "
+
+2008-04-11 13:04 +0000 [r8083-8084]  robert:
+
+	* Added reference to osgstereomatch example to
+	  osgmultiplerendertargets. Added usage example use
+	  OpenSceneGraph-Data/Images examples
+
+	* From Sherman Wilcox, "Here is a patch for cmakelists.txt to add
+	  support for the /MP option in Microsoft compilers as discussed in
+	  osg-users. There is now an advanced option called WIN32_USE_MP
+	  (which defaults to OFF) that will enable the /MP switch for all
+	  builds. I tucked this code block safely within a IF(WIN32)
+	  branch."
+
+2008-04-11 11:58 +0000 [r8082]  robert:
+
+	* From Jose Delport, a MRT example implementing stereo matching.
+
+2008-04-11 11:19 +0000 [r8080]  robert:
+
+	* Updated wrappers
+
+2008-04-11 11:10 +0000 [r8079]  robert:
+
+	* From Melchior Franz, "The GUIEventAdapter header file had
+	  KeySymbols for the super and hyper keys defined already, but
+	  these modifiers were missing in GUIEventAdapter::ModKeyMask, and
+	  the EventQueue ingored them as well. The attached diff/archive
+	  adds the missing parts for Super/Hyper modifier key support. I'm
+	  aware that this might not be supported on all systems/keyboards
+	  out of the box, but decided to submit it anyway because: -
+	  developers are aware of differences between input devices (Some
+	  mice have scroll wheels, others don't. Some have five or more
+	  buttons, some have only one. Some keyboards don't have numpads,
+	  some have AltGr, some don't etc.) - even if someone relies on
+	  Hyper/Super in distributed software, this is easy to fix and
+	  doesn't create lock-in conditions - while the names Hyper/Super
+	  may only be common on X11, they are just symbol names and not
+	  OS-specific - even though some systems might not offer these
+	  additional modifiers by default, it's likely that all of them
+	  have at least 8 modifier levels internally, so it should only be
+	  a matter of OS configuration to make them work - having
+	  super/hyper available is useful to offer a user ways to define
+	  local key definitions that are safe from collisions with
+	  predefined "official" key assignments"
+
+2008-04-11 10:58 +0000 [r8078]  robert:
+
+	* From Sherman Wilcox, "Modified the cmakelists.txt file for the
+	  curl plugin so the proper linker directories are set in Win32.
+	  The old cmakelists.txt would set the lib release folder for debug
+	  builds as well. This should correct that."
+
+2008-04-11 10:31 +0000 [r8076-8077]  robert:
+
+	* From Colin McDonald, fixed typo.
+
+	* From Benoit Laniel, "I use mingw to cross-compile openscenegraph
+	  to win32. However, linux filesystem is case-sensitive. Here are
+	  the modifications needed to make the compiler happy. These are
+	  only some include lines rewritten (Io.h to io.h, Windows.h to
+	  windows.h etc.) for version 2.3.7."
+
+2008-04-11 10:16 +0000 [r8074]  robert:
+
+	* From Bob Kuehne, "1) add simplifier command "--simplifier .5" to
+	  reduce complexity 2) complementarily add a "--overallNormal" to
+	  replace per-vert/per-facet normals with an overall. simplifier
+	  doesn't work in certain cases without less complex normals. this
+	  gets that done. 3) add env var output with full verbose output so
+	  people realize it's active when the app is run - i see this all
+	  the time in training where people run osgconv, with unintended
+	  data transformations due to osgUtil:;Optimzer, for example"
+
+2008-04-11 10:10 +0000 [r8073]  robert:
+
+	* Added --mouse option to enable mouse tracking, and fixed bug in
+	  assumption that nv is not null.
+
+2008-04-03 18:36 +0000 [r8038]  robert:
+
+	* Introduced CMake build option for compiling double or float
+	  versions of osg::BoundingSphere and osg::BoundingBox. Introduced
+	  code in BoundgingSphere, BoundingBox, ProxyNode and LOD to
+	  utilise the above settings. Added Matrix::value_type,
+	  Plane::value_type, BoundingSphere::value_type and
+	  BoundingBox::value_type command line options that report where
+	  the types of floats or doubles.
+
+2008-04-03 18:06 +0000 [r8037]  robert:
+
+	* From Colin McDonald, "The X11WindowingSystemInterface in
+	  osgViewer/GraphicsWindowX11.cpp unconditionally sets the X11
+	  error handler routine, replacing anything that was previously
+	  set. This is a bit unfriendly, as the X11 error handler is a
+	  global attribute which the application, or the GUI toolkit being
+	  used, may well have set itself. So I have modified
+	  X11WindowingSystemInterface to only replace the error handler if
+	  it is the default i.e. if the application has not set it."
+
+2008-04-03 10:26 +0000 [r8033]  robert:
+
+	* From Mattias Helsing, "While using the dds plugin (via osgdem) it
+	  was able to write 24bit images with BGR order but not read them.
+	  My 2-liner fixed it for me but it may be that someone with more
+	  knowledge of the plugin want to insert more pixel formats in the
+	  reading part of the plugin."
+
+2008-04-02 17:08 +0000 [r8032]  robert:
+
+	* From Jose Delport, added support for MRT via glDrawBuffers
+
+2008-04-02 13:57 +0000 [r8030-8031]  robert:
+
+	* From Mattias Helsing, "Subject: osga reading slash mismatch
+	  requests for files in a archive are made with unix style paths.
+	  So to be able to match an entry in map(_indexMap) it's keys needs
+	  to be stored in unix style even on Win32" Note from Robert
+	  Osfied, simplified this submission so that the added conversion
+	  to unix slahes is done on all platforms as this should be safe
+	  and simpler to maintain.
+
+	* Updated to reflect new COLOR_BUFFER0 value
+
+2008-04-02 13:48 +0000 [r8028-8029]  robert:
+
+	* From Jose Delport, introduced osgmultiplerendertargets example
+
+	* Changed the Camera::BufferComponent::COLOR_BUFFER0 from being
+	  equal to COLOR_BUFFER to being COLOR_BUFFER+1 to enable
+	  differentation between non MRT and MRT paths.
+
+2008-04-02 11:28 +0000 [r8027]  robert:
+
+	* From Jose Delport, typo fixes
+
+2008-04-01 17:22 +0000 [r8025]  robert:
+
+	* Updated ChangeLog, osgversion and AUTHOR.txt for 2.3.7 dev
+	  release
+
 2008-04-01 14:52 +0000 [r8024]  robert:
 
 	* Removed svn:externals property
