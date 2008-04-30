@@ -107,10 +107,10 @@ endif
 #
 #CURRENT=6
 #
-# OpenSceneGraph 2.3.7
+# OpenSceneGraph 2.4.0
 #
 CURRENT=7
-OSG_VERSION=2.3.7
+OSG_VERSION=2.4.0
 
 build: patch build-stamp
 build-stamp: configure-stamp 
