@@ -146,8 +146,8 @@ clean-patched:
 	dh_clean 
 
 MANPAGES = \
-	${MANAPPLICATIONS} \
-	${MANEXAMPLES}
+	${MANAPPLICATIONS:=.1} \
+	${MANEXAMPLES:=.1}
 
 MANAPPLICATIONS = \
 	osgviewer \
