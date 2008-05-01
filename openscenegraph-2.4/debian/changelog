@@ -2,8 +2,9 @@ openscenegraph (2.4.0-2) unstable; urgency=low
 
   * Remove Cyril Brulebois from Uploaders on his request.
 
-  * debian/rules: dont try to be smart about -j because it can lead to -j0 (Closes: #477353)
-  
+  * debian/rules: don't try to be smart about -j because it can lead to -j0
+    (Closes: #477353)
+
   * openthreads-doc and openscenegraph-doc in section doc
   
   * debian/rules: man pages files end with .1
