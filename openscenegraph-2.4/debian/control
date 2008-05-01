@@ -6,7 +6,7 @@ Build-Depends: debhelper (>= 4.0.0), dpatch, cmake, g++ (>= 3.3.0), libungif4-de
 Standards-Version: 3.7.2
 
 Package: libopenthreads-dev
-Section: devel
+Section: libdevel
 Architecture: any
 Depends: libopenthreads7 (= ${Source-Version})
 Description: Object-Oriented (OO) thread interface for C++ programmers, development files
@@ -39,7 +39,7 @@ Description: Documentation for Object-Oriented (OO) thread interface
  in a shared object library. 
 
 Package: libopenscenegraph-dev
-Section: devel
+Section: libdevel
 Architecture: any
 Depends: libopenthreads-dev, xlibmesa-gl-dev | libgl-dev, xlibmesa-glu-dev | libglu-dev, libopenscenegraph7 (= ${Source-Version})
 Description: 3D scenegraph development files
