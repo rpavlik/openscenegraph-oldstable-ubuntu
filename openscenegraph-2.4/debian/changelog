@@ -1,3 +1,13 @@
+openscenegraph (2.4.0-2) unstable; urgency=low
+
+  * Remove Cyril Brulebois from Uploaders on his request.
+
+  * debian/rules: dont try to be smart about -j because it can lead to -j0 (Closes: #477353)
+  
+  * openthreads-doc and openscenegraph-doc in section doc
+  
+ -- Loic Dachary (OuoU) <loic@debian.org>  Thu, 01 May 2008 19:56:49 +0200
+
 openscenegraph (2.4.0-1) unstable; urgency=low
 
   * New upstream release

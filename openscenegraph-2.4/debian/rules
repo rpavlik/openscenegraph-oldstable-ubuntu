@@ -24,12 +24,9 @@ else
 	# Full path to make ccache happy
 	CCACHE = $(shell which $(CXX))
 endif
-#ifeq (smp,$(findstring smp,$(DEB_BUILD_OPTIONS)))
-#	SMP = -j2
-#endif
-SMP = -j$(shell if [ -f /proc/cpuinfo ]; \
-			then echo `cat /proc/cpuinfo | grep 'processor' | wc -l`; \
-			else echo 1; fi)
+ifeq (smp,$(findstring smp,$(DEB_BUILD_OPTIONS)))
+	SMP = -j2
+endif
 
 # shared library versions, option 1
 # version=2.0.5
@@ -173,15 +170,15 @@ MANEXAMPLES = \
 	osgcopy.1 \
 	osgcubemap.1 \
 	osgdelaunay.1 \
-	osgdepthpeeling.1 \
 	osgdepthpartition.1 \
-	osgdepthshadow.1 \
+	osgdepthpeeling.1 \
 	osgdistortion.1 \
 	osgfadetext.1 \
 	osgforest.1 \
 	osgfxbrowser.1 \
 	osggeodemo.1 \
 	osggeometry.1 \
+	osggeometryshaders.1 \
 	osghangglide.1 \
 	osghud.1 \
 	osgimpostor.1 \
@@ -197,8 +194,11 @@ MANEXAMPLES = \
 	osgmanipulator.1 \
 	osgmotionblur.1 \
 	osgmovie.1 \
+	osgmultiplerendertargets.1 \
 	osgmultitexture.1 \
+	osgmultitexturecontrol.1 \
 	osgoccluder.1 \
+	osgocclusionquery.1 \
 	osgpagedlod.1 \
 	osgparametric.1 \
 	osgparticle.1 \
@@ -218,8 +218,8 @@ MANEXAMPLES = \
 	osgshaders.1 \
 	osgshaderterrain.1 \
 	osgshadow.1 \
-	osgshadowtexture.1 \
 	osgshape.1 \
+	osgsharedarray.1 \
 	osgsimplifier.1 \
 	osgsimulation.1 \
 	osgslice.1 \
@@ -228,18 +228,22 @@ MANEXAMPLES = \
 	osgspotlight.1 \
 	osgstaticviewer.1 \
 	osgstereoimage.1 \
+	osgstereomatch.1 \
 	osgteapot.1 \
 	osgterrain.1 \
 	osgtessellate.1 \
 	osgtext.1 \
+	osgtext3D.1 \
 	osgtexture1D.1 \
 	osgtexture2D.1 \
 	osgtexture3D.1 \
 	osgtexturerectangle.1 \
+	osgthirdpersonview.1 \
 	osgunittests.1 \
 	osgvertexprogram.1 \
 	osgviewerCocoa.1 \
 	osgviewerFLTK.1 \
+	osgviewerFOX.1 \
 	osgviewerGLUT.1 \
 	osgviewerMFC.1 \
 	osgviewerQT.1 \
