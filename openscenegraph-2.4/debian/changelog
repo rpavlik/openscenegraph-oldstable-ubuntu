@@ -6,6 +6,24 @@ openscenegraph (2.4.0-2) unstable; urgency=low
   
   * openthreads-doc and openscenegraph-doc in section doc
   
+  * debian/rules: man pages files end with .1
+
+  * debian/control.unstable: control and control.unstable must be the same
+
+  * debian/control: change libopenscenegraph-dev and 
+    libopenscenegraph-dev to libdevel instead of devel
+
+  * debian/osgapplications.1, debian/osgexamples.1:
+    names and years updates
+
+  * debian/osgapplications.1, debian/osgexamples.1,
+    debian/rules:
+	be whatis friendly by creating proper name entries
+
+  * debian/changelog, debian/control, 
+    debian/rules:
+	simpler -j option for make + updated list of man pages
+
  -- Loic Dachary (OuoU) <loic@debian.org>  Thu, 01 May 2008 19:56:49 +0200
 
 openscenegraph (2.4.0-1) unstable; urgency=low
