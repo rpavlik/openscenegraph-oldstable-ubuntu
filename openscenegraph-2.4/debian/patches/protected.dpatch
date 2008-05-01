@@ -1,4 +1,5 @@
 #! /bin/sh /usr/share/dpatch/dpatch-run
+## DP: expose members
 
 @DPATCH@
 diff -r 5256b881c340 openscenegraph-2.0/OpenSceneGraph/include/osg/AnimationPath

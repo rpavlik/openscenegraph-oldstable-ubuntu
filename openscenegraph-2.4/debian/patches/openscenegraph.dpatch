@@ -1,4 +1,5 @@
 #! /bin/sh /usr/share/dpatch/dpatch-run
+## DP: solib versions
 
 @DPATCH@
 diff -urN a/OpenSceneGraph~/CMakeLists.txt b/OpenSceneGraph/CMakeLists.txt
