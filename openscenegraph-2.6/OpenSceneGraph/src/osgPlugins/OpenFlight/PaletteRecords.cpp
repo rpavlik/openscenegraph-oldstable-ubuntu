@@ -48,7 +48,7 @@ protected:
     {
         uint32 paletteSize = in.readUInt32();
 
-        // Enteries in vertex pool found by offset from start of this record.
+        // Entries in vertex pool found by offset from start of this record.
         const int RECORD_HEADER_SIZE = 4;
         const int OFFSET = RECORD_HEADER_SIZE+sizeof(paletteSize);
 
@@ -192,6 +192,7 @@ protected:
         float32 alpha = in.readFloat32();
 
         osg::Material* material = new osg::Material;
+        material->setName(name);
         material->setAmbient(osg::Material::FRONT_AND_BACK,osg::Vec4(ambient,alpha));
         material->setDiffuse (osg::Material::FRONT_AND_BACK,osg::Vec4(diffuse,alpha));
         material->setSpecular(osg::Material::FRONT_AND_BACK,osg::Vec4(specular,alpha));

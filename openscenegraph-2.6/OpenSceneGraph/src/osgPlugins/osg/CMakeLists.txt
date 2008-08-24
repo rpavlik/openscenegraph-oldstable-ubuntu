@@ -29,6 +29,7 @@ Geode.cpp
 Geometry.cpp
 Group.cpp
 Image.cpp
+ImageSequence.cpp
 LOD.cpp
 Light.cpp
 LightModel.cpp
@@ -81,6 +82,6 @@ VertexProgram.cpp
 Viewport.cpp
 )
 SET(TARGET_H Matrix.h )
-SET(TARGET_ADDED_LIBRARIES osgSim osgFX osgText )
+
 #### end var setup  ###
 SETUP_PLUGIN(osg)

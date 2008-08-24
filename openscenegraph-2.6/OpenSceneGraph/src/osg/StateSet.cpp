@@ -1,4 +1,4 @@
-/* -*-c++-*- OpenSceneGraph - Copyright (C) 1998-2006 Robert Osfield 
+/* -*-c++-*- OpenSceneGraph - Copyright (C) 1998-2008 Robert Osfield 
  *
  * This library is open source and may be redistributed and/or modified under  
  * the terms of the OpenSceneGraph Public License (OSGPL) version 0.0 or 
@@ -81,7 +81,8 @@ bool osg::isTextureMode(StateAttribute::GLMode mode)
 }
 
 StateSet::StateSet():
-    Object(true)
+    Object(true),
+    _nestRenderBins(true)
 {
     _renderingHint = DEFAULT_BIN;
     
@@ -91,7 +92,8 @@ StateSet::StateSet():
     setRenderBinToInherit();
 }
 
-StateSet::StateSet(const StateSet& rhs,const CopyOp& copyop):Object(rhs,copyop)
+StateSet::StateSet(const StateSet& rhs,const CopyOp& copyop):Object(rhs,copyop),
+    _nestRenderBins(rhs._nestRenderBins)
 {
     _modeList = rhs._modeList;
 
@@ -774,10 +776,15 @@ void StateSet::merge(const StateSet& rhs)
         }
     }
 
-    // need to merge rendering hints
-    // but will need to think how best to do this first
-    // RO, Nov. 2001.
-
+    // Merge RenderBin state from rhs into this.
+    // Only do so if this's RenderBinMode is INHERIT.
+    if (getRenderBinMode() == INHERIT_RENDERBIN_DETAILS)
+    {
+        setRenderingHint( rhs.getRenderingHint() );
+        setRenderBinMode( rhs.getRenderBinMode() );
+        setBinNumber( rhs.getBinNumber() );
+        setBinName( rhs.getBinName() );
+    }
 }
 
 

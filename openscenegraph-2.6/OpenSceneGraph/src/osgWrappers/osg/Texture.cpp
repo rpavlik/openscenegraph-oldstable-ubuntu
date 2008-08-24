@@ -94,6 +94,13 @@ BEGIN_ENUM_REFLECTOR(osg::Texture::ShadowTextureMode)
 	I_EnumLabel(osg::Texture::ALPHA);
 END_REFLECTOR
 
+BEGIN_ENUM_REFLECTOR(osg::Texture::GenerateMipmapMode)
+	I_DeclaringFile("osg/Texture");
+	I_EnumLabel(osg::Texture::GENERATE_MIPMAP_NONE);
+	I_EnumLabel(osg::Texture::GENERATE_MIPMAP);
+	I_EnumLabel(osg::Texture::GENERATE_MIPMAP_TEX_PARAMETER);
+END_REFLECTOR
+
 BEGIN_ABSTRACT_OBJECT_REFLECTOR(osg::Texture)
 	I_DeclaringFile("osg/Texture");
 	I_BaseType(osg::StateAttribute);
@@ -128,6 +135,16 @@ BEGIN_ABSTRACT_OBJECT_REFLECTOR(osg::Texture)
 	          Properties::VIRTUAL,
 	          __C5_char_P1__className,
 	          "Return the name of the attribute's class type. ",
+	          "");
+	I_Method0(osg::Texture *, asTexture,
+	          Properties::VIRTUAL,
+	          __Texture_P1__asTexture,
+	          "Fast alternative to dynamic_cast<> for determining if state attribute is a Texture. ",
+	          "");
+	I_Method0(const osg::Texture *, asTexture,
+	          Properties::VIRTUAL,
+	          __C5_Texture_P1__asTexture,
+	          "Fast alternative to dynamic_cast<> for determining if state attribute is a Texture. ",
 	          "");
 	I_Method0(osg::StateAttribute::Type, getType,
 	          Properties::VIRTUAL,
@@ -513,11 +530,29 @@ BEGIN_ABSTRACT_OBJECT_REFLECTOR(osg::Texture)
 	                   __void__applyTexParameters__GLenum__State_R1,
 	                   "Helper method. ",
 	                   "Sets texture parameters. ");
+	I_ProtectedMethod1(bool, isHardwareMipmapGenerationEnabled, IN, const osg::State &, state,
+	                   Properties::NON_VIRTUAL,
+	                   Properties::CONST,
+	                   __bool__isHardwareMipmapGenerationEnabled__C5_State_R1,
+	                   "Returns true if _useHardwareMipMapGeneration is true and either glGenerateMipmapEXT() or GL_GENERATE_MIPMAP_SGIS are supported. ",
+	                   "");
+	I_ProtectedMethod2(osg::Texture::GenerateMipmapMode, mipmapBeforeTexImage, IN, const osg::State &, state, IN, bool, hardwareMipmapOn,
+	                   Properties::NON_VIRTUAL,
+	                   Properties::CONST,
+	                   __GenerateMipmapMode__mipmapBeforeTexImage__C5_State_R1__bool,
+	                   "Helper methods to be called before and after calling gl[Compressed][Copy]Tex[Sub]Image2D to handle generating mipmaps. ",
+	                   "");
+	I_ProtectedMethod2(void, mipmapAfterTexImage, IN, osg::State &, state, IN, osg::Texture::GenerateMipmapMode, beforeResult,
+	                   Properties::NON_VIRTUAL,
+	                   Properties::CONST,
+	                   __void__mipmapAfterTexImage__State_R1__GenerateMipmapMode,
+	                   "",
+	                   "");
 	I_ProtectedMethod1(void, generateMipmap, IN, osg::State &, state,
 	                   Properties::NON_VIRTUAL,
 	                   Properties::CONST,
 	                   __void__generateMipmap__State_R1,
-	                   "Helper method to generate empty mipmap levels by calling of glGenerateMipmapEXT. ",
+	                   "Helper method to generate mipmap levels by calling of glGenerateMipmapEXT. ",
 	                   "If it is not supported, then call the virtual allocateMipmap() method ");
 	I_ProtectedMethod1(void, allocateMipmap, IN, osg::State &, state,
 	                   Properties::PURE_VIRTUAL,

@@ -499,7 +499,6 @@ simage_tiff_load(std::istream& fin,
     osg::notify(osg::INFO)<<"bytesperpixel="<<bytesperpixel<<std::endl;
     
     buffer = new unsigned char [w*h*format];
-    for(unsigned char* ptr=buffer;ptr<buffer+w*h*format;++ptr) *ptr = 0;
 
     if (!buffer)
     {
@@ -507,6 +506,9 @@ simage_tiff_load(std::istream& fin,
         TIFFClose(in);
         return NULL;
     }
+
+    // initialize memory
+    for(unsigned char* ptr=buffer;ptr<buffer+w*h*format;++ptr) *ptr = 0;
 
     width = w;
     height = h;
@@ -631,6 +633,13 @@ simage_tiff_load(std::istream& fin,
 class ReaderWriterTIFF : public osgDB::ReaderWriter
 {
     public:
+    
+        ReaderWriterTIFF()
+        {
+            supportsExtension("tiff","Tiff image format");
+            supportsExtension("tif","Tiff image format");
+        }
+        
         virtual const char* className() const { return "TIFF Image Reader"; }
         virtual bool acceptsExtension(const std::string& extension) const
         { 
@@ -689,6 +698,7 @@ class ReaderWriterTIFF : public osgDB::ReaderWriter
 
             TIFF *image;
             int samplesPerPixel;
+            int bitsPerSample;
             uint16 photometric;
 
             image = TIFFClientOpen("outputstream", "w", (thandle_t)&fout,
@@ -728,9 +738,20 @@ class ReaderWriterTIFF : public osgDB::ReaderWriter
                     break;
             }
 
+            switch(img.getDataType()){
+                case GL_FLOAT:
+                    TIFFSetField(image, TIFFTAG_SAMPLEFORMAT, SAMPLEFORMAT_IEEEFP);
+                    TIFFSetField(image, TIFFTAG_ROWSPERSTRIP, 1);
+                    bitsPerSample = 32;
+                    break;
+                default:
+                    bitsPerSample = 8;
+                    break;
+            }
+
             TIFFSetField(image, TIFFTAG_IMAGEWIDTH,img.s());
             TIFFSetField(image, TIFFTAG_IMAGELENGTH,img.t());
-            TIFFSetField(image, TIFFTAG_BITSPERSAMPLE,8);
+            TIFFSetField(image, TIFFTAG_BITSPERSAMPLE,bitsPerSample);
             TIFFSetField(image, TIFFTAG_SAMPLESPERPIXEL,samplesPerPixel);
             TIFFSetField(image, TIFFTAG_PHOTOMETRIC, photometric);
             TIFFSetField(image, TIFFTAG_COMPRESSION, COMPRESSION_PACKBITS); 

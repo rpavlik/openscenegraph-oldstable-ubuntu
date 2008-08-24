@@ -545,7 +545,7 @@ void GraphicsWindowX11::init()
         return;
     }
 
-    getEventQueue()->setCurrentEventState(osgGA::GUIEventAdapter::getAccumulatedEventState().get());
+    // getEventQueue()->setCurrentEventState(osgGA::GUIEventAdapter::getAccumulatedEventState().get());
 
     WindowData* inheritedWindowData = dynamic_cast<WindowData*>(_traits->inheritedWindowData.get());
     Window windowHandle = inheritedWindowData ? inheritedWindowData->_window : 0;
@@ -655,11 +655,12 @@ bool GraphicsWindowX11::createWindow()
     swatt.event_mask =  0;
     unsigned long mask = CWBackPixel | CWBorderPixel | CWEventMask | CWColormap;
 
-    bool overrideRedirect = false;
-    if (overrideRedirect)
+    if (_traits->overrideRedirect)
     {
         swatt.override_redirect = true;
         mask |= CWOverrideRedirect;
+        
+        osg::notify(osg::INFO)<<"Setting override redirect"<<std::endl;
     }
 
     _window = XCreateWindow( _display, _parent,
@@ -903,6 +904,8 @@ void GraphicsWindowX11::checkEvents()
     double eventTime = baseTime;
     double resizeTime = eventTime;
     _timeOfLastCheckEvents = getEventQueue()->getTime();
+    
+    // osg::notify(osg::NOTICE)<<"GraphicsWindowX11::checkEvents() : getEventQueue()->getCurrentEventState()->getGraphicsContext()="<<getEventQueue()->getCurrentEventState()->getGraphicsContext()<<std::endl;
 
     int windowX = _traits->x;
     int windowY = _traits->y;
@@ -993,6 +996,7 @@ void GraphicsWindowX11::checkEvents()
 
             case FocusIn :
                 osg::notify(osg::INFO)<<"FocusIn event received"<<std::endl;
+                flushKeyEvents();
                 break;
 
             case UnmapNotify :
@@ -1038,12 +1042,15 @@ void GraphicsWindowX11::checkEvents()
                 getModifierMap(modMap);
                 syncLocks();
 
+                char keyMap[32];
+                XQueryKeymap(_eventDisplay, keyMap);
+
                 // release normal (non-modifier) keys
                 for (unsigned int key = 8; key < 256; key++)
                 {
                     bool isModifier = keyMapGetKey(modMap, key);
                     if (isModifier) continue;
-                    bool isPressed = keyMapGetKey(ev.xkeymap.key_vector, key);
+                    bool isPressed = keyMapGetKey(keyMap, key);
                     if (!isPressed) forceKey(key, eventTime, false);
                 }
 
@@ -1052,7 +1059,7 @@ void GraphicsWindowX11::checkEvents()
                 {
                     bool isModifier = keyMapGetKey(modMap, key);
                     if (!isModifier) continue;
-                    bool isPressed = keyMapGetKey(ev.xkeymap.key_vector, key);
+                    bool isPressed = keyMapGetKey(keyMap, key);
                     forceKey(key, eventTime, isPressed);
                 }
 
@@ -1061,7 +1068,7 @@ void GraphicsWindowX11::checkEvents()
                 {
                     bool isModifier = keyMapGetKey(modMap, key);
                     if (isModifier) continue;
-                    bool isPressed = keyMapGetKey(ev.xkeymap.key_vector, key);
+                    bool isPressed = keyMapGetKey(keyMap, key);
                     if (isPressed) forceKey(key, eventTime, true);
                 }
                 break;
@@ -1383,6 +1390,13 @@ void GraphicsWindowX11::rescanModifierMapping()
             break;
         }
     }
+}
+
+void GraphicsWindowX11::flushKeyEvents()
+{
+    XEvent e;
+    while (XCheckMaskEvent(_eventDisplay, KeyPressMask|KeyReleaseMask, &e))
+        continue;
 }
 
 // Returns char[32] keymap with bits for every modifier key set.

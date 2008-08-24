@@ -22,6 +22,8 @@
 #include <osgViewer/GraphicsWindow>
 #include <osgViewer/Viewer>
 
+#include <fstream>
+
 namespace osgViewer {
 
 /** Event handler for adding on screen help to Viewers.*/
@@ -234,6 +236,8 @@ public:
         void setKeyEventTogglePlayback(int key) { _keyEventTogglePlayback = key; }
         int getKeyEventTogglePlayback() const { return _keyEventTogglePlayback; }
 
+        void setAutoIncrementFilename( bool autoinc = true ) { _autoinc = autoinc?0:-1; }
+
         virtual void getUsage(osg::ApplicationUsage &usage) const;
 
         bool handle(const osgGA::GUIEventAdapter &ea, osgGA::GUIActionAdapter &aa);
@@ -241,6 +245,8 @@ public:
 protected:
 
         std::string                                     _filename;
+        int                                             _autoinc;
+        std::ofstream                                   _fout;
 
         int                                             _keyEventToggleRecord;
         int                                             _keyEventTogglePlayback;
@@ -282,6 +288,72 @@ class OSGVIEWER_EXPORT LODScaleHandler : public osgGA::GUIEventHandler
         int _keyEventDecreaseLODScale;
         
         
+};
+
+
+/** Event handler that will capture the screen on key press. */
+class OSGVIEWER_EXPORT ScreenCaptureHandler : public osgGA::GUIEventHandler
+{
+    public:
+
+        /** Abstract base class for what to do when a screen capture happens. */
+        class CaptureOperation : public osg::Referenced
+        {
+            public:
+                virtual void operator()(const osg::Image& image, const unsigned int context_id) = 0;
+        };
+
+        /** Concrete implementation of a CaptureOperation that writes the screen capture to a file. */
+        class OSGVIEWER_EXPORT WriteToFile : public CaptureOperation
+        {
+            public:
+                enum SavePolicy
+                {
+                    OVERWRITE,
+                    SEQUENTIAL_NUMBER
+                    // ... any others?
+                };
+
+                WriteToFile(const std::string& filename, const std::string& extension, SavePolicy savePolicy = OVERWRITE);
+
+                virtual void operator()(const osg::Image& image, const unsigned int context_id);
+
+                void setSavePolicy(SavePolicy savePolicy) { _savePolicy = savePolicy; }
+                SavePolicy getSavePolicy() const { return _savePolicy; }
+
+            protected:
+                const std::string _filename;
+                const std::string _extension;
+
+                SavePolicy _savePolicy;
+
+                std::vector<unsigned int> _contextSaveCounter;
+        };
+
+
+        ScreenCaptureHandler(CaptureOperation* defaultOperation = 0);
+
+        void setKeyEventTakeScreenShot(int key) { _keyEventTakeScreenShot = key; }
+        int getKeyEventTakeScreenShot() const { return _keyEventTakeScreenShot; }
+
+        void setCaptureOperation(CaptureOperation* operation);
+        CaptureOperation* getCaptureOperation() const;
+
+        // aa will point to an osgViewer::View, so we will take a screenshot
+        // of that view's graphics contexts.
+        bool handle(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter& aa);
+
+        /** Get the keyboard and mouse usage of this manipulator.*/
+        virtual void getUsage(osg::ApplicationUsage& usage) const;
+
+    protected:
+        int _keyEventTakeScreenShot;
+        // there could be a key to start taking screenshots every new frame
+
+        osg::ref_ptr<CaptureOperation>          _operation;
+        osg::ref_ptr<osg::Camera::DrawCallback> _callback;
+
+        void addCallbackToViewer(osgViewer::ViewerBase& viewer);
 };
 
 }

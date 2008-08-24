@@ -18,6 +18,8 @@
 #include <osg/Notify>
 #include <osg/io_utils>
 #include <osg/TriangleFunctor>
+#include <osg/KdTree>
+#include <osg/Timer>
 
 using namespace osgUtil;
 
@@ -283,9 +285,68 @@ void LineSegmentIntersector::intersect(osgUtil::IntersectionVisitor& iv, osg::Dr
     osg::Vec3d s(_start), e(_end);    
     if ( !intersectAndClip( s, e, drawable->getBound() ) ) return;
 
-    // reset the clipped range as it can be too close in on the BB, and cause missing due precission issues.
-    s = _start;
-    e = _end;
+    if (iv.getDoDummyTraversal()) return;
+
+    osg::KdTree* kdTree = iv.getUseKdTreeWhenAvailable() ? dynamic_cast<osg::KdTree*>(drawable->getShape()) : 0;
+    if (kdTree)
+    {
+        osg::KdTree::LineSegmentIntersections intersections;
+        intersections.reserve(4);
+        if (kdTree->intersect(s,e,intersections))
+        {
+            // osg::notify(osg::NOTICE)<<"Got KdTree intersections"<<std::endl;
+            for(osg::KdTree::LineSegmentIntersections::iterator itr = intersections.begin();
+                itr != intersections.end();
+                ++itr)
+            {
+                osg::KdTree::LineSegmentIntersection& lsi = *(itr);
+                
+                // get ratio in s,e range
+                double ratio = lsi.ratio;
+
+                // remap ratio into _start, _end range
+                double remap_ratio = ((s-_start).length() + ratio * (e-s).length() )/(_end-_start).length();
+
+
+                Intersection hit;
+                hit.ratio = remap_ratio;
+                hit.matrix = iv.getModelMatrix();
+                hit.nodePath = iv.getNodePath();
+                hit.drawable = drawable;
+                hit.primitiveIndex = lsi.primitiveIndex;
+
+                hit.localIntersectionPoint = _start*(1.0-remap_ratio) + _end*remap_ratio;
+                
+                // osg::notify(osg::NOTICE)<<"KdTree: ratio="<<hit.ratio<<" ("<<hit.localIntersectionPoint<<")"<<std::endl;
+                
+                hit.localIntersectionNormal = lsi.intersectionNormal;
+                
+                hit.indexList.reserve(3);
+                hit.ratioList.reserve(3);
+                if (lsi.r0!=0.0f) 
+                {
+                    hit.indexList.push_back(lsi.p0);
+                    hit.ratioList.push_back(lsi.r0);
+                }
+                
+                if (lsi.r1!=0.0f) 
+                {
+                    hit.indexList.push_back(lsi.p1);
+                    hit.ratioList.push_back(lsi.r1);
+                }
+
+                if (lsi.r2!=0.0f) 
+                {
+                    hit.indexList.push_back(lsi.p2);
+                    hit.ratioList.push_back(lsi.r2);
+                }
+
+                insertIntersection(hit);
+            }
+        }
+        
+        return;
+    }
 
     osg::TriangleFunctor<LineSegmentIntersectorUtils::TriangleIntersector> ti;
     ti.set(s,e);
@@ -301,21 +362,24 @@ void LineSegmentIntersector::intersect(osgUtil::IntersectionVisitor& iv, osg::Dr
         {
 
             // get ratio in s,e range
-            float ratio = thitr->first;
+            double ratio = thitr->first;
 
             // remap ratio into _start, _end range
-            ratio = ((s-_start).length() + ratio * (e-s).length() )/(_end-_start).length();
+            double remap_ratio = ((s-_start).length() + ratio * (e-s).length() )/(_end-_start).length();
 
             LineSegmentIntersectorUtils::TriangleIntersection& triHit = thitr->second;
 
             Intersection hit;
-            hit.ratio = ratio;
+            hit.ratio = remap_ratio;
             hit.matrix = iv.getModelMatrix();
             hit.nodePath = iv.getNodePath();
             hit.drawable = drawable;
             hit.primitiveIndex = triHit._index;
 
-            hit.localIntersectionPoint = s*(1.0f-ratio) + e*ratio;
+            hit.localIntersectionPoint = _start*(1.0-remap_ratio) + _end*remap_ratio;
+
+            // osg::notify(osg::NOTICE)<<"Conventional: ratio="<<hit.ratio<<" ("<<hit.localIntersectionPoint<<")"<<std::endl;
+
             hit.localIntersectionNormal = triHit._normal;
 
             if (geometry)
@@ -346,7 +410,6 @@ void LineSegmentIntersector::intersect(osgUtil::IntersectionVisitor& iv, osg::Dr
 
         }
     }
-    
 }
 
 void LineSegmentIntersector::reset()
@@ -387,43 +450,56 @@ bool LineSegmentIntersector::intersects(const osg::BoundingSphere& bs)
     return true;
 }
 
-bool LineSegmentIntersector::intersectAndClip(osg::Vec3d& s, osg::Vec3d& e,const osg::BoundingBox& bb)
+bool LineSegmentIntersector::intersectAndClip(osg::Vec3d& s, osg::Vec3d& e,const osg::BoundingBox& bbInput)
 {
+    osg::Vec3d bb_min(bbInput._min);
+    osg::Vec3d bb_max(bbInput._max);
+
+#if 1
+    double epsilon = 1e-4;
+    bb_min.x() -= epsilon;
+    bb_min.y() -= epsilon;
+    bb_min.z() -= epsilon;
+    bb_max.x() += epsilon;
+    bb_max.y() += epsilon;
+    bb_max.z() += epsilon;
+#endif
+
     // compate s and e against the xMin to xMax range of bb.
     if (s.x()<=e.x())
     {
 
         // trivial reject of segment wholely outside.
-        if (e.x()<bb.xMin()) return false;
-        if (s.x()>bb.xMax()) return false;
+        if (e.x()<bb_min.x()) return false;
+        if (s.x()>bb_max.x()) return false;
 
-        if (s.x()<bb.xMin())
+        if (s.x()<bb_min.x())
         {
             // clip s to xMin.
-            s = s+(e-s)*(bb.xMin()-s.x())/(e.x()-s.x());
+            s = s+(e-s)*(bb_min.x()-s.x())/(e.x()-s.x());
         }
 
-        if (e.x()>bb.xMax())
+        if (e.x()>bb_max.x())
         {
             // clip e to xMax.
-            e = s+(e-s)*(bb.xMax()-s.x())/(e.x()-s.x());
+            e = s+(e-s)*(bb_max.x()-s.x())/(e.x()-s.x());
         }
     }
     else
     {
-        if (s.x()<bb.xMin()) return false;
-        if (e.x()>bb.xMax()) return false;
+        if (s.x()<bb_min.x()) return false;
+        if (e.x()>bb_max.x()) return false;
 
-        if (e.x()<bb.xMin())
+        if (e.x()<bb_min.x())
         {
             // clip s to xMin.
-            e = s+(e-s)*(bb.xMin()-s.x())/(e.x()-s.x());
+            e = s+(e-s)*(bb_min.x()-s.x())/(e.x()-s.x());
         }
 
-        if (s.x()>bb.xMax())
+        if (s.x()>bb_max.x())
         {
             // clip e to xMax.
-            s = s+(e-s)*(bb.xMax()-s.x())/(e.x()-s.x());
+            s = s+(e-s)*(bb_max.x()-s.x())/(e.x()-s.x());
         }
     }
 
@@ -432,36 +508,36 @@ bool LineSegmentIntersector::intersectAndClip(osg::Vec3d& s, osg::Vec3d& e,const
     {
 
         // trivial reject of segment wholely outside.
-        if (e.y()<bb.yMin()) return false;
-        if (s.y()>bb.yMax()) return false;
+        if (e.y()<bb_min.y()) return false;
+        if (s.y()>bb_max.y()) return false;
 
-        if (s.y()<bb.yMin())
+        if (s.y()<bb_min.y())
         {
             // clip s to yMin.
-            s = s+(e-s)*(bb.yMin()-s.y())/(e.y()-s.y());
+            s = s+(e-s)*(bb_min.y()-s.y())/(e.y()-s.y());
         }
 
-        if (e.y()>bb.yMax())
+        if (e.y()>bb_max.y())
         {
             // clip e to yMax.
-            e = s+(e-s)*(bb.yMax()-s.y())/(e.y()-s.y());
+            e = s+(e-s)*(bb_max.y()-s.y())/(e.y()-s.y());
         }
     }
     else
     {
-        if (s.y()<bb.yMin()) return false;
-        if (e.y()>bb.yMax()) return false;
+        if (s.y()<bb_min.y()) return false;
+        if (e.y()>bb_max.y()) return false;
 
-        if (e.y()<bb.yMin())
+        if (e.y()<bb_min.y())
         {
             // clip s to yMin.
-            e = s+(e-s)*(bb.yMin()-s.y())/(e.y()-s.y());
+            e = s+(e-s)*(bb_min.y()-s.y())/(e.y()-s.y());
         }
 
-        if (s.y()>bb.yMax())
+        if (s.y()>bb_max.y())
         {
             // clip e to yMax.
-            s = s+(e-s)*(bb.yMax()-s.y())/(e.y()-s.y());
+            s = s+(e-s)*(bb_max.y()-s.y())/(e.y()-s.y());
         }
     }
 
@@ -470,36 +546,36 @@ bool LineSegmentIntersector::intersectAndClip(osg::Vec3d& s, osg::Vec3d& e,const
     {
 
         // trivial reject of segment wholely outside.
-        if (e.z()<bb.zMin()) return false;
-        if (s.z()>bb.zMax()) return false;
+        if (e.z()<bb_min.z()) return false;
+        if (s.z()>bb_max.z()) return false;
 
-        if (s.z()<bb.zMin())
+        if (s.z()<bb_min.z())
         {
             // clip s to zMin.
-            s = s+(e-s)*(bb.zMin()-s.z())/(e.z()-s.z());
+            s = s+(e-s)*(bb_min.z()-s.z())/(e.z()-s.z());
         }
 
-        if (e.z()>bb.zMax())
+        if (e.z()>bb_max.z())
         {
             // clip e to zMax.
-            e = s+(e-s)*(bb.zMax()-s.z())/(e.z()-s.z());
+            e = s+(e-s)*(bb_max.z()-s.z())/(e.z()-s.z());
         }
     }
     else
     {
-        if (s.z()<bb.zMin()) return false;
-        if (e.z()>bb.zMax()) return false;
+        if (s.z()<bb_min.z()) return false;
+        if (e.z()>bb_max.z()) return false;
 
-        if (e.z()<bb.zMin())
+        if (e.z()<bb_min.z())
         {
             // clip s to zMin.
-            e = s+(e-s)*(bb.zMin()-s.z())/(e.z()-s.z());
+            e = s+(e-s)*(bb_min.z()-s.z())/(e.z()-s.z());
         }
 
-        if (s.z()>bb.zMax())
+        if (s.z()>bb_max.z())
         {
             // clip e to zMax.
-            s = s+(e-s)*(bb.zMax()-s.z())/(e.z()-s.z());
+            s = s+(e-s)*(bb_max.z()-s.z())/(e.z()-s.z());
         }
     }
     

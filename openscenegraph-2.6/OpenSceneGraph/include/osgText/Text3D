@@ -47,12 +47,12 @@ public:
     /** Get the Charactere Depth of text. */
     float getCharacterDepth() const { return _characterDepth; }
     /** Set the Charactere Depth of text. */
-    void setCharacterDepth(float characterDepth) { _characterDepth = characterDepth; }
+    void setCharacterDepth(float characterDepth) { _characterDepth = characterDepth; computeGlyphRepresentation(); }
     
     /** Get the render mode used to render the text. */
     RenderMode getRenderMode() const { return _renderMode; }
     /** Set the render mode used to render the text. */
-    void setRenderMode(RenderMode renderMode) { _renderMode = renderMode; }
+    void setRenderMode(RenderMode renderMode) { _renderMode = renderMode; computeGlyphRepresentation(); }
 
 //    /** Get the wall StateSet */
 //    osg::StateSet * getWallStateSet() { return _wallStateSet.get(); }
@@ -125,6 +125,9 @@ public:
 //    // make Font a friend to allow it set the _font to 0 if the font is 
 //    // forcefully unloaded.
     friend class Font3D;
+
+    virtual osg::BoundingBox computeBound() const;
+
 
 protected:
 

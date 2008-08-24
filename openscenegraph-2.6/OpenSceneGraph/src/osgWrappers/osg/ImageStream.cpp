@@ -147,11 +147,6 @@ BEGIN_OBJECT_REFLECTOR(osg::ImageStream)
 	          __float__getVolume,
 	          "",
 	          "");
-	I_Method0(void, update,
-	          Properties::VIRTUAL,
-	          __void__update,
-	          "",
-	          "");
 	I_ProtectedMethod0(void, applyLoopingMode,
 	                   Properties::VIRTUAL,
 	                   Properties::NON_CONST,

@@ -5,13 +5,13 @@ SET(TARGET_DEFAULT_PREFIX "example_")
 SET(TARGET_DEFAULT_LABEL_PREFIX "Examples")
 
 SET(TARGET_COMMON_LIBRARIES 
-        OpenThreads
-	osg 
-	osgDB 
-	osgUtil
-	osgGA
-	osgViewer 
-	osgText 
+    OpenThreads
+    osg 
+    osgDB 
+    osgUtil
+    osgGA
+    osgViewer 
+    osgText 
 )
 
 IF(DYNAMIC_OPENSCENEGRAPH)
@@ -32,6 +32,7 @@ IF(DYNAMIC_OPENSCENEGRAPH)
     ADD_SUBDIRECTORY(osgdepthpeeling)
     ADD_SUBDIRECTORY(osgdistortion)
     ADD_SUBDIRECTORY(osgfadetext)
+    ADD_SUBDIRECTORY(osgfont)
     ADD_SUBDIRECTORY(osgforest)
     ADD_SUBDIRECTORY(osgfxbrowser)
     ADD_SUBDIRECTORY(osggeodemo)
@@ -39,9 +40,10 @@ IF(DYNAMIC_OPENSCENEGRAPH)
     ADD_SUBDIRECTORY(osggeometryshaders)
     ADD_SUBDIRECTORY(osghangglide)
     ADD_SUBDIRECTORY(osghud)
+    ADD_SUBDIRECTORY(osgimagesequence)
     ADD_SUBDIRECTORY(osgimpostor)
     ADD_SUBDIRECTORY(osgintersection)
-    ADD_SUBDIRECTORY(osgmultiplerendertargets)
+    ADD_SUBDIRECTORY(osgkdtree)
     ADD_SUBDIRECTORY(osgkeyboard)
     ADD_SUBDIRECTORY(osgkeyboardmouse)
     ADD_SUBDIRECTORY(osglauncher)
@@ -52,6 +54,7 @@ IF(DYNAMIC_OPENSCENEGRAPH)
     ADD_SUBDIRECTORY(osgmanipulator)
     ADD_SUBDIRECTORY(osgmotionblur)
     ADD_SUBDIRECTORY(osgmovie)
+    ADD_SUBDIRECTORY(osgmultiplerendertargets)
     ADD_SUBDIRECTORY(osgmultitexture)
     ADD_SUBDIRECTORY(osgmultitexturecontrol)
     ADD_SUBDIRECTORY(osgoccluder)
@@ -70,6 +73,7 @@ IF(DYNAMIC_OPENSCENEGRAPH)
     ADD_SUBDIRECTORY(osgprerendercubemap)
     ADD_SUBDIRECTORY(osgreflect)
     ADD_SUBDIRECTORY(osgscalarbar)
+    ADD_SUBDIRECTORY(osgscreencapture)
     ADD_SUBDIRECTORY(osgscribe)
     ADD_SUBDIRECTORY(osgsequence)
     ADD_SUBDIRECTORY(osgshaders)
@@ -87,7 +91,7 @@ IF(DYNAMIC_OPENSCENEGRAPH)
     ADD_SUBDIRECTORY(osgstereomatch)
     ADD_SUBDIRECTORY(osgteapot)
     ADD_SUBDIRECTORY(osgterrain)
-    ADD_SUBDIRECTORY(osgtessellate)#)
+    ADD_SUBDIRECTORY(osgtessellate)
     ADD_SUBDIRECTORY(osgtext)
     ADD_SUBDIRECTORY(osgtext3D)
     ADD_SUBDIRECTORY(osgtexture1D)
@@ -111,6 +115,10 @@ IF(DYNAMIC_OPENSCENEGRAPH)
     IF   (SDL_FOUND)
         ADD_SUBDIRECTORY(osgviewerSDL)
     ENDIF(SDL_FOUND)
+
+    IF   (GTKGL_FOUND)
+        ADD_SUBDIRECTORY(osgviewerGTK)
+    ENDIF(GTKGL_FOUND)
 
     IF   (FOX_FOUND)
         ADD_SUBDIRECTORY(osgviewerFOX)
@@ -137,6 +145,27 @@ IF(DYNAMIC_OPENSCENEGRAPH)
         ENDIF(BUILD_MFC_EXAMPLE)
 
     ENDIF(WIN32)
+
+    IF   (APPLE)
+        ADD_SUBDIRECTORY(osgviewerCocoa)
+    ENDIF(APPLE)
+
+    IF   (BUILD_OSGWIDGET)
+        ADD_SUBDIRECTORY(osgwidgetaddremove)
+        ADD_SUBDIRECTORY(osgwidgetbox)
+        ADD_SUBDIRECTORY(osgwidgetcanvas)
+        ADD_SUBDIRECTORY(osgwidgetframe)
+        ADD_SUBDIRECTORY(osgwidgetinput)
+        ADD_SUBDIRECTORY(osgwidgetlabel)
+        ADD_SUBDIRECTORY(osgwidgetmenu)
+        ADD_SUBDIRECTORY(osgwidgetnotebook)
+        ADD_SUBDIRECTORY(osgwidgetscrolled)
+        ADD_SUBDIRECTORY(osgwidgetshader)
+        ADD_SUBDIRECTORY(osgwidgetstyled)
+        ADD_SUBDIRECTORY(osgwidgettable)
+        ADD_SUBDIRECTORY(osgwidgetwindow)
+    ENDIF(BUILD_OSGWIDGET)
+
 
     #ADD_SUBDIRECTORY(osgcegui)
     #to add subject to find socket#ADD_SUBDIRECTORY(osgcluster)

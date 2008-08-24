@@ -17,6 +17,7 @@
 #include <osgDB/WriteFile>
 #include <osgDB/FileNameUtils>
 #include <osgDB/ReaderWriter>
+#include <osgDB/PluginQuery>
 
 #include <osgUtil/Optimizer>
 #include <osgUtil/Simplifier>
@@ -506,6 +507,8 @@ int main( int argc, char **argv )
     arguments.getApplicationUsage()->setCommandLineUsage(arguments.getApplicationName()+" [options] filename ...");
     arguments.getApplicationUsage()->addCommandLineOption("-h or --help","Display command line parameters");
     arguments.getApplicationUsage()->addCommandLineOption("--help-env","Display environmental variables available");
+    arguments.getApplicationUsage()->addCommandLineOption("--formats","List supported file formats");
+    arguments.getApplicationUsage()->addCommandLineOption("--plugins","List database olugins");
 
 
     // if user request help write it out to cout.
@@ -521,6 +524,45 @@ int main( int argc, char **argv )
         arguments.getApplicationUsage()->write(std::cout, osg::ApplicationUsage::ENVIRONMENTAL_VARIABLE);
         return 1;
     }
+    
+    if (arguments.read("--plugins"))
+    {
+        osgDB::FileNameList plugins = osgDB::listAllAvailablePlugins();
+        for(osgDB::FileNameList::iterator itr = plugins.begin();
+            itr != plugins.end();
+            ++itr)
+        {
+            std::cout<<"Plugin "<<*itr<<std::endl;
+        }
+        return 0;
+    }    
+    
+    std::string plugin;
+    if (arguments.read("--plugin", plugin))
+    {
+        osgDB::outputPluginDetails(std::cout, plugin);
+        return 0;
+    }    
+    
+    std::string ext;
+    if (arguments.read("--format", ext))
+    {
+        plugin = osgDB::Registry::instance()->createLibraryNameForExtension(ext);
+        osgDB::outputPluginDetails(std::cout, plugin);
+        return 0;
+    }    
+    
+    if (arguments.read("--formats"))
+    {
+        osgDB::FileNameList plugins = osgDB::listAllAvailablePlugins();
+        for(osgDB::FileNameList::iterator itr = plugins.begin();
+            itr != plugins.end();
+            ++itr)
+        {
+            osgDB::outputPluginDetails(std::cout,*itr);
+        }
+        return 0;
+    }    
     
     if (arguments.argc()<=1)
     {
@@ -540,7 +582,6 @@ int main( int argc, char **argv )
         osgDB::Registry::instance()->setOptions(options);
     }
 
-    std::string ext;
     while (arguments.read("-e",ext))
     {
         std::string libName = osgDB::Registry::instance()->createLibraryNameForExtension(ext);

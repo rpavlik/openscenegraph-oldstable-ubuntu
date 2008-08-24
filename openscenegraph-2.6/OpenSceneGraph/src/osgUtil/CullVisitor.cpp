@@ -140,6 +140,8 @@ void CullVisitor::reset()
     //
     
     CullStack::reset();
+    
+    _renderBinStack.clear();
 
     _numberOfEncloseOverrideRenderBinDetails = 0;
 
@@ -815,8 +817,18 @@ void CullVisitor::apply(Geode& node)
             }
         }
 
-        if (bb.valid()) addDrawableAndDepth(drawable,&matrix,distance(bb.center(),matrix));
-        else addDrawableAndDepth(drawable,&matrix,0.0f);
+        float depth = bb.valid() ? distance(bb.center(),matrix) : 0.0f;
+        
+        if (osg::isNaN(depth))
+        {
+            osg::notify(osg::NOTICE)<<"CullVisitor::apply(Geode&) detected NaN,"<<std::endl
+                                    <<"    depth="<<depth<<", center=("<<bb.center()<<"),"<<std::endl
+                                    <<"    matrix="<<matrix<<std::endl;
+        }
+        else
+        {        
+            addDrawableAndDepth(drawable,&matrix,depth);
+        }
 
         for(unsigned int i=0;i< numPopStateSetRequired; ++i)
         {
@@ -865,7 +877,7 @@ void CullVisitor::apply(Billboard& node)
 
 
         if (_computeNearFar && drawable->getBound().valid()) updateCalculatedNearFar(*billboard_matrix,*drawable,true);
-        float d = distance(pos,modelview);
+        float depth = distance(pos,modelview);
 /*
         if (_computeNearFar)
         {
@@ -880,7 +892,16 @@ void CullVisitor::apply(Billboard& node)
         StateSet* stateset = drawable->getStateSet();
         if (stateset) pushStateSet(stateset);
         
-        addDrawableAndDepth(drawable,billboard_matrix,d);
+        if (osg::isNaN(depth))
+        {
+            osg::notify(osg::NOTICE)<<"CullVisitor::apply(Billboard&) detected NaN,"<<std::endl
+                                    <<"    depth="<<depth<<", pos=("<<pos<<"),"<<std::endl
+                                    <<"    *billboard_matrix="<<*billboard_matrix<<std::endl;
+        }
+        else
+        {        
+            addDrawableAndDepth(drawable,billboard_matrix,depth);
+        }
 
         if (stateset) popStateSet();
 
@@ -1294,19 +1315,23 @@ void CullVisitor::apply(osg::Camera& camera)
             // reusing render to texture stage, so need to reset it to empty it from previous frames contents.
             rtts->reset();
         }
-        
+
+        // set up clera masks/values        
+        rtts->setClearDepth(camera.getClearDepth());
+        rtts->setClearAccum(camera.getClearAccum());
+        rtts->setClearStencil(camera.getClearStencil());
+        rtts->setClearMask(camera.getClearMask());
 
 
         // set up the background color and clear mask.
         if (camera.getInheritanceMask() & CLEAR_COLOR)
         {
-            rtts->setClearColor(camera.getClearColor());
+            rtts->setClearColor(previous_stage->getClearColor());
         }
         else
         {
-            rtts->setClearColor(previous_stage->getClearColor());
+            rtts->setClearColor(camera.getClearColor());
         }
-        rtts->setClearMask(camera.getClearMask());
         
         // set the color mask.
         osg::ColorMask* colorMask = camera.getColorMask()!=0 ? camera.getColorMask() : previous_stage->getColorMask();
@@ -1317,11 +1342,12 @@ void CullVisitor::apply(osg::Camera& camera)
         rtts->setViewport( viewport );
         
 
+
         // set up to charge the same PositionalStateContainer is the parent previous stage.
-        osg::Matrix inhertiedMVtolocalMV;
-        inhertiedMVtolocalMV.invert(originalModelView);
-        inhertiedMVtolocalMV.postMult(*getModelViewMatrix());
-        rtts->setInheritedPositionalStateContainerMatrix(inhertiedMVtolocalMV);
+        osg::Matrix inheritedMVtolocalMV;
+        inheritedMVtolocalMV.invert(originalModelView);
+        inheritedMVtolocalMV.postMult(*getModelViewMatrix());
+        rtts->setInheritedPositionalStateContainerMatrix(inheritedMVtolocalMV);
         rtts->setInheritedPositionalStateContainer(previous_stage->getPositionalStateContainer());
 
         // record the render bin, to be restored after creation
@@ -1435,7 +1461,8 @@ void CullVisitor::apply(osg::OcclusionQueryNode& node)
     if (node_state) pushStateSet(node_state);
 
 
-    osg::Camera* camera = getRenderStage()->getCamera();
+    osg::Camera* camera = getCurrentCamera();
+    
     // If previous query indicates visible, then traverse as usual.
     if (node.getPassed( camera, getDistanceToEyePoint( node.getBound()._center, false ) ))
         handle_cull_callbacks_and_traverse(node);

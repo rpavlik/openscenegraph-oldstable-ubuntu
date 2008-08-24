@@ -77,7 +77,6 @@ public:
     virtual void apply( osg::Transform& node );
     virtual void apply( osg::LightSource& node );
     virtual void apply( osg::Geode& node );
-    virtual void apply( osg::Billboard& node );
     virtual void apply( osg::Node& node );
     virtual void apply( osg::ProxyNode& node );
 
@@ -124,11 +123,11 @@ public:
 
     // Geometry records
     void writeFace( const osg::Geode& geode, const osg::Geometry& geom, GLenum mode );
-    void writeMesh( const osg::Geode& geode, const osg::Geometry& geom, GLenum mode );
+    void writeMesh( const osg::Geode& geode, const osg::Geometry& geom );
     int writeVertexList( int first, unsigned int count );
     int writeVertexList( const std::vector<unsigned int>& indices, unsigned int count );
     void writeMeshPrimitive( const std::vector<unsigned int>& indices, GLenum mode );
-    void writeLocalVertexPool( const osg::Geometry& geom, GLenum mode );
+    void writeLocalVertexPool( const osg::Geometry& geom );
     void writeMultitexture( const osg::Geometry& geom );
     void writeUVList( int numVerts, const osg::Geometry& geom );
 
@@ -158,7 +157,9 @@ private:
 
     bool isLit( const osg::Geometry& geom ) const;
     bool isTextured( int unit, const osg::Geometry& geom ) const;
-    bool isAllMesh( const osg::Geometry& geom ) const;
+    bool isMesh( const GLenum mode ) const;
+    bool atLeastOneFace( const osg::Geometry& geom ) const;
+    bool atLeastOneMesh( const osg::Geometry& geom ) const;
 
     osg::ref_ptr< ExportOptions > _fltOpt;
 

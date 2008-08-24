@@ -13,6 +13,7 @@
 #include <osg/BufferObject>
 #include <osg/CopyOp>
 #include <osg/Image>
+#include <osg/NodeVisitor>
 #include <osg/Object>
 #include <osg/Vec2>
 #include <osg/Vec3>
@@ -350,6 +351,11 @@ BEGIN_OBJECT_REFLECTOR(osg::Image)
 	          Properties::NON_VIRTUAL,
 	          __C5_PixelBufferObject_P1__getPixelBufferObject,
 	          "Get the const PixelBufferObject. ",
+	          "");
+	I_Method1(void, update, IN, osg::NodeVisitor *, nv,
+	          Properties::VIRTUAL,
+	          __void__update__NodeVisitor_P1,
+	          "",
 	          "");
 	I_StaticMethod1(bool, isPackedType, IN, GLenum, type,
 	                __bool__isPackedType__GLenum_S,

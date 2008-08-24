@@ -123,7 +123,6 @@ namespace
                 cf->setMode(osg::CullFace::FRONT);
                 ss->setAttributeAndModes(cf.get(), osg::StateAttribute::OVERRIDE|osg::StateAttribute::ON);
 
-                _wf_lw->setWidth(2);
                 ss->setAttributeAndModes(_wf_lw.get(), osg::StateAttribute::OVERRIDE | osg::StateAttribute::ON);
 
                 _wf_mat->setColorMode(osg::Material::OFF);
@@ -239,7 +238,6 @@ namespace
                 cf->setMode(osg::CullFace::FRONT);
                 ss->setAttributeAndModes(cf.get(), osg::StateAttribute::OVERRIDE|osg::StateAttribute::ON);
 
-                _wf_lw->setWidth(2);
                 ss->setAttributeAndModes(_wf_lw.get(), osg::StateAttribute::OVERRIDE | osg::StateAttribute::ON);
 
                 _wf_mat->setColorMode(osg::Material::OFF);
@@ -274,7 +272,7 @@ namespace
 Cartoon::Cartoon()
 :    Effect(),
     _wf_mat(new osg::Material),
-    _wf_lw(new osg::LineWidth),
+    _wf_lw(new osg::LineWidth(2.0f)),
     _lightnum(0)
 {
     setOutlineColor(osg::Vec4(0, 0, 0, 1));

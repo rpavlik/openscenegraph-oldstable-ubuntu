@@ -1,7 +1,7 @@
 // -*-c++-*-
 
 /*
- * $Id: ReaderWriterSTL.cpp 7076 2007-07-06 13:54:26Z robert $
+ * $Id: ReaderWriterSTL.cpp 8624 2008-07-17 13:51:14Z robert $
  *
  * STL importer for OpenSceneGraph.
  * Copyright (c)2004 Ulrich Hertlein <u.hertlein@sandbox.de>
@@ -45,16 +45,15 @@
 class ReaderWriterSTL : public osgDB::ReaderWriter
 {
 public:
-    ReaderWriterSTL() {}
-
-    virtual const char* className() const {
-        return "STL Reader/Writer";
+    ReaderWriterSTL()
+    {
+        supportsExtension("stl","STL binary format");
+        supportsExtension("sta","STL ASCII format");
+        supportsOption("smooth", "run SmoothingVisitor");
     }
 
-    virtual bool acceptsExtension(const std::string& extension) const { 
-        return
-            osgDB::equalCaseInsensitive(extension,"stl") ? true :
-            osgDB::equalCaseInsensitive(extension,"sta") ? true : false;
+    virtual const char* className() const {
+        return "STL Reader";
     }
 
     virtual ReadResult readNode(const std::string& fileName, const osgDB::ReaderWriter::Options*) const;
@@ -121,9 +120,8 @@ osgDB::ReaderWriter::ReadResult ReaderWriterSTL::readNode(const std::string& fil
 
     // determine ASCII vs. binary mode
     FILE* fp = fopen(fileName.c_str(), "rb");
-
     if (!fp) {
-        return ReadResult::FILE_NOT_HANDLED;
+        return ReadResult::FILE_NOT_FOUND;
     }
 
     ReaderObject readerObject;
@@ -132,7 +130,7 @@ osgDB::ReaderWriter::ReadResult ReaderWriterSTL::readNode(const std::string& fil
     StlHeader header;
     if (fread((void*) &header, sizeof(header), 1, fp) != 1) {
         fclose(fp);
-        return ReadResult::FILE_NOT_HANDLED;
+        return ReadResult::ERROR_IN_READING_FILE;
     }
     bool isBinary = false;
 
@@ -148,7 +146,7 @@ osgDB::ReaderWriter::ReadResult ReaderWriterSTL::readNode(const std::string& fil
     {
         osg::notify(osg::FATAL) << "ReaderWriterSTL::readNode: Unable to stat '" << fileName << "'" << std::endl;
         fclose(fp);
-        return ReadResult::FILE_NOT_HANDLED;
+        return ReadResult::ERROR_IN_READING_FILE;
     }
 
     if (stb.st_size == expectLen)
@@ -165,7 +163,7 @@ osgDB::ReaderWriter::ReadResult ReaderWriterSTL::readNode(const std::string& fil
     else {
         osg::notify(osg::FATAL) << "ReaderWriterSTL::readNode(" << fileName.c_str() << ") unable to determine file format" << std::endl;
         fclose(fp);
-        return ReadResult::FILE_NOT_HANDLED;
+        return ReadResult::ERROR_IN_READING_FILE;
     }
 
     if (!isBinary) 
@@ -206,15 +204,7 @@ osgDB::ReaderWriter::ReadResult ReaderWriterSTL::readNode(const std::string& fil
     osg::Geode* geode = new osg::Geode;
     geode->addDrawable(geom);
     
-    bool doSmoothing = false;
-    
-    if (options && (options->getOptionString() == "smooth"))
-    {
-        doSmoothing = true;
-    } 
-    
-    if (doSmoothing)
-    {
+    if (options && (options->getOptionString() == "smooth")) {
         osgUtil::SmoothingVisitor smooter;
         geode->accept(smooter);
     }

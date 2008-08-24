@@ -28,7 +28,6 @@
 
 #include <osgDB/FileUtils>
 #include <osgDB/WriteFile>
-#include <osg/Billboard>
 #include <osg/Geode>
 #include <osg/Geometry>
 #include <osg/LightSource>
@@ -103,7 +102,7 @@ FltExportVisitor::FltExportVisitor( DataOutputStream* dos,
     _stateSetStack.push_back( ss );
 
 
-    // Temp file for storing records. Need a temp file because we candon't
+    // Temp file for storing records. Need a temp file because we don't
     // write header and palette until FltExportVisitor completes traversal.
     _recordsTempName = fltOpt->getTempDir() + "/ofw_temp_records";
     _recordsStr.open( _recordsTempName.c_str(), std::ios::out | std::ios::binary );
@@ -148,7 +147,7 @@ FltExportVisitor::apply( osg::Group& node )
     // A Group node could indicate one of many possible records.
     //   Header record -- Don't need to support this here. We always output a header.
     //   Group record -- HIGH
-    //   Child of an LOD node -- HIGH Curently write out a Group record regardless.
+    //   Child of an LOD node -- HIGH Currently write out a Group record regardless.
     //   InstanceDefinition/InstanceReference -- MED --  multiparented Group is an instance
     //   Extension record -- MED
     //   Object record -- MED
@@ -213,7 +212,7 @@ FltExportVisitor::apply( osg::LOD& lodNode )
     _firstNode = false;
     ScopedStatePushPop guard( this, lodNode.getStateSet() );
 
-    // LOD center - same for all chilrden
+    // LOD center - same for all children
     osg::Vec3d center = lodNode.getCenter();
 
     // Iterate children of the LOD and write a separate LOD record for each,
@@ -240,7 +239,7 @@ void
 FltExportVisitor::apply( osg::MatrixTransform& node )
 {
     // Importer reads a Matrix record and inserts a MatrixTransform above
-    //   the corrent node. We need to do the opposite: Write a Matrix record
+    //   the current node. We need to do the opposite: Write a Matrix record
     //   as an ancillary record for each child. We do that by storing the
     //   MatrixTransform in each child's UserData. Each child then checks
     //   UserData and writes a Matrix record if UserData is a MatrixTransform.
@@ -336,6 +335,10 @@ FltExportVisitor::apply( osg::LightSource& node )
     writePushTraverseWritePop( node );
 }
 
+// Billboards also go through this code. The Geode is passed
+// to writeFace and writeMesh. If those methods successfully cast
+// the Geode to a Billboard, then they set the template mode
+// bit accordingly.
 void
 FltExportVisitor::apply( osg::Geode& node )
 {
@@ -356,51 +359,84 @@ FltExportVisitor::apply( osg::Geode& node )
 
         ScopedStatePushPop drawableGuard( this, geom->getStateSet() );
 
-        // Write vertex array data out to vertex palette manager
-        if (!isAllMesh( *geom ))
+        // Push and pop subfaces if polygon offset is on.
+        SubfaceHelper subface( *this, getCurrentStateSet() );
+
+        if (atLeastOneFace( *geom ))
+        {
             // If at least one record will be a Face record, then we
-            //   need to write to the vertex pool.
+            //   need to write to the vertex palette.
             _vertexPalette->add( *geom );
 
-        unsigned int jdx;
-        for (jdx=0; jdx < geom->getNumPrimitiveSets(); jdx++)
-        {
-            osg::PrimitiveSet* prim = geom->getPrimitiveSet( jdx );
-            if (prim->getType() == osg::PrimitiveSet::DrawArraysPrimitiveType)
-                handleDrawArrays( dynamic_cast<osg::DrawArrays*>( prim ), *geom, node );
-            else if (prim->getType() == osg::PrimitiveSet::DrawArrayLengthsPrimitiveType)
-                handleDrawArrayLengths( dynamic_cast<osg::DrawArrayLengths*>( prim ), *geom, node );
-            else if ( (prim->getType() == osg::PrimitiveSet::DrawElementsUBytePrimitiveType) ||
-                    (prim->getType() == osg::PrimitiveSet::DrawElementsUShortPrimitiveType) ||
-                    (prim->getType() == osg::PrimitiveSet::DrawElementsUIntPrimitiveType) )
-                handleDrawElements( dynamic_cast<osg::DrawElements*>( prim ), *geom, node );
-            else
+            // Iterate over all PrimitiveSets and output Face records.
+            unsigned int jdx;
+            for (jdx=0; jdx < geom->getNumPrimitiveSets(); jdx++)
             {
-                std::string warning( "fltexp: Unknown PrimitiveSet type." );
-                osg::notify( osg::WARN ) << warning << std::endl;
-                _fltOpt->getWriteResult().warn( warning );
-                return;
+                osg::PrimitiveSet* prim = geom->getPrimitiveSet( jdx );
+                if ( isMesh( prim->getMode() ) )
+                    continue;
+
+                if (prim->getType() == osg::PrimitiveSet::DrawArraysPrimitiveType)
+                    handleDrawArrays( dynamic_cast<osg::DrawArrays*>( prim ), *geom, node );
+                else if (prim->getType() == osg::PrimitiveSet::DrawArrayLengthsPrimitiveType)
+                    handleDrawArrayLengths( dynamic_cast<osg::DrawArrayLengths*>( prim ), *geom, node );
+                else if ( (prim->getType() == osg::PrimitiveSet::DrawElementsUBytePrimitiveType) ||
+                        (prim->getType() == osg::PrimitiveSet::DrawElementsUShortPrimitiveType) ||
+                        (prim->getType() == osg::PrimitiveSet::DrawElementsUIntPrimitiveType) )
+                    handleDrawElements( dynamic_cast<osg::DrawElements*>( prim ), *geom, node );
+                else
+                {
+                    std::string warning( "fltexp: Unknown PrimitiveSet type." );
+                    osg::notify( osg::WARN ) << warning << std::endl;
+                    _fltOpt->getWriteResult().warn( warning );
+                    return;
+                }
             }
+        }
+
+        if (atLeastOneMesh( *geom ))
+        {
+            // If at least one Mesh record, write out preamble mesh records
+            //   followed by a Mesh Primitive record per PrimitiveSet.
+            writeMesh( node, *geom );
+
+            writeMatrix( node.getUserData() );
+            writeComment( node );
+            writeMultitexture( *geom );
+            writeLocalVertexPool( *geom );
+
+            writePush();
+
+            unsigned int jdx;
+            for (jdx=0; jdx < geom->getNumPrimitiveSets(); jdx++)
+            {
+                osg::PrimitiveSet* prim = geom->getPrimitiveSet( jdx );
+                if ( !isMesh( prim->getMode() ) )
+                    continue;
+
+                if (prim->getType() == osg::PrimitiveSet::DrawArraysPrimitiveType)
+                    handleDrawArrays( dynamic_cast<osg::DrawArrays*>( prim ), *geom, node );
+                else if (prim->getType() == osg::PrimitiveSet::DrawArrayLengthsPrimitiveType)
+                    handleDrawArrayLengths( dynamic_cast<osg::DrawArrayLengths*>( prim ), *geom, node );
+                else if ( (prim->getType() == osg::PrimitiveSet::DrawElementsUBytePrimitiveType) ||
+                        (prim->getType() == osg::PrimitiveSet::DrawElementsUShortPrimitiveType) ||
+                        (prim->getType() == osg::PrimitiveSet::DrawElementsUIntPrimitiveType) )
+                    handleDrawElements( dynamic_cast<osg::DrawElements*>( prim ), *geom, node );
+                else
+                {
+                    std::string warning( "fltexp: Unknown PrimitiveSet type." );
+                    osg::notify( osg::WARN ) << warning << std::endl;
+                    _fltOpt->getWriteResult().warn( warning );
+                    return;
+                }
+            }
+
+            writePop();
         }
     }
 
     // Would traverse here if this node could have children.
     //   traverse( (osg::Node&)node );
-}
-
-void
-FltExportVisitor::apply( osg::Billboard& node )
-{
-    _firstNode = false;
-    ScopedStatePushPop guard( this, node.getStateSet() );
-
-    // TBD -- Not yet implemented, but HIGH priority.
-    //   Face record -- HIGH
-    //   Mesh record -- HIGH
-
-    writeMatrix( node.getUserData() );
-    writeComment( node );
-    writePushTraverseWritePop( node );
 }
 
 void
@@ -417,7 +453,7 @@ FltExportVisitor::apply( osg::Node& node )
     else
     {
         // Unknown Node. Warn and return.
-        // (Note, if the base class of this Node was a Grouo, then apply(Group&)
+        // (Note, if the base class of this Node was a Group, then apply(Group&)
         //   would export a Group record then continue traversal. Because we are
         //   a Node, there's no way to continue traversal, so just return.)
         std::string warning( "fltexp: Unknown Node in OpenFlight export." );
@@ -450,7 +486,7 @@ FltExportVisitor::complete( const osg::Node& node )
     // Done writing records, close the record data temp file.
     _recordsStr.close();
 
-    // Write OpenFlight file front matter: heqader, vertex palette, etc.
+    // Write OpenFlight file front matter: header, vertex palette, etc.
     writeHeader( node.getName() );
 
     writeColorPalette();

@@ -14,6 +14,7 @@
 #include <osg/Camera>
 #include <osg/ColorMask>
 #include <osg/CopyOp>
+#include <osg/CullSettings>
 #include <osg/DisplaySettings>
 #include <osg/GraphicsContext>
 #include <osg/GraphicsThread>
@@ -460,22 +461,22 @@ BEGIN_OBJECT_REFLECTOR(osg::Camera)
 	I_Method2(void, attach, IN, osg::Camera::BufferComponent, buffer, IN, GLenum, internalFormat,
 	          Properties::NON_VIRTUAL,
 	          __void__attach__BufferComponent__GLenum,
-	          "",
+	          "Attach a buffer with specified OpenGL internal format. ",
 	          "");
-	I_MethodWithDefaults5(void, attach, IN, osg::Camera::BufferComponent, buffer, , IN, osg::Texture *, texture, , IN, unsigned int, level, 0, IN, unsigned int, face, 0, IN, bool, mipMapGeneration, false,
+	I_MethodWithDefaults7(void, attach, IN, osg::Camera::BufferComponent, buffer, , IN, osg::Texture *, texture, , IN, unsigned int, level, 0, IN, unsigned int, face, 0, IN, bool, mipMapGeneration, false, IN, unsigned int, multisampleSamples, 0, IN, unsigned int, multisampleColorSamples, 0,
 	                      Properties::NON_VIRTUAL,
-	                      __void__attach__BufferComponent__osg_Texture_P1__unsigned_int__unsigned_int__bool,
-	                      "",
+	                      __void__attach__BufferComponent__osg_Texture_P1__unsigned_int__unsigned_int__bool__unsigned_int__unsigned_int,
+	                      "Attach a Texture to specified buffer component. ",
+	                      "The level parameter controls the mip map level of the texture that is attached. The face parameter controls the face of texture cube map or z level of 3d texture. The mipMapGeneration flag controls whether mipmap generation should be done for texture. ");
+	I_MethodWithDefaults4(void, attach, IN, osg::Camera::BufferComponent, buffer, , IN, osg::Image *, image, , IN, unsigned int, multisampleSamples, 0, IN, unsigned int, multisampleColorSamples, 0,
+	                      Properties::NON_VIRTUAL,
+	                      __void__attach__BufferComponent__osg_Image_P1__unsigned_int__unsigned_int,
+	                      "Attach a Image to specified buffer component. ",
 	                      "");
-	I_Method2(void, attach, IN, osg::Camera::BufferComponent, buffer, IN, osg::Image *, image,
-	          Properties::NON_VIRTUAL,
-	          __void__attach__BufferComponent__osg_Image_P1,
-	          "",
-	          "");
 	I_Method1(void, detach, IN, osg::Camera::BufferComponent, buffer,
 	          Properties::NON_VIRTUAL,
 	          __void__detach__BufferComponent,
-	          "",
+	          "Detach specified buffer component. ",
 	          "");
 	I_Method0(osg::Camera::BufferAttachmentMap &, getBufferAttachmentMap,
 	          Properties::NON_VIRTUAL,
@@ -552,9 +553,9 @@ BEGIN_OBJECT_REFLECTOR(osg::Camera)
 	          __C5_osg_Object_P1__getRenderingCache,
 	          "Get the const Rendering cache that is used for cached objects associated with rendering of subgraphs. ",
 	          "");
-	I_Method1(void, setIntialDrawCallback, IN, osg::Camera::DrawCallback *, cb,
+	I_Method1(void, setInitialDrawCallback, IN, osg::Camera::DrawCallback *, cb,
 	          Properties::NON_VIRTUAL,
-	          __void__setIntialDrawCallback__DrawCallback_P1,
+	          __void__setInitialDrawCallback__DrawCallback_P1,
 	          "Set the initial draw callback for custom operations to be done before the drawing of the camera's subgraph and pre render stages. ",
 	          "");
 	I_Method0(osg::Camera::DrawCallback *, getInitialDrawCallback,
@@ -637,6 +638,11 @@ BEGIN_OBJECT_REFLECTOR(osg::Camera)
 	          __bool__computeWorldToLocalMatrix__Matrix_R1__NodeVisitor_P1,
 	          "Transform method that must be defined to provide generic interface for scene graph traversals. ",
 	          "");
+	I_Method2(void, inheritCullSettings, IN, const osg::CullSettings &, settings, IN, unsigned int, inheritanceMask,
+	          Properties::VIRTUAL,
+	          __void__inheritCullSettings__C5_CullSettings_R1__unsigned_int,
+	          "Inherit the local cull settings variable from specified CullSettings object, according to the inheritance mask. ",
+	          "");
 	I_SimpleProperty(bool, AllowEventFocus, 
 	                 __bool__getAllowEventFocus, 
 	                 __void__setAllowEventFocus__bool);
@@ -681,10 +687,7 @@ BEGIN_OBJECT_REFLECTOR(osg::Camera)
 	                 __void__setGraphicsContext__GraphicsContext_P1);
 	I_SimpleProperty(osg::Camera::DrawCallback *, InitialDrawCallback, 
 	                 __DrawCallback_P1__getInitialDrawCallback, 
-	                 0);
-	I_SimpleProperty(osg::Camera::DrawCallback *, IntialDrawCallback, 
-	                 0, 
-	                 __void__setIntialDrawCallback__DrawCallback_P1);
+	                 __void__setInitialDrawCallback__DrawCallback_P1);
 	I_SimpleProperty(osg::Matrixd, InverseViewMatrix, 
 	                 __Matrixd__getInverseViewMatrix, 
 	                 0);
@@ -764,6 +767,8 @@ BEGIN_VALUE_REFLECTOR(osg::Camera::Attachment)
 	I_PublicMemberProperty(unsigned int, _level);
 	I_PublicMemberProperty(unsigned int, _face);
 	I_PublicMemberProperty(bool, _mipMapGeneration);
+	I_PublicMemberProperty(unsigned int, _multisampleSamples);
+	I_PublicMemberProperty(unsigned int, _multisampleColorSamples);
 END_REFLECTOR
 
 BEGIN_OBJECT_REFLECTOR(osg::Camera::DrawCallback)

@@ -247,15 +247,15 @@ template <class T>
 class ReaderWriterPNM : public osgDB::ReaderWriter
 {
     public:
-        virtual const char* className() const { return "PNM Image Reader/Writer"; }
-        virtual bool acceptsExtension(const std::string& extension) const
+        ReaderWriterPNM()
         {
-            return osgDB::equalCaseInsensitive(extension, "pnm") ||
-                osgDB::equalCaseInsensitive(extension, "ppm") ||
-                osgDB::equalCaseInsensitive(extension, "pgm") ||
-                osgDB::equalCaseInsensitive(extension, "pbm");
+            supportsExtension("pnm","PNM Image format");
+            supportsExtension("ppm","PNM Image format");
+            supportsExtension("pgm","PNM Image format");
+            supportsExtension("pbm","PNM Image format");
         }
-
+        
+        virtual const char* className() const { return "PNM Image Reader/Writer"; }
 
         virtual ReadResult readImage(const std::string& file, const osgDB::ReaderWriter::Options* options) const
         {
@@ -279,7 +279,8 @@ class ReaderWriterPNM : public osgDB::ReaderWriter
             int row;
             for (row = 1; row <= 3; row++)
             {
-                fgets(line, 300, fp);
+                if ( fgets(line, 300, fp) == NULL)
+                    break;
 
                 char *cp = line;
                 while (*cp && isspace(*cp))
@@ -326,7 +327,7 @@ class ReaderWriterPNM : public osgDB::ReaderWriter
                 ppmtype < 1 || ppmtype > 6)
             {
                 fclose(fp);
-                return ReadResult::FILE_NOT_HANDLED;
+                return ReadResult::ERROR_IN_READING_FILE;
             }
 
             int pixelFormat = 0;

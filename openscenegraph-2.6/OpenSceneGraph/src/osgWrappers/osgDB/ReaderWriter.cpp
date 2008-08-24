@@ -17,6 +17,7 @@
 #include <osg/Shader>
 #include <osg/Shape>
 #include <osgDB/Archive>
+#include <osgDB/AuthenticationMap>
 #include <osgDB/ReaderWriter>
 
 // Must undefine IN and OUT macros defined in Windows headers
@@ -26,6 +27,8 @@
 #ifdef OUT
 #undef OUT
 #endif
+
+TYPE_NAME_ALIAS(std::map< std::string COMMA  std::string >, osgDB::ReaderWriter::FormatDescriptionMap)
 
 BEGIN_ENUM_REFLECTOR(osgDB::ReaderWriter::ArchiveStatus)
 	I_DeclaringFile("osgDB/ReaderWriter");
@@ -69,10 +72,25 @@ BEGIN_OBJECT_REFLECTOR(osgDB::ReaderWriter)
 	          __C5_char_P1__className,
 	          "return the name of the object's class type. ",
 	          "Must be defined by derived classes. ");
+	I_Method0(const osgDB::ReaderWriter::FormatDescriptionMap &, supportedProtocols,
+	          Properties::VIRTUAL,
+	          __C5_FormatDescriptionMap_R1__supportedProtocols,
+	          "return which protocols are supported by ReaderWriter. ",
+	          "");
+	I_Method0(const osgDB::ReaderWriter::FormatDescriptionMap &, supportedExtensions,
+	          Properties::VIRTUAL,
+	          __C5_FormatDescriptionMap_R1__supportedExtensions,
+	          "return which list of file extensions supported by ReaderWriter. ",
+	          "");
+	I_Method0(const osgDB::ReaderWriter::FormatDescriptionMap &, supportedOptions,
+	          Properties::VIRTUAL,
+	          __C5_FormatDescriptionMap_R1__supportedOptions,
+	          "return which list of file extensions supported by ReaderWriter. ",
+	          "");
 	I_Method1(bool, acceptsExtension, IN, const std::string &, x,
 	          Properties::VIRTUAL,
 	          __bool__acceptsExtension__C5_std_string_R1,
-	          "",
+	          "return true if ReaderWriter accepts specified file extension. ",
 	          "");
 	I_MethodWithDefaults4(osgDB::ReaderWriter::ReadResult, openArchive, IN, const std::string &, x, , IN, osgDB::ReaderWriter::ArchiveStatus, x, , IN, unsigned, int, 4096, IN, const osgDB::ReaderWriter::Options *, x, NULL,
 	                      Properties::VIRTUAL,
@@ -184,6 +202,24 @@ BEGIN_OBJECT_REFLECTOR(osgDB::ReaderWriter)
 	                      __WriteResult__writeShader__C5_osg_Shader_R1__std_ostream_R1__C5_Options_P1,
 	                      "",
 	                      "");
+	I_ProtectedMethod2(void, supportsProtocol, IN, const std::string &, fmt, IN, const std::string &, description,
+	                   Properties::NON_VIRTUAL,
+	                   Properties::NON_CONST,
+	                   __void__supportsProtocol__C5_std_string_R1__C5_std_string_R1,
+	                   "",
+	                   "");
+	I_ProtectedMethod2(void, supportsExtension, IN, const std::string &, fmt, IN, const std::string &, description,
+	                   Properties::NON_VIRTUAL,
+	                   Properties::NON_CONST,
+	                   __void__supportsExtension__C5_std_string_R1__C5_std_string_R1,
+	                   "",
+	                   "");
+	I_ProtectedMethod2(void, supportsOption, IN, const std::string &, fmt, IN, const std::string &, description,
+	                   Properties::NON_VIRTUAL,
+	                   Properties::NON_CONST,
+	                   __void__supportsOption__C5_std_string_R1__C5_std_string_R1,
+	                   "",
+	                   "");
 END_REFLECTOR
 
 BEGIN_ENUM_REFLECTOR(osgDB::ReaderWriter::Options::CacheHintOptions)
@@ -196,6 +232,13 @@ BEGIN_ENUM_REFLECTOR(osgDB::ReaderWriter::Options::CacheHintOptions)
 	I_EnumLabel(osgDB::ReaderWriter::Options::CACHE_OBJECTS);
 	I_EnumLabel(osgDB::ReaderWriter::Options::CACHE_SHADERS);
 	I_EnumLabel(osgDB::ReaderWriter::Options::CACHE_ALL);
+END_REFLECTOR
+
+BEGIN_ENUM_REFLECTOR(osgDB::ReaderWriter::Options::BuildKdTreesHint)
+	I_DeclaringFile("osgDB/ReaderWriter");
+	I_EnumLabel(osgDB::ReaderWriter::Options::NO_PREFERENCE);
+	I_EnumLabel(osgDB::ReaderWriter::Options::DO_NOT_BUILD_KDTREES);
+	I_EnumLabel(osgDB::ReaderWriter::Options::BUILD_KDTREES);
 END_REFLECTOR
 
 BEGIN_OBJECT_REFLECTOR(osgDB::ReaderWriter::Options)
@@ -273,6 +316,26 @@ BEGIN_OBJECT_REFLECTOR(osgDB::ReaderWriter::Options)
 	          __CacheHintOptions__getObjectCacheHint,
 	          "Get whether the Registry::ObjectCache should be used by default. ",
 	          "");
+	I_Method1(void, setBuildKdTreesHint, IN, osgDB::ReaderWriter::Options::BuildKdTreesHint, hint,
+	          Properties::NON_VIRTUAL,
+	          __void__setBuildKdTreesHint__BuildKdTreesHint,
+	          "Set whether the KdTrees should be built for geometry in the loader model. ",
+	          "");
+	I_Method0(osgDB::ReaderWriter::Options::BuildKdTreesHint, getBuildKdTreesHint,
+	          Properties::NON_VIRTUAL,
+	          __BuildKdTreesHint__getBuildKdTreesHint,
+	          "Get whether the KdTrees should be built for geometry in the loader model. ",
+	          "");
+	I_Method1(void, setAuthenticationMap, IN, osgDB::AuthenticationMap *, authenticationMap,
+	          Properties::NON_VIRTUAL,
+	          __void__setAuthenticationMap__AuthenticationMap_P1,
+	          "Set the password map to be used by plugins when access files from secure locations. ",
+	          "");
+	I_Method0(const osgDB::AuthenticationMap *, getAuthenticationMap,
+	          Properties::NON_VIRTUAL,
+	          __C5_AuthenticationMap_P1__getAuthenticationMap,
+	          "Get the password map to be used by plugins when access files from secure locations. ",
+	          "");
 	I_Method2(void, setPluginData, IN, const std::string &, s, IN, void *, v,
 	          Properties::NON_VIRTUAL,
 	          __void__setPluginData__C5_std_string_R1__void_P1,
@@ -293,6 +356,12 @@ BEGIN_OBJECT_REFLECTOR(osgDB::ReaderWriter::Options)
 	          __void__removePluginData__C5_std_string_R1,
 	          "Remove a value from the PluginData. ",
 	          "");
+	I_SimpleProperty(osgDB::AuthenticationMap *, AuthenticationMap, 
+	                 0, 
+	                 __void__setAuthenticationMap__AuthenticationMap_P1);
+	I_SimpleProperty(osgDB::ReaderWriter::Options::BuildKdTreesHint, BuildKdTreesHint, 
+	                 __BuildKdTreesHint__getBuildKdTreesHint, 
+	                 __void__setBuildKdTreesHint__BuildKdTreesHint);
 	I_SimpleProperty(const std::string &, DatabasePath, 
 	                 0, 
 	                 __void__setDatabasePath__C5_std_string_R1);
@@ -318,6 +387,7 @@ BEGIN_ENUM_REFLECTOR(osgDB::ReaderWriter::ReadResult::ReadStatus)
 	I_EnumLabel(osgDB::ReaderWriter::ReadResult::FILE_LOADED);
 	I_EnumLabel(osgDB::ReaderWriter::ReadResult::FILE_LOADED_FROM_CACHE);
 	I_EnumLabel(osgDB::ReaderWriter::ReadResult::ERROR_IN_READING_FILE);
+	I_EnumLabel(osgDB::ReaderWriter::ReadResult::FILE_REQUESTED);
 END_REFLECTOR
 
 BEGIN_VALUE_REFLECTOR(osgDB::ReaderWriter::ReadResult)

@@ -13,6 +13,7 @@
 #include <osg/ArgumentParser>
 #include <osg/Drawable>
 #include <osg/Image>
+#include <osg/KdTree>
 #include <osg/Node>
 #include <osg/Object>
 #include <osg/Shader>
@@ -21,6 +22,7 @@
 #include <osg/StateAttribute>
 #include <osg/Uniform>
 #include <osgDB/Archive>
+#include <osgDB/AuthenticationMap>
 #include <osgDB/DatabasePager>
 #include <osgDB/DotOsgWrapper>
 #include <osgDB/DynamicLibrary>
@@ -66,6 +68,8 @@ BEGIN_VALUE_REFLECTOR(osgDB::RegisterDotOsgWrapperProxy)
 	                           "",
 	                           "");
 END_REFLECTOR
+
+TYPE_NAME_ALIAS(std::vector< osg::ref_ptr< osgDB::ReaderWriter > >, osgDB::Registry::ReaderWriterList)
 
 BEGIN_OBJECT_REFLECTOR(osgDB::Registry)
 	I_DeclaringFile("osgDB/Registry");
@@ -139,6 +143,16 @@ BEGIN_OBJECT_REFLECTOR(osgDB::Registry)
 	          Properties::NON_VIRTUAL,
 	          __ReaderWriter_P1__getReaderWriterForExtension__C5_std_string_R1,
 	          "get a reader writer which handles specified extension. ",
+	          "");
+	I_Method0(osgDB::Registry::ReaderWriterList &, getReaderWriterList,
+	          Properties::NON_VIRTUAL,
+	          __ReaderWriterList_R1__getReaderWriterList,
+	          "get list of all registered ReaderWriters. ",
+	          "");
+	I_Method0(const osgDB::Registry::ReaderWriterList &, getReaderWriterList,
+	          Properties::NON_VIRTUAL,
+	          __C5_ReaderWriterList_R1__getReaderWriterList,
+	          "get const list of all registered ReaderWriters. ",
 	          "");
 	I_Method2(osg::Object *, readObjectOfType, IN, const osg::Object &, compObj, IN, osgDB::Input &, fr,
 	          Properties::NON_VIRTUAL,
@@ -329,6 +343,46 @@ BEGIN_OBJECT_REFLECTOR(osgDB::Registry)
 	          Properties::NON_VIRTUAL,
 	          __ReaderWriter_WriteResult__writeShaderImplementation__C5_osg_Shader_R1__C5_std_string_R1__C5_ReaderWriter_Options_P1,
 	          "",
+	          "");
+	I_Method2(void, buildKdTreeIfRequired, IN, osgDB::ReaderWriter::ReadResult &, result, IN, const osgDB::ReaderWriter::Options *, options,
+	          Properties::NON_VIRTUAL,
+	          __void__buildKdTreeIfRequired__ReaderWriter_ReadResult_R1__C5_ReaderWriter_Options_P1,
+	          "",
+	          "");
+	I_Method1(void, setBuildKdTreesHint, IN, osgDB::ReaderWriter::Options::BuildKdTreesHint, hint,
+	          Properties::NON_VIRTUAL,
+	          __void__setBuildKdTreesHint__ReaderWriter_Options_BuildKdTreesHint,
+	          "Set whether the KdTrees should be built for geometry in the loader model. ",
+	          "");
+	I_Method0(osgDB::ReaderWriter::Options::BuildKdTreesHint, getBuildKdTreesHint,
+	          Properties::NON_VIRTUAL,
+	          __ReaderWriter_Options_BuildKdTreesHint__getBuildKdTreesHint,
+	          "Get whether the KdTrees should be built for geometry in the loader model. ",
+	          "");
+	I_Method1(void, setKdTreeBuilder, IN, osg::KdTreeBuilder *, builder,
+	          Properties::NON_VIRTUAL,
+	          __void__setKdTreeBuilder__osg_KdTreeBuilder_P1,
+	          "Set the KdTreeBuilder visitor that is used to build KdTree on loaded models. ",
+	          "");
+	I_Method0(osg::KdTreeBuilder *, getKdTreeBuilder,
+	          Properties::NON_VIRTUAL,
+	          __osg_KdTreeBuilder_P1__getKdTreeBuilder,
+	          "Get the KdTreeBuilder visitor that is used to build KdTree on loaded models. ",
+	          "");
+	I_Method1(void, setAuthenticationMap, IN, osgDB::AuthenticationMap *, authenticationMap,
+	          Properties::NON_VIRTUAL,
+	          __void__setAuthenticationMap__AuthenticationMap_P1,
+	          "Set the password map to be used by plugins when access files from secure locations. ",
+	          "");
+	I_Method0(osgDB::AuthenticationMap *, getAuthenticationMap,
+	          Properties::NON_VIRTUAL,
+	          __AuthenticationMap_P1__getAuthenticationMap,
+	          "Get the password map to be used by plugins when access files from secure locations. ",
+	          "");
+	I_Method0(const osgDB::AuthenticationMap *, getAuthenticationMap,
+	          Properties::NON_VIRTUAL,
+	          __C5_AuthenticationMap_P1__getAuthenticationMap,
+	          "Get the password map to be used by plugins when access files from secure locations. ",
 	          "");
 	I_Method1(void, setCreateNodeFromImage, IN, bool, flag,
 	          Properties::NON_VIRTUAL,
@@ -528,6 +582,12 @@ BEGIN_OBJECT_REFLECTOR(osgDB::Registry)
 	                   __ReaderWriter_ReadResult__readImplementation__C5_ReadFunctor_R1__bool,
 	                   "",
 	                   "");
+	I_SimpleProperty(osgDB::AuthenticationMap *, AuthenticationMap, 
+	                 __AuthenticationMap_P1__getAuthenticationMap, 
+	                 __void__setAuthenticationMap__AuthenticationMap_P1);
+	I_SimpleProperty(osgDB::ReaderWriter::Options::BuildKdTreesHint, BuildKdTreesHint, 
+	                 __ReaderWriter_Options_BuildKdTreesHint__getBuildKdTreesHint, 
+	                 __void__setBuildKdTreesHint__ReaderWriter_Options_BuildKdTreesHint);
 	I_SimpleProperty(bool, CreateNodeFromImage, 
 	                 __bool__getCreateNodeFromImage, 
 	                 __void__setCreateNodeFromImage__bool);
@@ -537,6 +597,9 @@ BEGIN_OBJECT_REFLECTOR(osgDB::Registry)
 	I_SimpleProperty(osgDB::DatabasePager *, DatabasePager, 
 	                 __DatabasePager_P1__getDatabasePager, 
 	                 __void__setDatabasePager__DatabasePager_P1);
+	I_SimpleProperty(osg::KdTreeBuilder *, KdTreeBuilder, 
+	                 __osg_KdTreeBuilder_P1__getKdTreeBuilder, 
+	                 __void__setKdTreeBuilder__osg_KdTreeBuilder_P1);
 	I_SimpleProperty(const osgDB::FilePathList &, LibraryFilePathList, 
 	                 __C5_FilePathList_R1__getLibraryFilePathList, 
 	                 __void__setLibraryFilePathList__C5_FilePathList_R1);
@@ -546,6 +609,9 @@ BEGIN_OBJECT_REFLECTOR(osgDB::Registry)
 	I_SimpleProperty(osgDB::Registry::ReadFileCallback *, ReadFileCallback, 
 	                 __ReadFileCallback_P1__getReadFileCallback, 
 	                 __void__setReadFileCallback__ReadFileCallback_P1);
+	I_SimpleProperty(osgDB::Registry::ReaderWriterList &, ReaderWriterList, 
+	                 __ReaderWriterList_R1__getReaderWriterList, 
+	                 0);
 	I_SimpleProperty(osgDB::SharedStateManager *, SharedStateManager, 
 	                 __SharedStateManager_P1__getSharedStateManager, 
 	                 __void__setSharedStateManager__SharedStateManager_P1);
@@ -648,4 +714,46 @@ BEGIN_OBJECT_REFLECTOR(osgDB::Registry::WriteFileCallback)
 	          "",
 	          "");
 END_REFLECTOR
+
+BEGIN_VALUE_REFLECTOR(osg::ref_ptr< osgDB::ReaderWriter >)
+	I_DeclaringFile("osg/ref_ptr");
+	I_Constructor0(____ref_ptr,
+	               "",
+	               "");
+	I_Constructor1(IN, osgDB::ReaderWriter *, ptr,
+	               Properties::NON_EXPLICIT,
+	               ____ref_ptr__T_P1,
+	               "",
+	               "");
+	I_Constructor1(IN, const osg::ref_ptr< osgDB::ReaderWriter > &, rp,
+	               Properties::NON_EXPLICIT,
+	               ____ref_ptr__C5_ref_ptr_R1,
+	               "",
+	               "");
+	I_Method0(osgDB::ReaderWriter *, get,
+	          Properties::NON_VIRTUAL,
+	          __T_P1__get,
+	          "",
+	          "");
+	I_Method0(bool, valid,
+	          Properties::NON_VIRTUAL,
+	          __bool__valid,
+	          "",
+	          "");
+	I_Method0(osgDB::ReaderWriter *, release,
+	          Properties::NON_VIRTUAL,
+	          __T_P1__release,
+	          "",
+	          "");
+	I_Method1(void, swap, IN, osg::ref_ptr< osgDB::ReaderWriter > &, rp,
+	          Properties::NON_VIRTUAL,
+	          __void__swap__ref_ptr_R1,
+	          "",
+	          "");
+	I_SimpleProperty(osgDB::ReaderWriter *, , 
+	                 __T_P1__get, 
+	                 0);
+END_REFLECTOR
+
+STD_VECTOR_REFLECTOR(std::vector< osg::ref_ptr< osgDB::ReaderWriter > >)
 

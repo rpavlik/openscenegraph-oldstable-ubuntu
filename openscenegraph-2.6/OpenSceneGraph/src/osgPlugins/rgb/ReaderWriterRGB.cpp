@@ -168,6 +168,8 @@ static rawImageRec *RawImageOpen(std::istream& fin)
     }
 
     fin.read((char*)raw,12);
+    if (!fin.good())
+        return NULL;
 
     if (raw->swapFlag)
     {
@@ -441,25 +443,26 @@ static void RawImageGetData(rawImageRec *raw, unsigned char **data )
 class ReaderWriterRGB : public osgDB::ReaderWriter
 {
     public:
+    
+        ReaderWriterRGB()
+        {
+            supportsExtension("rgb","rgb image format");
+            supportsExtension("rgba","rgba image format");
+            supportsExtension("sgi","sgi image format");
+            supportsExtension("int","int image format");
+            supportsExtension("inta","inta image format");
+            supportsExtension("bw","bw image format");
+        }
+    
         virtual const char* className() const { return "RGB Image Reader/Writer"; }
         
-        virtual bool acceptsExtension(const std::string& extension) const
-        {
-            return osgDB::equalCaseInsensitive(extension,"rgb") ||
-                osgDB::equalCaseInsensitive(extension,"sgi") ||
-                osgDB::equalCaseInsensitive(extension,"rgba") ||
-                osgDB::equalCaseInsensitive(extension,"int") || 
-                osgDB::equalCaseInsensitive(extension,"inta") ||
-                osgDB::equalCaseInsensitive(extension,"bw");
-        }
-
         ReadResult readRGBStream(std::istream& fin) const
         {
             rawImageRec *raw;
 
             if( (raw = RawImageOpen(fin)) == NULL )
             {
-                return ReadResult::FILE_NOT_HANDLED;
+                return ReadResult::ERROR_IN_READING_FILE;
             }
 
             int s = raw->sizeX;

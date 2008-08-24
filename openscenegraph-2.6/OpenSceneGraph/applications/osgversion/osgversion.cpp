@@ -219,6 +219,8 @@ bool validName(const std::string& first)
     if (first=="LightPointNode") return false;
     if (first=="GeometryTechnique") return false;
     if (first=="GeoemtryTechnique") return false;
+    if (first=="KdTree") return false;
+    if (first=="LineSegment") return false;
     return true;
 }
 
@@ -230,6 +232,7 @@ std::string typoCorrection(const std::string& name)
     if (name=="") return "";
     if (name=="") return "";
 #endif
+    if (name=="Weidemann") return "Wiedemann";
     if (name=="Martsz") return "Martz";
     if (name=="Matz")  return "Martz";
     if (name=="Froenlich") return "Fröhlich";
@@ -238,6 +241,7 @@ std::string typoCorrection(const std::string& name)
     if (name=="Fruciel") return "Frauciel";
     if (name=="Hebelin") return "Herbelin";
     if (name=="Jea-Sebastien") return "Jean-Sebastien";
+    if (name=="Jean-Sebastian") return "Jean-Sebastien";
     if (name=="Robet") return "Robert";
     if (name=="MornÃ©") return "Morné";
     if (name=="Adndre") return "Andre";
@@ -256,7 +260,7 @@ std::string typoCorrection(const std::string& name)
     if (name=="Drederic") return "Frederic";
     if (name=="Fredrick") return "Frederic";
     if (name=="Fredric") return "Frederic";
-    if (name=="Garrat") return "Garret";
+    if (name=="Garrat") return "Garrett";
     if (name=="Geof") return "Geoff";
     if (name=="Gronenger") return "Gronager";
     if (name=="Gronger") return "Gronager";
@@ -342,16 +346,33 @@ std::string typoCorrection(const std::string& name)
     if (name=="Giatan") return "Gaitan";
     if (name=="Melchoir") return "Melchior";
     if (name=="Simmonsson") return "Simonsson";
+    if (name=="Simmonson") return "Simonsson";
     if (name=="Sokolwsky") return "Sokolowsky";
     if (name=="Cullu") return "Callu";
     if (name=="Comporesi") return "Camporesi";
     if (name=="Machler") return "Mächler";
     if (name=="Maechler") return "Mächler";
+    if (name=="Messerschimdt") return "Messerschmidt";
+    if (name=="Garret") return "Garrett";
+    if (name=="Adrain") return "Adrian";
+    if (name=="Elgi") return "Egli";
     return name;
 }
 
 void nameCorrection(NamePair& name)
 {
+    if (name.first=="John" && name.second=="Vidar")
+    {
+        name.first = "John";
+        name.second = "Vidar Larring";
+    }
+
+    if (name.first=="Sebastien" && name.second=="Messerschmidt")
+    {
+        name.first = "Sebastian";
+        name.second = "Messerschmidt";
+    }
+
     if ((name.first=="Jose" || name.first=="José") && name.second=="Delport")
     {
         name.first = "J.P.";
@@ -411,6 +432,11 @@ void nameCorrection(NamePair& name)
     {
         name.first = "Paul";
         name.second = "de Repentigny";
+    }
+    if (name.first=="Raymond" && name.second=="de")
+    {
+        name.first = "Raymond";
+        name.second = "de Vries";
     }
     if (name.first=="Nick" && name.second=="")
     {

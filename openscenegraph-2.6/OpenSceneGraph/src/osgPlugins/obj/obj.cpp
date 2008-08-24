@@ -12,7 +12,9 @@
 */
 
 #include <iostream>
+#include <sstream>
 #include <fstream>
+#include <string>
 #include <stdio.h>
 
 #include "obj.h"
@@ -23,6 +25,76 @@
 #include <osgDB/FileNameUtils>
 
 using namespace obj;
+
+static std::string strip( const std::string& ss )
+{
+    std::string result;
+    result.assign( ss.begin() + ss.find_first_not_of( ' ' ), ss.begin() + 1 + ss.find_last_not_of( ' ' ) );
+    return( result );
+}
+
+/*
+ * parse a subset of texture options, following
+ * http://local.wasp.uwa.edu.au/~pbourke/dataformats/mtl/
+ */
+static std::string parseTexture( const std::string& ss, Material& mat)
+{
+    std::string s(ss);
+    for (;;)
+    {
+        if (s[0] != '-')
+            break;
+ 
+        int n;
+        if (s[1] == 's' || s[1] == 'o')
+        {
+            float x, y, z;
+            if (sscanf(s.c_str(), "%*s %f %f %f%n", &x, &y, &z, &n) != 3)
+            {
+                break;
+            }
+
+            if (s[1] == 's')
+            {
+                // texture scale
+                mat.uScale = x;
+                mat.vScale = y;
+            }
+            else if (s[1] == 'o')
+            {
+                // texture offset
+                mat.uOffset = x;
+                mat.vOffset = y;
+            }
+        }
+        else if (s[1] == 'm' && s[2] == 'm')
+        {
+            // texture color offset and gain
+            float base, gain;
+            if (sscanf(s.c_str(), "%*s %f %f%n", &base, &gain, &n) != 2)
+            {
+                break;
+            }
+            // UNUSED
+        }
+        else if (s[1] == 'b' && s[2] == 'm')
+        {
+            // blend multiplier
+            float mult;
+            if (sscanf(s.c_str(), "%*s %f%n", &mult, &n) != 2)
+            {
+                break;
+            }
+            // UNUSED
+        }
+        else
+            break;
+
+        s = strip(s.substr(n));
+    }
+
+    return s;
+}
 
 bool Model::readline(std::istream& fin, char* line, const int LINE_SIZE)
 {
@@ -132,6 +204,7 @@ bool Model::readMTL(std::istream& fin)
     float r = 1.0f, g = 1.0f, b = 1.0f, a = 1.0f;
 
     Material* material = 0;// &(materialMap[""]);
+    std::string filename;
 
     while (fin)
     {
@@ -155,46 +228,136 @@ bool Model::readMTL(std::istream& fin)
                 {
                     unsigned int fieldsRead = sscanf(line+3,"%f %f %f %f", &r, &g, &b, &a);
 
-                    if (fieldsRead==1)      material->ambient.set(r,0.0f,0.0f,1.0f);
-                    else if (fieldsRead==2) material->ambient.set(r,g,0.0f,1.0f);
-                    else if (fieldsRead==3) material->ambient.set(r,g,b,1.0f);
-                    else if (fieldsRead==4) material->ambient.set(r,g,b,a);
+                    if (fieldsRead==1)
+                    {
+                        material->ambient[ 0 ] = r;
+                    }
+                    else if (fieldsRead==2)
+                    {
+                        material->ambient[ 0 ] = r;
+                        material->ambient[ 1 ] = g;
+                    }
+                    else if (fieldsRead==3)
+                    {
+                        material->ambient[ 0 ] = r;
+                        material->ambient[ 1 ] = g;
+                        material->ambient[ 2 ] = b;
+                    }
+                    else if (fieldsRead==4)
+                    {
+                        material->ambient[ 0 ] = r;
+                        material->ambient[ 1 ] = g;
+                        material->ambient[ 2 ] = b;
+                        material->ambient[ 3 ] = a;
+                    }
                 }
                 else if (strncmp(line,"Kd ",3)==0)
                 {
                     unsigned int fieldsRead = sscanf(line+3,"%f %f %f %f", &r, &g, &b, &a);
 
-                    if (fieldsRead==1)      material->diffuse.set(r,0.0f,0.0f,1.0f);
-                    else if (fieldsRead==2) material->diffuse.set(r,g,0.0f,1.0f);
-                    else if (fieldsRead==3) material->diffuse.set(r,g,b,1.0f);
-                    else if (fieldsRead==4) material->diffuse.set(r,g,b,a);
+                    if (fieldsRead==1)
+                    {
+                        material->diffuse[ 0 ] = r;
+                    }
+                    else if (fieldsRead==2)
+                    {
+                        material->diffuse[ 0 ] = r;
+                        material->diffuse[ 1 ] = g;
+                    }
+                    else if (fieldsRead==3)
+                    {
+                        material->diffuse[ 0 ] = r;
+                        material->diffuse[ 1 ] = g;
+                        material->diffuse[ 2 ] = b;
+                    }
+                    else if (fieldsRead==4)
+                    {
+                        material->diffuse[ 0 ] = r;
+                        material->diffuse[ 1 ] = g;
+                        material->diffuse[ 2 ] = b;
+                        material->diffuse[ 3 ] = a;
+                    }
                 }
                 else if (strncmp(line,"Ks ",3)==0)
                 {
                     unsigned int fieldsRead = sscanf(line+3,"%f %f %f %f", &r, &g, &b, &a);
 
-                    if (fieldsRead==1)      material->specular.set(r,0.0f,0.0f,1.0f);
-                    else if (fieldsRead==2) material->specular.set(r,g,0.0f,1.0f);
-                    else if (fieldsRead==3) material->specular.set(r,g,b,1.0f);
-                    else if (fieldsRead==4) material->specular.set(r,g,b,a);
+                    if (fieldsRead==1)
+                    {
+                        material->specular[ 0 ] = r;
+                    }
+                    else if (fieldsRead==2)
+                    {
+                        material->specular[ 0 ] = r;
+                        material->specular[ 1 ] = g;
+                    }
+                    else if (fieldsRead==3)
+                    {
+                        material->specular[ 0 ] = r;
+                        material->specular[ 1 ] = g;
+                        material->specular[ 2 ] = b;
+                    }
+                    else if (fieldsRead==4)
+                    {
+                        material->specular[ 0 ] = r;
+                        material->specular[ 1 ] = g;
+                        material->specular[ 2 ] = b;
+                        material->specular[ 3 ] = a;
+                    }
                 }
                 else if (strncmp(line,"Ke ",3)==0)
                 {
                     unsigned int fieldsRead = sscanf(line+3,"%f %f %f %f", &r, &g, &b, &a);
 
-                    if (fieldsRead==1)      material->emissive.set(r,0.0f,0.0f,1.0f);
-                    else if (fieldsRead==2) material->emissive.set(r,g,0.0f,1.0f);
-                    else if (fieldsRead==3) material->emissive.set(r,g,b,1.0f);
-                    else if (fieldsRead==4) material->emissive.set(r,g,b,a);
+                    if (fieldsRead==1)
+                    {
+                        material->emissive[ 0 ] = r;
+                    }
+                    else if (fieldsRead==2)
+                    {
+                        material->emissive[ 0 ] = r;
+                        material->emissive[ 1 ] = g;
+                    }
+                    else if (fieldsRead==3)
+                    {
+                        material->emissive[ 0 ] = r;
+                        material->emissive[ 1 ] = g;
+                        material->emissive[ 2 ] = b;
+                    }
+                    else if (fieldsRead==4)
+                    {
+                        material->emissive[ 0 ] = r;
+                        material->emissive[ 1 ] = g;
+                        material->emissive[ 2 ] = b;
+                        material->emissive[ 3 ] = a;
+                    }
                 }
                 else if (strncmp(line,"Tf ",3)==0)
                 {
                     unsigned int fieldsRead = sscanf(line+3,"%f %f %f %f", &r, &g, &b, &a);
 
-                    if (fieldsRead==1)      material->Tf.set(r,0.0f,0.0f,1.0f);
-                    else if (fieldsRead==2) material->Tf.set(r,g,0.0f,1.0f);
-                    else if (fieldsRead==3) material->Tf.set(r,g,b,1.0f);
-                    else if (fieldsRead==4) material->Tf.set(r,g,b,a);
+                    if (fieldsRead==1)
+                    {
+                        material->Tf[ 0 ] = r;
+                    }
+                    else if (fieldsRead==2)
+                    {
+                        material->Tf[ 0 ] = r;
+                        material->Tf[ 1 ] = g;
+                    }
+                    else if (fieldsRead==3)
+                    {
+                        material->Tf[ 0 ] = r;
+                        material->Tf[ 1 ] = g;
+                        material->Tf[ 2 ] = b;
+                    }
+                    else if (fieldsRead==4)
+                    {
+                        material->Tf[ 0 ] = r;
+                        material->Tf[ 1 ] = g;
+                        material->Tf[ 2 ] = b;
+                        material->Tf[ 3 ] = a;
+                    }
                 }
                 else if (strncmp(line,"sharpness ",10)==0)
                 {
@@ -252,16 +415,19 @@ bool Model::readMTL(std::istream& fin)
                 }
                 else if (strncmp(line,"map_Ka ",7)==0)
                 {
-                    std::string filename(line+7);
-                    material->map_Ka = filename;
+                    material->map_Ka = parseTexture(strip(line+7), *material);
                 }
                 else if (strncmp(line,"map_Kd ",7)==0)
                 {
-                    material->map_Kd = lastComponent(line+7);
+                    material->map_Kd = parseTexture(strip(line+7), *material);
                 }
                 else if (strncmp(line,"map_Ks ",7)==0)
                 {
-                    material->map_Ks = lastComponent(line+7);
+                    material->map_Ks = parseTexture(strip(line+7), *material);
+                }
+                else if (strncmp(line,"map_opacity ",7)==0)
+                {
+                    material->map_opacity = parseTexture(strip(line+7), *material);
                 }
                 else if (strcmp(line,"refl")==0 || strncmp(line,"refl ",5)==0)
                 {

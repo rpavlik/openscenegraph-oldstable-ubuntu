@@ -13,6 +13,7 @@
 #include <osg/GLExtensions>
 #include <osg/Texture3D>
 #include <osg/State>
+#include <osg/ImageSequence>
 #include <osg/GLU>
 #include <osg/Notify>
 
@@ -96,12 +97,26 @@ int Texture3D::compare(const StateAttribute& sa) const
 
 void Texture3D::setImage(Image* image)
 {
+    if (_image == image) return;
+
+    if (dynamic_cast<osg::ImageSequence*>(_image.get()))
+    {
+        setUpdateCallback(0);
+        setDataVariance(osg::Object::STATIC);
+    }
+
     // delete old texture objects.
     dirtyTextureObject();
 
     _modifiedCount.setAllElementsTo(0);
 
     _image = image;
+    
+    if (dynamic_cast<osg::ImageSequence*>(_image.get()))
+    {
+        setUpdateCallback(new ImageSequence::UpdateCallback());
+        setDataVariance(osg::Object::DYNAMIC);
+    }
 }
 
 void Texture3D::computeRequiredTextureDimensions(State& state, const osg::Image& image,GLsizei& inwidth, GLsizei& inheight,GLsizei& indepth, GLsizei& numMipmapLevels) const
@@ -134,7 +149,7 @@ void Texture3D::computeRequiredTextureDimensions(State& state, const osg::Image&
     inheight = height;
     indepth = depth;
     
-    bool useHardwareMipMapGeneration = false; //!image.isMipmap() && _useHardwareMipMapGeneration && extensions->isGenerateMipMapSupported();
+    bool useHardwareMipMapGeneration = !image.isMipmap() && _useHardwareMipMapGeneration && texExtensions->isGenerateMipMapSupported();
 
     if( _min_filter == LINEAR || _min_filter == NEAREST || useHardwareMipMapGeneration )
     {
@@ -195,6 +210,8 @@ void Texture3D::apply(State& state) const
         }
         else if (_image.get() && getModifiedCount(contextID) != _image->getModifiedCount())
         {
+           computeRequiredTextureDimensions(state,*_image,_textureWidth, _textureHeight, _textureDepth,_numMipmapLevels);
+
             applyTexImage3D(GL_TEXTURE_3D,_image.get(),state, _textureWidth, _textureHeight, _textureDepth,_numMipmapLevels);
 
             // update the modified count to show that it is upto date.
@@ -231,7 +248,7 @@ void Texture3D::apply(State& state) const
         // compute the dimensions of the texture.
         computeRequiredTextureDimensions(state,*_image,_textureWidth, _textureHeight, _textureDepth,_numMipmapLevels);
 
-        _textureObjectBuffer[contextID] = textureObject = generateTextureObject(contextID,GL_TEXTURE_3D);
+        textureObject = generateTextureObject(contextID,GL_TEXTURE_3D);
 
         textureObject->bind();
 
@@ -244,6 +261,8 @@ void Texture3D::apply(State& state) const
 
         // update the modified count to show that it is upto date.
         getModifiedCount(contextID) = _image->getModifiedCount();
+
+        _textureObjectBuffer[contextID] = textureObject;
 
         if (_unrefImageDataAfterApply && areAllTextureObjectsLoaded() && _image->getDataVariance()==STATIC)
         {
@@ -327,13 +346,21 @@ void Texture3D::applyTexImage3D(GLenum target, Image* image, State& state, GLsiz
 
     glPixelStorei(GL_UNPACK_ALIGNMENT,image->getPacking());
 
-    if( _min_filter == LINEAR || _min_filter == NEAREST )
+    bool useHardwareMipMapGeneration = !image->isMipmap() && _useHardwareMipMapGeneration && texExtensions->isGenerateMipMapSupported();
+
+    if( _min_filter == LINEAR || _min_filter == NEAREST || useHardwareMipMapGeneration )
     {
+        bool hardwareMipMapOn = false;
+        if (_min_filter != LINEAR && _min_filter != NEAREST) 
+        {
+            if (useHardwareMipMapGeneration) glTexParameteri(GL_TEXTURE_3D, GL_GENERATE_MIPMAP_SGIS,GL_TRUE);
+            hardwareMipMapOn = true;
+        }
+
         numMipmapLevels = 1;
 
         if (!compressed_image)
         {
-            // notify(WARN)<<"glTexImage3D"<<std::endl;
             extensions->glTexImage3D( target, 0, _internalFormat,
                                       inwidth, inheight, indepth,
                                       _borderWidth,
@@ -356,7 +383,7 @@ void Texture3D::applyTexImage3D(GLenum target, Image* image, State& state, GLsiz
                 image->data());
         }
 
-
+        if (hardwareMipMapOn) glTexParameteri(GL_TEXTURE_3D, GL_GENERATE_MIPMAP_SGIS,GL_FALSE);
     }
     else
     {

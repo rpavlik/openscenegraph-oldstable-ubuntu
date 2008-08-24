@@ -39,6 +39,10 @@ TYPE_NAME_ALIAS(void , osg::FBOExtensions::TglGenRenderbuffersEXT)
 
 TYPE_NAME_ALIAS(void , osg::FBOExtensions::TglRenderbufferStorageEXT)
 
+TYPE_NAME_ALIAS(void , osg::FBOExtensions::TglRenderbufferStorageMultisampleEXT)
+
+TYPE_NAME_ALIAS(void , osg::FBOExtensions::TglRenderbufferStorageMultisampleCoverageNV)
+
 TYPE_NAME_ALIAS(void , osg::FBOExtensions::TglBindFramebufferEXT)
 
 TYPE_NAME_ALIAS(void , osg::FBOExtensions::TglDeleteFramebuffersEXT)
@@ -59,7 +63,7 @@ TYPE_NAME_ALIAS(void , osg::FBOExtensions::TglFramebufferRenderbufferEXT)
 
 TYPE_NAME_ALIAS(void , osg::FBOExtensions::TglGenerateMipmapEXT)
 
-TYPE_NAME_ALIAS(void , osg::FBOExtensions::TglRenderbufferStorageMultisampleCoverageNV)
+TYPE_NAME_ALIAS(void , osg::FBOExtensions::TglBlitFramebufferEXT)
 
 BEGIN_OBJECT_REFLECTOR(osg::FBOExtensions)
 	I_DeclaringFile("osg/FrameBufferObject");
@@ -67,6 +71,16 @@ BEGIN_OBJECT_REFLECTOR(osg::FBOExtensions)
 	I_Method0(bool, isSupported,
 	          Properties::NON_VIRTUAL,
 	          __bool__isSupported,
+	          "",
+	          "");
+	I_Method0(bool, isMultisampleSupported,
+	          Properties::NON_VIRTUAL,
+	          __bool__isMultisampleSupported,
+	          "",
+	          "");
+	I_Method0(bool, isMultisampleCoverageSupported,
+	          Properties::NON_VIRTUAL,
+	          __bool__isMultisampleCoverageSupported,
 	          "",
 	          "");
 	I_StaticMethod2(osg::FBOExtensions *, instance, IN, unsigned, contextID, IN, bool, createIfNotInitalized,
@@ -82,6 +96,7 @@ BEGIN_OBJECT_REFLECTOR(osg::FBOExtensions)
 	I_PublicMemberProperty(osg::FBOExtensions::TglGenRenderbuffersEXT *, glGenRenderbuffersEXT);
 	I_PublicMemberProperty(osg::FBOExtensions::TglDeleteRenderbuffersEXT *, glDeleteRenderbuffersEXT);
 	I_PublicMemberProperty(osg::FBOExtensions::TglRenderbufferStorageEXT *, glRenderbufferStorageEXT);
+	I_PublicMemberProperty(osg::FBOExtensions::TglRenderbufferStorageMultisampleEXT *, glRenderbufferStorageMultisampleEXT);
 	I_PublicMemberProperty(osg::FBOExtensions::TglRenderbufferStorageMultisampleCoverageNV *, glRenderbufferStorageMultisampleCoverageNV);
 	I_PublicMemberProperty(osg::FBOExtensions::TglBindFramebufferEXT *, glBindFramebufferEXT);
 	I_PublicMemberProperty(osg::FBOExtensions::TglDeleteFramebuffersEXT *, glDeleteFramebuffersEXT);
@@ -93,6 +108,7 @@ BEGIN_OBJECT_REFLECTOR(osg::FBOExtensions)
 	I_PublicMemberProperty(osg::FBOExtensions::TglFramebufferTextureLayerEXT *, glFramebufferTextureLayerEXT);
 	I_PublicMemberProperty(osg::FBOExtensions::TglFramebufferRenderbufferEXT *, glFramebufferRenderbufferEXT);
 	I_PublicMemberProperty(osg::FBOExtensions::TglGenerateMipmapEXT *, glGenerateMipmapEXT);
+	I_PublicMemberProperty(osg::FBOExtensions::TglBlitFramebufferEXT *, glBlitFramebufferEXT);
 END_REFLECTOR
 
 BEGIN_VALUE_REFLECTOR(osg::FrameBufferAttachment)
@@ -140,14 +156,19 @@ BEGIN_VALUE_REFLECTOR(osg::FrameBufferAttachment)
 	               ____FrameBufferAttachment__Camera_Attachment_R1,
 	               "",
 	               "");
+	I_Method0(bool, isMultisample,
+	          Properties::NON_VIRTUAL,
+	          __bool__isMultisample,
+	          "",
+	          "");
 	I_Method2(void, createRequiredTexturesAndApplyGenerateMipMap, IN, osg::State &, state, IN, const osg::FBOExtensions *, ext,
 	          Properties::NON_VIRTUAL,
 	          __void__createRequiredTexturesAndApplyGenerateMipMap__State_R1__C5_FBOExtensions_P1,
 	          "",
 	          "");
-	I_Method3(void, attach, IN, osg::State &, state, IN, GLenum, attachment_point, IN, const osg::FBOExtensions *, ext,
+	I_Method4(void, attach, IN, osg::State &, state, IN, GLenum, target, IN, GLenum, attachment_point, IN, const osg::FBOExtensions *, ext,
 	          Properties::NON_VIRTUAL,
-	          __void__attach__State_R1__GLenum__C5_FBOExtensions_P1,
+	          __void__attach__State_R1__GLenum__GLenum__C5_FBOExtensions_P1,
 	          "",
 	          "");
 	I_Method1(int, compare, IN, const osg::FrameBufferAttachment &, fa,
@@ -162,6 +183,13 @@ TYPE_NAME_ALIAS(std::map< osg::Camera::BufferComponent COMMA  osg::FrameBufferAt
 TYPE_NAME_ALIAS(std::vector< GLenum >, osg::FrameBufferObject::MultipleRenderingTargets)
 
 TYPE_NAME_ALIAS(osg::Camera::BufferComponent, osg::FrameBufferObject::BufferComponent)
+
+BEGIN_ENUM_REFLECTOR(osg::FrameBufferObject::BindTarget)
+	I_DeclaringFile("osg/FrameBufferObject");
+	I_EnumLabel(osg::FrameBufferObject::READ_FRAMEBUFFER);
+	I_EnumLabel(osg::FrameBufferObject::DRAW_FRAMEBUFFER);
+	I_EnumLabel(osg::FrameBufferObject::READ_DRAW_FRAMEBUFFER);
+END_REFLECTOR
 
 BEGIN_OBJECT_REFLECTOR(osg::FrameBufferObject)
 	I_DeclaringFile("osg/FrameBufferObject");
@@ -208,21 +236,6 @@ BEGIN_OBJECT_REFLECTOR(osg::FrameBufferObject)
 	          __C5_AttachmentMap_R1__getAttachmentMap,
 	          "",
 	          "");
-	I_Method2(void, setAttachment, IN, GLenum, attachment_point, IN, const osg::FrameBufferAttachment &, attachment,
-	          Properties::NON_VIRTUAL,
-	          __void__setAttachment__GLenum__C5_FrameBufferAttachment_R1,
-	          "",
-	          "");
-	I_Method1(const osg::FrameBufferAttachment &, getAttachment, IN, GLenum, attachment_point,
-	          Properties::NON_VIRTUAL,
-	          __C5_FrameBufferAttachment_R1__getAttachment__GLenum,
-	          "",
-	          "");
-	I_Method1(bool, hasAttachment, IN, GLenum, attachment_point,
-	          Properties::NON_VIRTUAL,
-	          __bool__hasAttachment__GLenum,
-	          "",
-	          "");
 	I_Method2(void, setAttachment, IN, osg::FrameBufferObject::BufferComponent, attachment_point, IN, const osg::FrameBufferAttachment &, attachment,
 	          Properties::NON_VIRTUAL,
 	          __void__setAttachment__BufferComponent__C5_FrameBufferAttachment_R1,
@@ -238,16 +251,6 @@ BEGIN_OBJECT_REFLECTOR(osg::FrameBufferObject)
 	          __bool__hasAttachment__BufferComponent,
 	          "",
 	          "");
-	I_Method1(GLenum, convertBufferComponentToGLenum, IN, osg::FrameBufferObject::BufferComponent, attachment_point,
-	          Properties::NON_VIRTUAL,
-	          __GLenum__convertBufferComponentToGLenum__BufferComponent,
-	          "",
-	          "");
-	I_Method1(osg::FrameBufferObject::BufferComponent, convertGLenumToBufferComponent, IN, GLenum, attachment_point,
-	          Properties::NON_VIRTUAL,
-	          __BufferComponent__convertGLenumToBufferComponent__GLenum,
-	          "",
-	          "");
 	I_Method0(bool, hasMultipleRenderingTargets,
 	          Properties::NON_VIRTUAL,
 	          __bool__hasMultipleRenderingTargets,
@@ -256,6 +259,11 @@ BEGIN_OBJECT_REFLECTOR(osg::FrameBufferObject)
 	I_Method0(const osg::FrameBufferObject::MultipleRenderingTargets &, getMultipleRenderingTargets,
 	          Properties::NON_VIRTUAL,
 	          __C5_MultipleRenderingTargets_R1__getMultipleRenderingTargets,
+	          "",
+	          "");
+	I_Method0(bool, isMultisample,
+	          Properties::NON_VIRTUAL,
+	          __bool__isMultisample,
 	          "",
 	          "");
 	I_Method1(int, compare, IN, const osg::StateAttribute &, sa,
@@ -268,6 +276,11 @@ BEGIN_OBJECT_REFLECTOR(osg::FrameBufferObject)
 	          __void__apply__State_R1,
 	          "apply the OpenGL state attributes. ",
 	          "The render info for the current OpenGL context is passed in to allow the StateAttribute to obtain details on the the current context and state. ");
+	I_Method2(void, apply, IN, osg::State &, state, IN, osg::FrameBufferObject::BindTarget, target,
+	          Properties::NON_VIRTUAL,
+	          __void__apply__State_R1__BindTarget,
+	          "Bind the FBO as either the read or draw target, or both. ",
+	          "");
 	I_StaticMethod2(void, deleteFrameBufferObject, IN, unsigned int, contextID, IN, GLuint, program,
 	                __void__deleteFrameBufferObject__unsigned_int__GLuint_S,
 	                "Mark internal FBO for deletion. ",
@@ -292,6 +305,12 @@ BEGIN_OBJECT_REFLECTOR(osg::FrameBufferObject)
 	                   __void__dirtyAll,
 	                   "",
 	                   "");
+	I_ProtectedMethod1(GLenum, convertBufferComponentToGLenum, IN, osg::FrameBufferObject::BufferComponent, attachment_point,
+	                   Properties::NON_VIRTUAL,
+	                   Properties::CONST,
+	                   __GLenum__convertBufferComponentToGLenum__BufferComponent,
+	                   "",
+	                   "");
 	I_IndexedProperty(const osg::FrameBufferAttachment &, Attachment, 
 	                  __C5_FrameBufferAttachment_R1__getAttachment__BufferComponent, 
 	                  __void__setAttachment__BufferComponent__C5_FrameBufferAttachment_R1, 
@@ -313,10 +332,10 @@ BEGIN_OBJECT_REFLECTOR(osg::RenderBuffer)
 	I_Constructor0(____RenderBuffer,
 	               "",
 	               "");
-	I_Constructor3(IN, int, width, IN, int, height, IN, GLenum, internalFormat,
-	               ____RenderBuffer__int__int__GLenum,
-	               "",
-	               "");
+	I_ConstructorWithDefaults5(IN, int, width, , IN, int, height, , IN, GLenum, internalFormat, , IN, int, samples, 0, IN, int, colorSamples, 0,
+	                           ____RenderBuffer__int__int__GLenum__int__int,
+	                           "",
+	                           "");
 	I_ConstructorWithDefaults2(IN, const osg::RenderBuffer &, copy, , IN, const osg::CopyOp &, copyop, osg::CopyOp::SHALLOW_COPY,
 	                           ____RenderBuffer__C5_RenderBuffer_R1__C5_CopyOp_R1,
 	                           "",
@@ -381,6 +400,26 @@ BEGIN_OBJECT_REFLECTOR(osg::RenderBuffer)
 	          __void__setInternalFormat__GLenum,
 	          "",
 	          "");
+	I_Method0(int, getSamples,
+	          Properties::NON_VIRTUAL,
+	          __int__getSamples,
+	          "",
+	          "");
+	I_Method0(int, getColorSamples,
+	          Properties::NON_VIRTUAL,
+	          __int__getColorSamples,
+	          "",
+	          "");
+	I_Method1(void, setSamples, IN, int, samples,
+	          Properties::NON_VIRTUAL,
+	          __void__setSamples__int,
+	          "",
+	          "");
+	I_Method1(void, setColorSamples, IN, int, colorSamples,
+	          Properties::NON_VIRTUAL,
+	          __void__setColorSamples__int,
+	          "",
+	          "");
 	I_Method2(GLuint, getObjectID, IN, unsigned int, contextID, IN, const osg::FBOExtensions *, ext,
 	          Properties::NON_VIRTUAL,
 	          __GLuint__getObjectID__unsigned_int__C5_FBOExtensions_P1,
@@ -403,18 +442,28 @@ BEGIN_OBJECT_REFLECTOR(osg::RenderBuffer)
 	                __void__discardDeletedRenderBuffers__unsigned_int_S,
 	                "discard all the cached RenderBuffers which need to be deleted in the OpenGL context related to contextID. ",
 	                "Note, unlike flush no OpenGL calls are made, instead the handles are all removed. this call is useful for when an OpenGL context has been destroyed. ");
+	I_StaticMethod2(int, getMaxSamples, IN, unsigned int, contextID, IN, const osg::FBOExtensions *, ext,
+	                __int__getMaxSamples__unsigned_int__C5_FBOExtensions_P1_S,
+	                "",
+	                "");
 	I_ProtectedMethod0(void, dirtyAll,
 	                   Properties::NON_VIRTUAL,
 	                   Properties::CONST,
 	                   __void__dirtyAll,
 	                   "",
 	                   "");
+	I_SimpleProperty(int, ColorSamples, 
+	                 __int__getColorSamples, 
+	                 __void__setColorSamples__int);
 	I_SimpleProperty(int, Height, 
 	                 __int__getHeight, 
 	                 __void__setHeight__int);
 	I_SimpleProperty(GLenum, InternalFormat, 
 	                 __GLenum__getInternalFormat, 
 	                 __void__setInternalFormat__GLenum);
+	I_SimpleProperty(int, Samples, 
+	                 __int__getSamples, 
+	                 __void__setSamples__int);
 	I_SimpleProperty(int, Width, 
 	                 __int__getWidth, 
 	                 __void__setWidth__int);

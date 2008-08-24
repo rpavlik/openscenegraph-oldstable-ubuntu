@@ -24,6 +24,7 @@
 #include <osg/BlendFunc>
 #include <osg/Geometry>
 #include <osg/Geode>
+#include <osg/Billboard>
 #include <osg/io_utils>
 #include <osg/Material>
 #include <osg/Texture2D>
@@ -67,19 +68,40 @@ FltExportVisitor::isTextured( int unit, const osg::Geometry& geom ) const
 }
 
 bool
-FltExportVisitor::isAllMesh( const osg::Geometry& geom ) const
+FltExportVisitor::isMesh( const GLenum mode ) const
 {
-    // Return true if all primitive types will use Mesh records for output.
+    return( (mode == GL_TRIANGLE_STRIP) ||
+        (mode == GL_TRIANGLE_FAN) ||
+        (mode == GL_QUAD_STRIP) );
+}
+
+bool
+FltExportVisitor::atLeastOneFace( const osg::Geometry& geom ) const
+{
+    // Return true if at least one PrimitiveSet mode will use a Face record.
     unsigned int jdx;
     for (jdx=0; jdx < geom.getNumPrimitiveSets(); jdx++)
     {
         const osg::PrimitiveSet* prim = geom.getPrimitiveSet( jdx );
-        if( (prim->getMode() != GL_TRIANGLE_STRIP) &&
-            (prim->getMode() != GL_TRIANGLE_FAN) &&
-            (prim->getMode() != GL_QUAD_STRIP) )
-            return false;
+        if( !isMesh( prim->getMode() ) )
+            return true;
     }
-    return true;
+    // All PrimitiveSet modes will use Mesh records.
+    return false;
+}
+bool
+FltExportVisitor::atLeastOneMesh( const osg::Geometry& geom ) const
+{
+    // Return true if at least one PrimitiveSet mode will use a Mesh record.
+    unsigned int jdx;
+    for (jdx=0; jdx < geom.getNumPrimitiveSets(); jdx++)
+    {
+        const osg::PrimitiveSet* prim = geom.getPrimitiveSet( jdx );
+        if( isMesh( prim->getMode() ) )
+            return true;
+    }
+    // All PrimitiveSet modes will use Face records.
+    return false;
 }
 
 void
@@ -228,10 +250,18 @@ FltExportVisitor::writeFace( const osg::Geode& geode, const osg::Geometry& geom,
         }
     }
 
-    // Check for blending. We're not a Billboard (TBD?)
-    //   so use either FIXED_NO_ALPHA_BLENDING or FIXED_ALPHA_BLENDING.
+    // Set the appropriate template mode based
+    // on blending or Billboarding.
     TemplateMode templateMode( FIXED_NO_ALPHA_BLENDING );
-    if ( ss->getMode( GL_BLEND ) & osg::StateAttribute::ON )
+    const osg::Billboard* bb = dynamic_cast< const osg::Billboard* >( &geode );
+    if (bb != NULL)
+    {
+        if( bb->getMode() == osg::Billboard::AXIAL_ROT )
+            templateMode = AXIAL_ROTATE_WITH_ALPHA_BLENDING;
+        else
+            templateMode = POINT_ROTATE_WITH_ALPHA_BLENDING;
+    }
+    else if ( ss->getMode( GL_BLEND ) & osg::StateAttribute::ON )
     {
         const osg::BlendFunc* bf = static_cast<const osg::BlendFunc*>(
             ss->getAttribute(osg::StateAttribute::BLENDFUNC) );
@@ -282,7 +312,7 @@ FltExportVisitor::writeFace( const osg::Geode& geode, const osg::Geometry& geom,
 
 
 void
-FltExportVisitor::writeMesh( const osg::Geode& geode, const osg::Geometry& geom, GLenum mode )
+FltExportVisitor::writeMesh( const osg::Geode& geode, const osg::Geometry& geom )
 {
     enum DrawMode
     {
@@ -354,32 +384,6 @@ FltExportVisitor::writeMesh( const osg::Geode& geode, const osg::Geometry& geom,
     int8 drawType;
     osg::StateSet const* ss = getCurrentStateSet();
 
-    switch( mode )
-    {
-    case GL_POINTS:
-    {
-        std::string warning( "fltexp: GL_POINTS not supported in FLT export." );
-        osg::notify( osg::WARN ) << warning << std::endl;
-        _fltOpt->getWriteResult().warn( warning );
-        return;
-        break;
-    }
-    case GL_LINES:
-    case GL_LINE_STRIP:
-    case GL_LINE_LOOP:
-    case GL_TRIANGLES:
-    case GL_QUADS:
-    {
-        std::string warning( "fltexp: Wrong mode in Mesh record." );
-        osg::notify( osg::WARN ) << warning << std::endl;
-        _fltOpt->getWriteResult().warn( warning );
-        return;
-        break;
-    }
-    case GL_TRIANGLE_STRIP:
-    case GL_TRIANGLE_FAN:
-    case GL_QUAD_STRIP:
-    case GL_POLYGON:
     {
         // Default to no facet culling
         drawType = SOLID_NO_BACKFACE;
@@ -394,8 +398,6 @@ FltExportVisitor::writeMesh( const osg::Geode& geode, const osg::Geometry& geom,
 
             // Note: OpenFlt can't handle FRONT or FRONT_AND_BACK settings, so ignore these(??)
         }
-        break;
-    }
     }
 
     // Determine the material properties for the face
@@ -423,10 +425,18 @@ FltExportVisitor::writeMesh( const osg::Geode& geode, const osg::Geometry& geom,
         }
     }
 
-    // Check for blending. We're not a Billboard (TBD?)
-    //   so use either FIXED_NO_ALPHA_BLENDING or FIXED_ALPHA_BLENDING.
+    // Set the appropriate template mode based
+    // on blending or Billboarding.
     TemplateMode templateMode( FIXED_NO_ALPHA_BLENDING );
-    if ( ss->getMode( GL_BLEND ) & osg::StateAttribute::ON )
+    const osg::Billboard* bb = dynamic_cast< const osg::Billboard* >( &geode );
+    if (bb != NULL)
+    {
+        if( bb->getMode() == osg::Billboard::AXIAL_ROT )
+            templateMode = AXIAL_ROTATE_WITH_ALPHA_BLENDING;
+        else
+            templateMode = POINT_ROTATE_WITH_ALPHA_BLENDING;
+    }
+    else if ( ss->getMode( GL_BLEND ) & osg::StateAttribute::ON )
     {
         const osg::BlendFunc* bf = static_cast<const osg::BlendFunc*>(
             ss->getAttribute(osg::StateAttribute::BLENDFUNC) );
@@ -484,7 +494,7 @@ FltExportVisitor::writeVertexList( int first, unsigned int count )
 
     unsigned int idx;
     for( idx=0; idx<count; idx++)
-        // I'm imaginining that 'first' will be a 0-based index into the 
+        // I'm imagining that 'first' will be a 0-based index into the 
         //   'current' set of vertices held by the vertex palette manager.
         _records->writeInt32( _vertexPalette->byteOffset( first+idx ) );
 
@@ -499,7 +509,7 @@ FltExportVisitor::writeVertexList( const std::vector<unsigned int>& indices, uns
 
     unsigned int idx;
     for( idx=0; idx<count; idx++)
-        // I'm imaginining that 'first' will be a 0-based index into the 
+        // I'm imagining that 'first' will be a 0-based index into the 
         //   'current' set of vertices held by the vertex palette manager.
         _records->writeInt32( _vertexPalette->byteOffset( indices[ idx ] ) );
 
@@ -544,7 +554,7 @@ FltExportVisitor::writeMeshPrimitive( const std::vector<unsigned int>& indices, 
 }
 
 void
-FltExportVisitor::writeLocalVertexPool( const osg::Geometry& geom, GLenum mode )
+FltExportVisitor::writeLocalVertexPool( const osg::Geometry& geom )
 {
     // Attribute Mask
     static const unsigned int HAS_POSITION      = 0x80000000u >> 0;
@@ -836,11 +846,7 @@ FltExportVisitor::handleDrawArrays( const osg::DrawArrays* da, const osg::Geomet
         useMesh = true;
         break;
     case GL_POINTS:
-    case GL_LINE_STRIP:
-    case GL_LINE_LOOP:
-    case GL_POLYGON:
-    default:
-        n = count;
+        n = 1;
         break;
     case GL_LINES:
         n = 2;
@@ -851,40 +857,27 @@ FltExportVisitor::handleDrawArrays( const osg::DrawArrays* da, const osg::Geomet
     case GL_QUADS:
         n = 4;
         break;
+    case GL_LINE_STRIP:
+    case GL_LINE_LOOP:
+    case GL_POLYGON:
+    default:
+        n = count;
+        break;
     }
-
-    // Push and pop subfaces if polygon offset is on.
-    SubfaceHelper subface( *this, getCurrentStateSet() );
 
     if (useMesh)
     {
-        writeMesh( geode, geom, mode );
-
-        writeMatrix( geode.getUserData() );
-        writeComment( geode );
-        writeMultitexture( geom );
-        writeLocalVertexPool( geom, mode );
-
-        writePush();
-
         std::vector< unsigned int > indices;
         int jdx;
         for (jdx=0; jdx<count; jdx++)
             indices.push_back( first+jdx );
         writeMeshPrimitive( indices, mode );
-
-        writePop();
     }
     else
     {
         const unsigned int max( first+count );
         while ((unsigned int)( first+n ) <= max)
         {
-            // Need:
-            // * Geode for record name (but also need to handle
-            //   multi Geometry objects and multi PrimitiveSet objects;
-            //   all Face records can't have the same name).
-            // * Mode
             writeFace( geode, geom, mode );
 
             writeMatrix( geode.getUserData() );
@@ -919,10 +912,7 @@ FltExportVisitor::handleDrawArrayLengths( const osg::DrawArrayLengths* dal, cons
         useMesh = true;
         break;
     case GL_POINTS:
-    case GL_LINE_STRIP:
-    case GL_LINE_LOOP:
-    case GL_POLYGON:
-    default:
+        n = 1;
         break;
     case GL_LINES:
         n = 2;
@@ -933,6 +923,11 @@ FltExportVisitor::handleDrawArrayLengths( const osg::DrawArrayLengths* dal, cons
     case GL_QUADS:
         n = 4;
         break;
+    case GL_LINE_STRIP:
+    case GL_LINE_LOOP:
+    case GL_POLYGON:
+    default:
+        break;
     }
 
     // Push and pop subfaces if polygon offset is on.
@@ -940,15 +935,6 @@ FltExportVisitor::handleDrawArrayLengths( const osg::DrawArrayLengths* dal, cons
 
     if (useMesh)
     {
-        writeMesh( geode, geom, mode );
-
-        writeMatrix( geode.getUserData() );
-        writeComment( geode );
-        writeMultitexture( geom );
-        writeLocalVertexPool( geom, mode );
-
-        writePush();
-
         int idx( 0 );
         for( osg::DrawArrayLengths::const_iterator itr=dal->begin();
              itr!=dal->end(); itr++ )
@@ -959,8 +945,6 @@ FltExportVisitor::handleDrawArrayLengths( const osg::DrawArrayLengths* dal, cons
                 indices.push_back( idx );
             writeMeshPrimitive( indices, mode );
         }
-
-        writePop();
     }
     else
     {
@@ -1016,11 +1000,7 @@ FltExportVisitor::handleDrawElements( const osg::DrawElements* de, const osg::Ge
         useMesh = true;
         break;
     case GL_POINTS:
-    case GL_LINE_STRIP:
-    case GL_LINE_LOOP:
-    case GL_POLYGON:
-    default:
-        n = de->getNumIndices();
+        n = 1;
         break;
     case GL_LINES:
         n = 2;
@@ -1031,6 +1011,12 @@ FltExportVisitor::handleDrawElements( const osg::DrawElements* de, const osg::Ge
     case GL_QUADS:
         n = 4;
         break;
+    case GL_LINE_STRIP:
+    case GL_LINE_LOOP:
+    case GL_POLYGON:
+    default:
+        n = de->getNumIndices();
+        break;
     }
 
     // Push and pop subfaces if polygon offset is on.
@@ -1038,22 +1024,11 @@ FltExportVisitor::handleDrawElements( const osg::DrawElements* de, const osg::Ge
 
     if (useMesh)
     {
-        writeMesh( geode, geom, mode );
-
-        writeMatrix( geode.getUserData() );
-        writeComment( geode );
-        writeMultitexture( geom );
-        writeLocalVertexPool( geom, mode );
-
-        writePush();
-
         std::vector< unsigned int > indices;
         int idx;
         for (idx=0; idx<n; idx++)
             indices.push_back( de->index( idx ) );
         writeMeshPrimitive( indices, mode );
-
-        writePop();
     }
     else
     {

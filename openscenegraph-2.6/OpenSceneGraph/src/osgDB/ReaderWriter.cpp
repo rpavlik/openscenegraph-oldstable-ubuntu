@@ -12,6 +12,7 @@
 */
 
 #include <osgDB/ReaderWriter>
+#include <osgDB/FileNameUtils>
 #include <osgDB/Archive>
 
 using namespace osgDB;
@@ -32,4 +33,29 @@ osg::Shader* ReaderWriter::ReadResult::takeShader() { osg::Shader* shader=dynami
 
 ReaderWriter::~ReaderWriter()
 {
+}
+
+bool ReaderWriter::acceptsExtension(const std::string& extension) const
+{
+    // check for an exact match
+    std::string lowercase_ext = convertToLowerCase(extension);
+    if (_supportedExtensions.count(lowercase_ext)!=0) return true;
+    
+    // if plugin supports wildcard extension then passthrough all types
+    return (_supportedExtensions.count("*")!=0);
+}
+
+void ReaderWriter::supportsProtocol(const std::string& fmt, const std::string& description)
+{
+    _supportedProtocols[convertToLowerCase(fmt)] = description;
+}
+
+void ReaderWriter::supportsExtension(const std::string& fmt, const std::string& description)
+{
+    _supportedExtensions[convertToLowerCase(fmt)] = description;
+}
+
+void ReaderWriter::supportsOption(const std::string& fmt, const std::string& description)
+{
+    _supportedOptions[fmt] = description;
 }

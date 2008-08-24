@@ -20,6 +20,7 @@
 #include <osg/Timer>
 #include <osg/View>
 #include <osgDB/DatabasePager>
+#include <osgDB/ImagePager>
 #include <osgGA/EventQueue>
 #include <osgGA/GUIEventHandler>
 #include <osgGA/MatrixManipulator>
@@ -145,6 +146,21 @@ BEGIN_OBJECT_REFLECTOR(osgViewer::View)
 	          __C5_osgDB_DatabasePager_P1__getDatabasePager,
 	          "Get the const View's database pager. ",
 	          "");
+	I_Method1(void, setImagePager, IN, osgDB::ImagePager *, ip,
+	          Properties::NON_VIRTUAL,
+	          __void__setImagePager__osgDB_ImagePager_P1,
+	          "Set the View's image pager. ",
+	          "");
+	I_Method0(osgDB::ImagePager *, getImagePager,
+	          Properties::NON_VIRTUAL,
+	          __osgDB_ImagePager_P1__getImagePager,
+	          "Get the View's image pager. ",
+	          "");
+	I_Method0(const osgDB::ImagePager *, getImagePager,
+	          Properties::NON_VIRTUAL,
+	          __C5_osgDB_ImagePager_P1__getImagePager,
+	          "Get the const View's image pager. ",
+	          "");
 	I_Method1(void, setEventQueue, IN, osgGA::EventQueue *, eventQueue,
 	          Properties::NON_VIRTUAL,
 	          __void__setEventQueue__osgGA_EventQueue_P1,
@@ -265,6 +281,11 @@ BEGIN_OBJECT_REFLECTOR(osgViewer::View)
 	                      __void__setUpViewForPanoramicSphericalDisplay__double__double__unsigned_int__osg_Image_P1__C5_osg_Matrixd_R1,
 	                      "Convenience method for spherical display by rendering main scene to as panoramic 2:1 texture and then doing distortion correction to present onto a spherical display. ",
 	                      "");
+	I_Method8(void, setUpViewForWoWVxDisplay, IN, unsigned int, screenNum, IN, unsigned char, wow_content, IN, unsigned char, wow_factor, IN, unsigned char, wow_offset, IN, float, wow_disparity_Zd, IN, float, wow_disparity_vz, IN, float, wow_disparity_M, IN, float, wow_disparity_C,
+	          Properties::NON_VIRTUAL,
+	          __void__setUpViewForWoWVxDisplay__unsigned_int__unsigned_char__unsigned_char__unsigned_char__float__float__float__float,
+	          "Convenience method for autostereoscopic Philips WoWvx display. ",
+	          "");
 	I_Method1(bool, containsCamera, IN, const osg::Camera *, camera,
 	          Properties::NON_VIRTUAL,
 	          __bool__containsCamera__C5_osg_Camera_P1,
@@ -340,6 +361,9 @@ BEGIN_OBJECT_REFLECTOR(osgViewer::View)
 	I_SimpleProperty(float, FusionDistanceValue, 
 	                 __float__getFusionDistanceValue, 
 	                 0);
+	I_SimpleProperty(osgDB::ImagePager *, ImagePager, 
+	                 __osgDB_ImagePager_P1__getImagePager, 
+	                 __void__setImagePager__osgDB_ImagePager_P1);
 	I_SimpleProperty(osgViewer::Scene *, Scene, 
 	                 __Scene_P1__getScene, 
 	                 0);

@@ -1,4 +1,5 @@
 #include "osg/TextureCubeMap"
+#include "osg/ImageSequence"
 
 #include "osgDB/Registry"
 #include "osgDB/Input"
@@ -27,11 +28,19 @@ RegisterDotOsgWrapperProxy g_TextureCubeMapProxy
         matched = false;\
         if (fr[1].matchWord(#FACE)) \
         {\
-            if (fr[2].isString())\
+            if (fr[2].matchWord("ImageSequence") || fr[2].matchWord("Image")) \
+            { \
+                fr += 2;\
+                osg::Image* image = fr.readImage(); \
+                if (image) texture.setImage(osg::TextureCubeMap::FACE,image); \
+                iteratorAdvanced = true; \
+                matched = true;\
+            } \
+            else if (fr[2].isString())\
             { \
                 Image* image = fr.readImage(fr[2].getStr());\
                 if (image) texture.setImage(osg::TextureCubeMap::FACE,image);\
-                fr += 2;\
+                fr += 3;\
                 iteratorAdvanced = true; \
                 matched = true;\
             }\
@@ -63,20 +72,29 @@ bool TextureCubeMap_readLocalData(Object& obj, Input& fr)
         const osg::Image* image = texture.getImage(osg::TextureCubeMap::FACE);\
         if (image)\
         {\
-            std::string fileName = image->getFileName();\
-            if (fw.getOutputTextureFiles())\
-            {\
-                if (fileName.empty())\
+            const osg::ImageSequence* is = dynamic_cast<const osg::ImageSequence*>(image); \
+            if (is) \
+            { \
+                fw.indent() << "image "<<#FACE<<std::endl; \
+                fw.writeObject(*is); \
+            } \
+            else \
+            { \
+                std::string fileName = image->getFileName();\
+                if (fw.getOutputTextureFiles())\
                 {\
-                    fileName = fw.getTextureFileNameForOutput();\
+                    if (fileName.empty())\
+                    {\
+                        fileName = fw.getTextureFileNameForOutput();\
+                    }\
+                    osgDB::writeImageFile(*image, fileName);\
                 }\
-                osgDB::writeImageFile(*image, fileName);\
+                if (!fileName.empty())\
+                {\
+                    fw.indent() << "image "<<#FACE<<" "<<fw.wrapString(fw.getFileNameForOutput(fileName))<< std::endl;\
+                }\
             }\
-            if (!fileName.empty())\
-            {\
-                fw.indent() << "image "<<#FACE<<" "<<fw.wrapString(fw.getFileNameForOutput(fileName))<< std::endl;\
-            }\
-        }\
+        } \
     }
 
 bool TextureCubeMap_writeLocalData(const Object& obj, Output& fw)

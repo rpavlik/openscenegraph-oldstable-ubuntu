@@ -40,7 +40,7 @@ class PThreadPrivateData {
 
 private:
 
-    PThreadPrivateData() {};
+    PThreadPrivateData() : stackSize(0), stackSizeLocked(false), isRunning(false), isCanceled(false), idSet(false), tid(0), uniqueId(0), cpunum(0) {};
 
     virtual ~PThreadPrivateData() {};
 

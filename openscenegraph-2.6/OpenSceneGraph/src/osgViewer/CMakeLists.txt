@@ -26,6 +26,7 @@ SET(LIB_COMMON_FILES
     HelpHandler.cpp
     Renderer.cpp
     Scene.cpp
+    ScreenCaptureHandler.cpp
     StatsHandler.cpp
     Version.cpp
     View.cpp
@@ -34,6 +35,7 @@ SET(LIB_COMMON_FILES
     ViewerEventHandlers.cpp
 )
 
+SET(LIB_EXTRA_LIBS)
 
 IF(WIN32)
 
@@ -50,6 +52,13 @@ IF(WIN32)
 ELSE(WIN32)
 
     IF(APPLE)
+        SET(OSG_WINDOWING_SYSTEM "Carbon" CACHE STRING "Windowing system type for graphics window creation, options Carbon or X11.")
+    ELSE(APPLE)
+        SET(OSG_WINDOWING_SYSTEM "X11" CACHE STRING "Windowing system type for graphics window creation. options only X11")
+    ENDIF(APPLE)
+    
+
+    IF(${OSG_WINDOWING_SYSTEM} STREQUAL "Carbon")
 
         # FIXME: OS X needs selection mechanism for Cocoa, Carbon, X11
         SET(LIB_PUBLIC_HEADERS ${LIB_PUBLIC_HEADERS} 
@@ -61,7 +70,8 @@ ELSE(WIN32)
             PixelBufferCarbon.cpp
         )
 
-    ELSE(APPLE)
+    ELSE(${OSG_WINDOWING_SYSTEM} STREQUAL "Carbon")
+
         # X11 for everybody else
         OPTION(OSGVIEWER_USE_XRANDR "Set to ON to enable Xrandr support for GraphicsWindowX11." OFF)
 
@@ -80,10 +90,27 @@ ELSE(WIN32)
             PKG_CHECK_MODULES(XRANDR REQUIRED xrandr)
             ADD_DEFINITIONS(-DOSGVIEWER_USE_XRANDR)
             SET(LIB_PUBLIC_HEADERS ${LIB_PUBLIC_HEADERS} ${XRANDR_INCLUDE_DIRS})
-        LINK_LIBRARIES(Xrandr)
+            LINK_LIBRARIES(Xrandr)
         ENDIF(OSGVIEWER_USE_XRANDR)
 
-    ENDIF(APPLE)
+        # X11 on Apple requires X11 library plus OpenGL linking hack on Leopard
+        IF(APPLE)
+            # Find GL/glx.h 
+            IF(EXISTS ${CMAKE_OSX_SYSROOT}/usr/X11/include/GL/glx.h)
+                SET(OPENGL_INCLUDE_DIR /usr/X11/include)
+                SET(OPENGL_LIBRARIES /usr/X11/lib/libGL.dylib)
+            ELSEIF(EXISTS ${CMAKE_OSX_SYSROOT}/usr/X11R6/include/GL/glx.h)
+                SET(OPENGL_INCLUDE_DIR /usr/X11R6/include)
+                SET(OPENGL_LIBRARIES /usr/X11R6/lib/libGL.dylib)
+            ENDIF(EXISTS ${CMAKE_OSX_SYSROOT}/usr/X11/include/GL/glx.h)
+            INCLUDE_DIRECTORIES(BEFORE SYSTEM ${OPENGL_INCLUDE_DIR})
+
+            SET(LIB_EXTRA_LIBS ${X11_X11_LIB} ${OPENGL_LIBRARIES} ${LIB_EXTRA_LIBS})
+            SET(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -Wl,-dylib_file,/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib:${CMAKE_OSX_SYSROOT}/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib")
+        ENDIF(APPLE)
+            
+
+    ENDIF(${OSG_WINDOWING_SYSTEM} STREQUAL "Carbon")
 
 ENDIF(WIN32)
 
@@ -103,6 +130,7 @@ LINK_INTERNAL(${LIB_NAME}
     osgUtil
     osg
     OpenThreads
+    ${LIB_EXTRA_LIBS}
 )
 
 LINK_CORELIB_DEFAULT(${LIB_NAME})

@@ -19,11 +19,13 @@
 #include <osg/FrameStamp>
 #include <osg/Geode>
 #include <osg/Group>
+#include <osg/Image>
 #include <osg/LOD>
 #include <osg/LightSource>
 #include <osg/MatrixTransform>
 #include <osg/Node>
 #include <osg/NodeVisitor>
+#include <osg/Object>
 #include <osg/OccluderNode>
 #include <osg/OcclusionQueryNode>
 #include <osg/PagedLOD>
@@ -343,6 +345,21 @@ BEGIN_OBJECT_REFLECTOR(osg::NodeVisitor)
 	          __C5_DatabaseRequestHandler_P1__getDatabaseRequestHandler,
 	          "Get the const handler for database requests. ",
 	          "");
+	I_Method1(void, setImageRequestHandler, IN, osg::NodeVisitor::ImageRequestHandler *, handler,
+	          Properties::NON_VIRTUAL,
+	          __void__setImageRequestHandler__ImageRequestHandler_P1,
+	          "Set the handler for image requests. ",
+	          "");
+	I_Method0(osg::NodeVisitor::ImageRequestHandler *, getImageRequestHandler,
+	          Properties::NON_VIRTUAL,
+	          __ImageRequestHandler_P1__getImageRequestHandler,
+	          "Get the handler for image requests. ",
+	          "");
+	I_Method0(const osg::NodeVisitor::ImageRequestHandler *, getImageRequestHandler,
+	          Properties::NON_VIRTUAL,
+	          __C5_ImageRequestHandler_P1__getImageRequestHandler,
+	          "Get the const handler for image requests. ",
+	          "");
 	I_SimpleProperty(osg::NodeVisitor::DatabaseRequestHandler *, DatabaseRequestHandler, 
 	                 __DatabaseRequestHandler_P1__getDatabaseRequestHandler, 
 	                 __void__setDatabaseRequestHandler__DatabaseRequestHandler_P1);
@@ -352,6 +369,9 @@ BEGIN_OBJECT_REFLECTOR(osg::NodeVisitor)
 	I_SimpleProperty(osg::FrameStamp *, FrameStamp, 
 	                 0, 
 	                 __void__setFrameStamp__FrameStamp_P1);
+	I_SimpleProperty(osg::NodeVisitor::ImageRequestHandler *, ImageRequestHandler, 
+	                 __ImageRequestHandler_P1__getImageRequestHandler, 
+	                 __void__setImageRequestHandler__ImageRequestHandler_P1);
 	I_SimpleProperty(osg::Node::NodeMask, NodeMaskOverride, 
 	                 __Node_NodeMask__getNodeMaskOverride, 
 	                 __void__setNodeMaskOverride__Node_NodeMask);
@@ -384,10 +404,76 @@ BEGIN_ABSTRACT_OBJECT_REFLECTOR(osg::NodeVisitor::DatabaseRequestHandler)
 	I_Constructor0(____DatabaseRequestHandler,
 	               "",
 	               "");
-	I_Method4(void, requestNodeFile, IN, const std::string &, fileName, IN, osg::Group *, group, IN, float, priority, IN, const osg::FrameStamp *, framestamp,
+	I_Method5(void, requestNodeFile, IN, const std::string &, fileName, IN, osg::Group *, group, IN, float, priority, IN, const osg::FrameStamp *, framestamp, IN, osg::ref_ptr< osg::Referenced > &, databaseRequest,
 	          Properties::PURE_VIRTUAL,
-	          __void__requestNodeFile__C5_std_string_R1__osg_Group_P1__float__C5_FrameStamp_P1,
+	          __void__requestNodeFile__C5_std_string_R1__osg_Group_P1__float__C5_FrameStamp_P1__osg_ref_ptrT1_osg_Referenced__R1,
 	          "",
 	          "");
+END_REFLECTOR
+
+BEGIN_ABSTRACT_OBJECT_REFLECTOR(osg::NodeVisitor::ImageRequestHandler)
+	I_DeclaringFile("osg/NodeVisitor");
+	I_BaseType(osg::Referenced);
+	I_Constructor0(____ImageRequestHandler,
+	               "",
+	               "");
+	I_Method0(double, getPreLoadTime,
+	          Properties::PURE_VIRTUAL,
+	          __double__getPreLoadTime,
+	          "",
+	          "");
+	I_Method1(osg::Image *, readImageFile, IN, const std::string &, fileName,
+	          Properties::PURE_VIRTUAL,
+	          __osg_Image_P1__readImageFile__C5_std_string_R1,
+	          "",
+	          "");
+	I_Method4(void, requestImageFile, IN, const std::string &, fileName, IN, osg::Object *, attachmentPoint, IN, double, timeToMergeBy, IN, const osg::FrameStamp *, framestamp,
+	          Properties::PURE_VIRTUAL,
+	          __void__requestImageFile__C5_std_string_R1__osg_Object_P1__double__C5_FrameStamp_P1,
+	          "",
+	          "");
+	I_SimpleProperty(double, PreLoadTime, 
+	                 __double__getPreLoadTime, 
+	                 0);
+END_REFLECTOR
+
+BEGIN_VALUE_REFLECTOR(osg::ref_ptr< osg::Referenced >)
+	I_DeclaringFile("osg/ref_ptr");
+	I_Constructor0(____ref_ptr,
+	               "",
+	               "");
+	I_Constructor1(IN, osg::Referenced *, ptr,
+	               Properties::NON_EXPLICIT,
+	               ____ref_ptr__T_P1,
+	               "",
+	               "");
+	I_Constructor1(IN, const osg::ref_ptr< osg::Referenced > &, rp,
+	               Properties::NON_EXPLICIT,
+	               ____ref_ptr__C5_ref_ptr_R1,
+	               "",
+	               "");
+	I_Method0(osg::Referenced *, get,
+	          Properties::NON_VIRTUAL,
+	          __T_P1__get,
+	          "",
+	          "");
+	I_Method0(bool, valid,
+	          Properties::NON_VIRTUAL,
+	          __bool__valid,
+	          "",
+	          "");
+	I_Method0(osg::Referenced *, release,
+	          Properties::NON_VIRTUAL,
+	          __T_P1__release,
+	          "",
+	          "");
+	I_Method1(void, swap, IN, osg::ref_ptr< osg::Referenced > &, rp,
+	          Properties::NON_VIRTUAL,
+	          __void__swap__ref_ptr_R1,
+	          "",
+	          "");
+	I_SimpleProperty(osg::Referenced *, , 
+	                 __T_P1__get, 
+	                 0);
 END_REFLECTOR
 

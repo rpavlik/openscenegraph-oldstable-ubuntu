@@ -68,6 +68,9 @@ static osg::GraphicsContext::Traits* buildTrait(RenderSurface& rs)
             case(VisualChooser::SampleBuffers):    traits->sampleBuffers = it->_parameter; break;
         }
     }
+
+    osg::notify(osg::INFO)<<"Set up Traits ( rs.getScreenNum() = "<<rs.getScreenNum()<<" )"<<std::endl;
+
     
     traits->hostName = rs.getHostName();
     traits->displayNum = rs.getDisplayNum();
@@ -80,6 +83,8 @@ static osg::GraphicsContext::Traits* buildTrait(RenderSurface& rs)
     traits->windowDecoration = rs.usesBorder();
     traits->sharedContext = 0;
     traits->pbuffer = (rs.getDrawableType()==osgProducer::RenderSurface::DrawableType_PBuffer);
+
+    traits->overrideRedirect = rs.usesOverrideRedirect();
 
     return traits;
  }
@@ -112,12 +117,14 @@ static osgViewer::View* load(const std::string& file, const osgDB::ReaderWriter:
         else
         {
             osg::GraphicsContext::Traits* newtraits = buildTrait(*rs);
-            
+
+#if 0            
             osg::GraphicsContext::ScreenIdentifier si;
             si.readDISPLAY();
 
             if (si.displayNum>=0) newtraits->displayNum = si.displayNum;
             if (si.screenNum>=0) newtraits->screenNum = si.screenNum;
+#endif
     
             gc = osg::GraphicsContext::createGraphicsContext(newtraits);
             
@@ -182,12 +189,13 @@ class ReaderWriterProducerCFG : public osgDB::ReaderWriter
 {
 public:
 
+    ReaderWriterProducerCFG()
+    {
+        supportsExtension("cfg","Producer camera configuration file");
+    }
+
     virtual const char* className() { return "Producer cfg object reader"; }
 
-    virtual bool acceptsExtension(const std::string& extension) const
-    {
-        return osgDB::equalCaseInsensitive(extension, "cfg");
-    }
 
     virtual ReadResult readObject(const std::string& fileName, const Options* options = NULL) const
     {

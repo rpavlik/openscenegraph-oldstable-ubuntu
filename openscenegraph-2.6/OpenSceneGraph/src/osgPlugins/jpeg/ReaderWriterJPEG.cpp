@@ -612,8 +612,12 @@ int *numComponents_ret)
 
 class ReaderWriterJPEG : public osgDB::ReaderWriter
 {
+    
         WriteResult::WriteStatus write_JPEG_file (std::ostream &fout,int image_width,int image_height,JSAMPLE* image_buffer,int quality = 100) const
         {
+            if ( (image_width == 0) || (image_height == 0) )
+                return WriteResult::ERROR_IN_WRITING_FILE;
+
             /* This struct contains the JPEG compression parameters and pointers to
             * working space (which is allocated as needed by the JPEG library).
             * It is possible to have several such structures, representing multiple
@@ -737,11 +741,14 @@ class ReaderWriterJPEG : public osgDB::ReaderWriter
             return 100;
         }
     public:
-        virtual const char* className() const { return "JPEG Image Reader/Writer"; }
-        virtual bool acceptsExtension(const std::string& extension) const
+
+        ReaderWriterJPEG()
         {
-            return osgDB::equalCaseInsensitive(extension,"jpeg") || osgDB::equalCaseInsensitive(extension,"jpg");
+            supportsExtension("jpeg","JPEG image format");
+            supportsExtension("jpg","JPEG image format");
         }
+
+        virtual const char* className() const { return "JPEG Image Reader/Writer"; }
 
         ReadResult readJPGStream(std::istream& fin) const
         {
@@ -752,7 +759,7 @@ class ReaderWriterJPEG : public osgDB::ReaderWriter
 
             imageData = simage_jpeg_load(fin,&width_ret,&height_ret,&numComponents_ret);
 
-            if (imageData==NULL) return ReadResult::FILE_NOT_HANDLED;
+            if (imageData==NULL) return ReadResult::ERROR_IN_READING_FILE;
 
             int s = width_ret;
             int t = height_ret;
@@ -808,7 +815,7 @@ class ReaderWriterJPEG : public osgDB::ReaderWriter
             if (fileName.empty()) return ReadResult::FILE_NOT_FOUND;
 
             std::ifstream istream(fileName.c_str(), std::ios::in | std::ios::binary);
-            if(!istream) return ReadResult::FILE_NOT_HANDLED;
+            if(!istream) return ReadResult::ERROR_IN_READING_FILE;
             ReadResult rr = readJPGStream(istream);
             if(rr.validImage()) rr.getImage()->setFileName(file);
             return rr;

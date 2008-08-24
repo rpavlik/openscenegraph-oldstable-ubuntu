@@ -282,10 +282,16 @@ class OSG_EXPORT Texture : public osg::StateAttribute
         virtual bool isSameKindAs(const osg::Object* obj) const { return dynamic_cast<const Texture *>(obj)!=NULL; }
         virtual const char* libraryName() const { return "osg"; }
         virtual const char* className() const { return "Texture"; }
+
+        /** Fast alternative to dynamic_cast<> for determining if state attribute is a Texture.*/
+        virtual Texture* asTexture() { return this; }
+        
+        /** Fast alternative to dynamic_cast<> for determining if state attribute is a Texture.*/
+        virtual const Texture* asTexture() const { return this; }
+
         virtual Type getType() const { return TEXTURE; }
 
         virtual bool isTextureAttribute() const { return true; }
-
 
         virtual GLenum getTextureTarget() const = 0;
 
@@ -704,6 +710,15 @@ class OSG_EXPORT Texture : public osg::StateAttribute
           * unless you're implementing a subload callback. */
         void applyTexImage2D_subload(State& state, GLenum target, const Image* image, GLsizei width, GLsizei height, GLint inInternalFormat, GLsizei numMipmapLevels) const;
 
+        /** Returned by mipmapBeforeTexImage() to indicate what
+          * mipmapAfterTexImage() should do */
+        enum GenerateMipmapMode
+        {
+            GENERATE_MIPMAP_NONE,
+            GENERATE_MIPMAP,
+            GENERATE_MIPMAP_TEX_PARAMETER
+        };
+
     protected :
 
         virtual ~Texture();
@@ -719,7 +734,16 @@ class OSG_EXPORT Texture : public osg::StateAttribute
         /** Helper method. Sets texture parameters. */
         void applyTexParameters(GLenum target, State& state) const;
 
-        /** Helper method to generate empty mipmap levels by calling of glGenerateMipmapEXT.
+        /** Returns true if _useHardwareMipMapGeneration is true and either
+          * glGenerateMipmapEXT() or GL_GENERATE_MIPMAP_SGIS are supported. */
+        bool isHardwareMipmapGenerationEnabled(const State& state) const;
+
+        /** Helper methods to be called before and after calling
+          * gl[Compressed][Copy]Tex[Sub]Image2D to handle generating mipmaps. */
+        GenerateMipmapMode mipmapBeforeTexImage(const State& state, bool hardwareMipmapOn) const;
+        void mipmapAfterTexImage(State& state, GenerateMipmapMode beforeResult) const;
+
+        /** Helper method to generate mipmap levels by calling of glGenerateMipmapEXT.
           * If it is not supported, then call the virtual allocateMipmap() method */
         void generateMipmap(State& state) const;
 

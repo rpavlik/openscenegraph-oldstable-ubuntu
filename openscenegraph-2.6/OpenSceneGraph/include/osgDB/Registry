@@ -16,6 +16,7 @@
 
 #include <osg/ref_ptr>
 #include <osg/ArgumentParser>
+#include <osg/KdTree>
 
 #include <osgDB/DynamicLibrary>
 #include <osgDB/ReaderWriter>
@@ -114,8 +115,16 @@ class OSGDB_EXPORT Registry : public osg::Referenced
         /** close all libraries.*/
         void closeAllLibraries();
 
+        typedef std::vector< osg::ref_ptr<ReaderWriter> > ReaderWriterList;
+
         /** get a reader writer which handles specified extension.*/
         ReaderWriter* getReaderWriterForExtension(const std::string& ext);
+        
+        /** get list of all registered ReaderWriters.*/
+        ReaderWriterList& getReaderWriterList() { return _rwList; }
+
+        /** get const list of all registered ReaderWriters.*/
+        const ReaderWriterList& getReaderWriterList() const { return _rwList; }
  
         osg::Object*         readObjectOfType(const osg::Object& compObj,Input& fr);       
         osg::Object*         readObjectOfType(const basic_type_wrapper &btw, Input& fr);
@@ -130,7 +139,6 @@ class OSGDB_EXPORT Registry : public osg::Referenced
         
         bool                 writeObject(const osg::Object& obj,Output& fw);
 
-        
         class ReadFileCallback : public virtual osg::Referenced
         {
         public:
@@ -188,8 +196,13 @@ class OSGDB_EXPORT Registry : public osg::Referenced
 
         ReaderWriter::ReadResult readObject(const std::string& fileName,const ReaderWriter::Options* options)
         {
-            if (_readFileCallback.valid()) return _readFileCallback->readObject(fileName,options);
-            else return readObjectImplementation(fileName,options);
+            ReaderWriter::ReadResult result = _readFileCallback.valid() ?
+                    _readFileCallback->readObject(fileName,options) :
+                    readObjectImplementation(fileName,options);
+                    
+            buildKdTreeIfRequired(result, options);
+                    
+            return result;
         }
         ReaderWriter::ReadResult readObjectImplementation(const std::string& fileName,const ReaderWriter::Options* options);
         
@@ -209,8 +222,13 @@ class OSGDB_EXPORT Registry : public osg::Referenced
 
         ReaderWriter::ReadResult readNode(const std::string& fileName,const ReaderWriter::Options* options)
         {
-            if (_readFileCallback.valid()) return _readFileCallback->readNode(fileName,options);
-            else return readNodeImplementation(fileName,options);
+            ReaderWriter::ReadResult result = _readFileCallback.valid() ?
+                    _readFileCallback->readNode(fileName,options) :
+                    readNodeImplementation(fileName,options);
+                    
+            buildKdTreeIfRequired(result, options);
+                    
+            return result;
         }
         ReaderWriter::ReadResult readNodeImplementation(const std::string& fileName,const ReaderWriter::Options* options);
 
@@ -302,9 +320,46 @@ class OSGDB_EXPORT Registry : public osg::Referenced
         ReaderWriter::WriteResult writeShaderImplementation(const osg::Shader& obj, const std::string& fileName,const ReaderWriter::Options* options);
         
 
+        inline void buildKdTreeIfRequired(ReaderWriter::ReadResult& result, const ReaderWriter::Options* options)
+        {
+            bool doKdTreeBuilder = (options && options->getBuildKdTreesHint()!=ReaderWriter::Options::NO_PREFERENCE) ?
+                options->getBuildKdTreesHint() == ReaderWriter::Options::BUILD_KDTREES :
+                _buildKdTreesHint == ReaderWriter::Options::BUILD_KDTREES;
+
+            if (doKdTreeBuilder && _kdTreeBuilder.valid() && result.validNode()) 
+            {
+                osg::ref_ptr<osg::KdTreeBuilder> builder = _kdTreeBuilder->clone();
+                result.getNode()->accept(*builder);
+            }
+        }
+
+
+        /** Set whether the KdTrees should be built for geometry in the loader model. */
+        void setBuildKdTreesHint(ReaderWriter::Options::BuildKdTreesHint hint) { _buildKdTreesHint = hint; }
+
+        /** Get whether the KdTrees should be built for geometry in the loader model. */
+        ReaderWriter::Options::BuildKdTreesHint getBuildKdTreesHint() const { return _buildKdTreesHint; }
+
+        /** Set the KdTreeBuilder visitor that is used to build KdTree on loaded models.*/
+        void setKdTreeBuilder(osg::KdTreeBuilder* builder) { _kdTreeBuilder = builder; }
+
+        /** Get the KdTreeBuilder visitor that is used to build KdTree on loaded models.*/
+        osg::KdTreeBuilder* getKdTreeBuilder() { return _kdTreeBuilder.get(); }
+
+
+        /** Set the password map to be used by plugins when access files from secure locations.*/
+        void setAuthenticationMap(AuthenticationMap* authenticationMap) { _authenticationMap = authenticationMap; }
+
+        /** Get the password map to be used by plugins when access files from secure locations.*/
+        AuthenticationMap* getAuthenticationMap() { return _authenticationMap.get(); }
+
+        /** Get the password map to be used by plugins when access files from secure locations.*/
+        const AuthenticationMap* getAuthenticationMap() const { return _authenticationMap.get(); }
+
+
         void setCreateNodeFromImage(bool flag) { _createNodeFromImage = flag; }
         bool getCreateNodeFromImage() const { return _createNodeFromImage; }
-
+        
 
         void setOptions(ReaderWriter::Options* opt) { _options = opt; }
         ReaderWriter::Options* getOptions() { return _options.get(); }
@@ -419,7 +474,6 @@ class OSGDB_EXPORT Registry : public osg::Referenced
 
         virtual ~Registry();
 
-        typedef std::vector< osg::ref_ptr<ReaderWriter> >               ReaderWriterList;
         typedef std::map< std::string, osg::ref_ptr<DotOsgWrapper> >    DotOsgWrapperMap;
         typedef std::vector< osg::ref_ptr<DynamicLibrary> >             DynamicLibraryList;
         typedef std::map< std::string, std::string>                     ExtensionAliasMap;
@@ -437,7 +491,12 @@ class OSGDB_EXPORT Registry : public osg::Referenced
         /** get the attached library with specified name.*/
         DynamicLibraryList::iterator getLibraryItr(const std::string& fileName);
 
-        bool _createNodeFromImage;
+        ReaderWriter::Options::BuildKdTreesHint     _buildKdTreesHint;
+        osg::ref_ptr<osg::KdTreeBuilder>            _kdTreeBuilder;
+        
+        osg::ref_ptr<AuthenticationMap>             _authenticationMap;
+        
+        bool                                        _createNodeFromImage;
 
         osg::Object*       readObject(DotOsgWrapperMap& dowMap,Input& fr);
 

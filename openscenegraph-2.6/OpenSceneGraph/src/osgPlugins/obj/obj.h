@@ -48,8 +48,8 @@ public:
         alpha(1.0f),
         uScale(1.0f),
         vScale(1.0f),
-        uOffset(1.0f),
-        vOffset(1.0f) {}
+        uOffset(0.0f),
+        vOffset(0.0f) {}
     
     std::string name;
     
@@ -67,6 +67,7 @@ public:
     std::string map_Ka;
     std::string map_Kd;
     std::string map_Ks;
+    std::string map_opacity;
     bool        textureReflection;
     float       alpha;
     float       uScale;

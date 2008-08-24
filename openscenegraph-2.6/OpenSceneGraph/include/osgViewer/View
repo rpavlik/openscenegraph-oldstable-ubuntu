@@ -71,6 +71,7 @@ class OSGVIEWER_EXPORT View : public osg::View, public osgGA::GUIActionAdapter
         /** Get the const View's scene graph.*/
         const osg::Node* getSceneData() const { return _scene.valid() ? _scene->getSceneData() : 0; }
 
+
         /** Set the View's database pager.*/
         void setDatabasePager(osgDB::DatabasePager* dp);
 
@@ -79,6 +80,17 @@ class OSGVIEWER_EXPORT View : public osg::View, public osgGA::GUIActionAdapter
 
         /** Get the const View's database pager.*/
         const osgDB::DatabasePager* getDatabasePager() const;
+
+
+        /** Set the View's image pager.*/
+        void setImagePager(osgDB::ImagePager* ip);
+
+        /** Get the View's image pager.*/
+        osgDB::ImagePager* getImagePager();
+
+        /** Get the const View's image pager.*/
+        const osgDB::ImagePager* getImagePager() const;
+
 
         /* Set the EventQueue that View uses to integrate external non window related events.*/
         void setEventQueue(osgGA::EventQueue* eventQueue) { _eventQueue = eventQueue; }
@@ -166,6 +178,9 @@ class OSGVIEWER_EXPORT View : public osg::View, public osgGA::GUIActionAdapter
         /** Convenience method for spherical display by rendering main scene to as panoramic 2:1 texture and then doing distortion correction to present onto a spherical display.*/
         void setUpViewForPanoramicSphericalDisplay(double radius=1.0, double collar=0.45, unsigned int screenNum=0, osg::Image* intensityMap=0, const osg::Matrixd& projectorMatrix = osg::Matrixd());
 
+        /** Convenience method for autostereoscopic Philips WoWvx display.*/
+        void setUpViewForWoWVxDisplay(unsigned int screenNum, unsigned char wow_content, unsigned char wow_factor, unsigned char wow_offset, float wow_disparity_Zd, float wow_disparity_vz, float wow_disparity_M, float wow_disparity_C);
+
         
         /** Return true if this view contains a specified camera.*/
         bool containsCamera(const osg::Camera* camera) const;
@@ -173,7 +188,7 @@ class OSGVIEWER_EXPORT View : public osg::View, public osgGA::GUIActionAdapter
         /** Get the camera which contains the pointer position x,y specified master cameras window/eye coords.
           * Also passes back the local window coords for the graphics context associated with the camera passed back. */
         const osg::Camera* getCameraContainingPosition(float x, float y, float& local_x, float& local_y) const;
-        
+
         /** Compute intersections between a ray through the specified master cameras window/eye coords and a specified node.
           * Note, when a master cameras has slaves and no viewport itself its coordinate frame will be in clip space i.e. -1,-1 to 1,1,
           * while if its has a viewport the coordintates will be relative to its viewport dimensions. 
@@ -183,7 +198,7 @@ class OSGVIEWER_EXPORT View : public osg::View, public osgGA::GUIActionAdapter
         
         /** Compute intersections between a ray through the specified master cameras window/eye coords and a specified nodePath's subgraph. */
         bool computeIntersections(float x,float y, osg::NodePath& nodePath, osgUtil::LineSegmentIntersector::Intersections& intersections,osg::Node::NodeMask traversalMask = 0xffffffff);
-        
+
         
         virtual void requestRedraw();
         virtual void requestContinuousUpdate(bool needed=true);

@@ -52,12 +52,15 @@
 class ReaderWriterOBJ : public osgDB::ReaderWriter
 {
 public:
-    ReaderWriterOBJ():_fixBlackMaterials(true) {}
+    ReaderWriterOBJ():_fixBlackMaterials(true)
+    {
+        supportsExtension("obj","Alias Wavefront OBJ format");
+        supportsOption("noRotation","Do not do the default rotate about X axis");
+        supportsOption("noTesselateLargePolygons","Do not do the default tesselation of large polygons");
+        supportsOption("noTriStripPolygons","Do not do the default tri stripping of polygons");
+    }
 
     virtual const char* className() const { return "Wavefront OBJ Reader"; }
-    virtual bool acceptsExtension(const std::string& extension) const {
-        return osgDB::equalCaseInsensitive(extension,"obj");
-    }
 
     virtual ReadResult readNode(const std::string& fileName, const osgDB::ReaderWriter::Options* options) const;
 
@@ -122,7 +125,8 @@ protected:
     
     osg::Geometry* convertElementListToGeometry(obj::Model& model, obj::Model::ElementList& elementList, bool& rotate) const;
     
-    osg::Node* convertModelToSceneGraph(obj::Model& model, bool& rotate) const;
+    osg::Node* convertModelToSceneGraph(obj::Model& model, bool& rotate,
+        bool& noTesselateLargePolygons, bool& noTriStripPolygons) const;
 
     inline osg::Vec3 transformVertex(const osg::Vec3& vec, const bool rotate) const ;
     inline osg::Vec3 transformNormal(const osg::Vec3& vec, const bool rotate) const ;
@@ -159,10 +163,76 @@ inline osg::Vec3 ReaderWriterOBJ::transformNormal(const osg::Vec3& vec, const bo
 // register with Registry to instantiate the above reader/writer.
 REGISTER_OSGPLUGIN(obj, ReaderWriterOBJ)
 
+static void load_material_texture( obj::Model &model,
+                            obj::Material &material,
+                            osg::StateSet *stateset,
+                            const std::string & filename,
+                            const unsigned int texture_unit  )
+{
+    if (!filename.empty())
+    {
+        osg::ref_ptr< osg::Image > image;
+        if ( !model.getDatabasePath().empty() ) 
+        {
+            // first try with database path of parent. 
+            image = osgDB::readImageFile(model.getDatabasePath()+'/'+filename);
+        }
+        
+        if ( !image.valid() )
+        {
+            // if not already set then try the filename as is.
+            image = osgDB::readImageFile(filename);
+        }
+
+        if ( image.valid() )
+        {
+            osg::Texture2D* texture = new osg::Texture2D( image.get() );
+            osg::Texture::WrapMode textureWrapMode = osg::Texture::REPEAT;
+            texture->setWrap(osg::Texture2D::WRAP_R, textureWrapMode);
+            texture->setWrap(osg::Texture2D::WRAP_S, textureWrapMode);
+            texture->setWrap(osg::Texture2D::WRAP_T, textureWrapMode);
+            stateset->setTextureAttributeAndModes( texture_unit, texture,osg::StateAttribute::ON );
+            
+            if ( material.textureReflection )
+            {
+                osg::TexGen* texgen = new osg::TexGen;
+                texgen->setMode(osg::TexGen::SPHERE_MAP);
+                stateset->setTextureAttributeAndModes( texture_unit,texgen,osg::StateAttribute::ON );
+            }
+            
+            if  ( image->isImageTranslucent())
+            {
+                osg::notify(osg::INFO)<<"Found transparent image"<<std::endl;
+                stateset->setMode(GL_BLEND, osg::StateAttribute::ON);
+                stateset->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
+            }
+        }
+    }
+
+    if (material.uScale != 1.0f || material.vScale != 1.0f ||
+            material.uOffset != 0.0f || material.vOffset != 0.0f)
+    {
+        osg::Matrix mat;
+        if (material.uScale != 1.0f || material.vScale != 1.0f)
+        {
+            osg::notify(osg::DEBUG_INFO) << "Obj TexMat scale=" << material.uScale << "," << material.vScale << std::endl;
+            mat *= osg::Matrix::scale(material.uScale, material.vScale, 1.0);
+        }
+        if (material.uOffset != 0.0f || material.vOffset != 0.0f)
+        {
+            osg::notify(osg::DEBUG_INFO) << "Obj TexMat offset=" << material.uOffset << "," << material.uOffset << std::endl;
+            mat *= osg::Matrix::translate(material.uOffset, material.vOffset, 0.0);
+        }
+
+        osg::TexMat* texmat = new osg::TexMat;
+        texmat->setMatrix(mat);
+        stateset->setTextureAttributeAndModes( texture_unit,texmat,osg::StateAttribute::ON );
+    }
+}
+
+
 void ReaderWriterOBJ::buildMaterialToStateSetMap(obj::Model& model, MaterialToStateSetMap& materialToStateSetMap) const
 {
-    osg::Texture::WrapMode textureWrapMode = osg::Texture::REPEAT;
-
     if (_fixBlackMaterials)
     {
         // hack to fix Maya exported models that contian all black materials.
@@ -208,7 +278,7 @@ void ReaderWriterOBJ::buildMaterialToStateSetMap(obj::Model& model, MaterialToSt
     {
         obj::Material& material = itr->second;
         
-        osg::StateSet* stateset = new osg::StateSet;
+        osg::ref_ptr< osg::StateSet > stateset = new osg::StateSet;
 
         bool isTransparent = false;
 
@@ -221,6 +291,8 @@ void ReaderWriterOBJ::buildMaterialToStateSetMap(obj::Model& model, MaterialToSt
 
             osg_material->setAmbient(osg::Material::FRONT_AND_BACK,material.ambient);
             osg_material->setDiffuse(osg::Material::FRONT_AND_BACK,material.diffuse);
+            osg_material->setEmission(osg::Material::FRONT_AND_BACK,material.emissive);
+
             if (material.illum == 2) {
                 osg_material->setSpecular(osg::Material::FRONT_AND_BACK,material.specular);
             } else {
@@ -230,7 +302,8 @@ void ReaderWriterOBJ::buildMaterialToStateSetMap(obj::Model& model, MaterialToSt
             
             if (material.ambient[3]!=1.0 ||
                 material.diffuse[3]!=1.0 ||
-                material.specular[3]!=1.0)
+                material.specular[3]!=1.0||
+                material.emissive[3]!=1.0)
             {
                 osg::notify(osg::INFO)<<"Found transparent material"<<std::endl;
                 isTransparent = true;
@@ -238,52 +311,21 @@ void ReaderWriterOBJ::buildMaterialToStateSetMap(obj::Model& model, MaterialToSt
         }
         
         // handle textures
-        if (!material.map_Kd.empty())
+        enum TextureUnit
         {
-            std::string filename = material.map_Kd;
-            osg::Image* image = 0;
-            if (!model.getDatabasePath().empty()) 
-            {
-                // first try with databasr path of parent. 
-                image = osgDB::readImageFile(model.getDatabasePath()+'/'+filename);
-            }
-            
-            if (!image)
-            {
-                // if not already set then try the filename as is.
-                image = osgDB::readImageFile(filename);
-            }
-            if (image)
-            {
-                osg::Texture2D* texture = new osg::Texture2D(image);
-                texture->setWrap(osg::Texture2D::WRAP_R, textureWrapMode);
-                texture->setWrap(osg::Texture2D::WRAP_S, textureWrapMode);
-                texture->setWrap(osg::Texture2D::WRAP_T, textureWrapMode);
-                stateset->setTextureAttributeAndModes(0,texture,osg::StateAttribute::ON);
-                
-                if (material.textureReflection)
-                {
-                    osg::TexGen* texgen = new osg::TexGen;
-                    texgen->setMode(osg::TexGen::SPHERE_MAP);
-                    stateset->setTextureAttributeAndModes(0,texgen,osg::StateAttribute::ON);
-                }
-                
-                if  (!isTransparent && image->isImageTranslucent())
-                {
-                    osg::notify(osg::INFO)<<"Found transparent image"<<std::endl;
-                    isTransparent = true;
-                }
-            }
-        }
-
+            TEXTURE_UNIT_KD = 0,
+            TEXTURE_UNIT_OPACITY
+        };
+        load_material_texture( model, material, stateset.get(), material.map_Kd,       TEXTURE_UNIT_KD );
+        load_material_texture( model, material, stateset.get(), material.map_opacity,  TEXTURE_UNIT_OPACITY );
+        
         if (isTransparent)
         {
             stateset->setMode(GL_BLEND, osg::StateAttribute::ON);
             stateset->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
         }
-        
-        materialToStateSetMap[material.name] = stateset;
-        
+
+        materialToStateSetMap[material.name] = stateset.get();
     }
 }
 
@@ -540,7 +582,8 @@ osg::Geometry* ReaderWriterOBJ::convertElementListToGeometry(obj::Model& model, 
     return geometry;
 }
 
-osg::Node* ReaderWriterOBJ::convertModelToSceneGraph(obj::Model& model, bool& rotate) const
+osg::Node* ReaderWriterOBJ::convertModelToSceneGraph(obj::Model& model,
+    bool& rotate, bool& noTesselateLargePolygons, bool& noTriStripPolygons) const
 {
 
     if (model.elementStateMap.empty()) return 0;
@@ -569,18 +612,24 @@ osg::Node* ReaderWriterOBJ::convertModelToSceneGraph(obj::Model& model, bool& ro
             geometry->setStateSet(stateset);
         
             // tesseleate any large polygons
-            osgUtil::Tessellator tessellator;
-            tessellator.retessellatePolygons(*geometry);
-
+            if (!noTesselateLargePolygons)
+            {
+                osgUtil::Tessellator tessellator;
+                tessellator.retessellatePolygons(*geometry);
+            }
+            
             // tri strip polygons to improve graphics peformance
-            osgUtil::TriStripVisitor tsv;
-            tsv.stripify(*geometry);
-
+            if (!noTriStripPolygons)
+            {
+                osgUtil::TriStripVisitor tsv;
+                tsv.stripify(*geometry);
+            }
+            
             // if no normals present add them.
             if (!geometry->getNormalArray() || geometry->getNormalArray()->getNumElements()==0)
             {
-                osgUtil::SmoothingVisitor tsv;
-                tsv.smooth(*geometry);
+                osgUtil::SmoothingVisitor sv;
+                sv.smooth(*geometry);
             }
 
 
@@ -631,14 +680,32 @@ osgDB::ReaderWriter::ReadResult ReaderWriterOBJ::readNode(const std::string& fil
         model.setDatabasePath(osgDB::getFilePath(fileName.c_str()));
         model.readOBJ(fin, local_opt.get());
         
-        // code for checking the nonRotation
+        // code for checking the nonRotation, noTesselateLargePolygons,
+        // and noTriStripPolygons
         bool rotate = true;
-        if ((options!=NULL) && (options->getOptionString() == "noRotation"))
+        bool noTesselateLargePolygons = false;
+        bool noTriStripPolygons = false;
+        
+        if (options!=NULL)
         {
-            rotate = false;
+            if (options->getOptionString() == "noRotation")
+            {
+                rotate = false;
+            }
+            
+            if (options->getOptionString() == "noTesselateLargePolygons")
+            {
+                noTesselateLargePolygons = true;
+            }
+            
+            if (options->getOptionString() == "noTriStripPolygons")
+            {
+                noTesselateLargePolygons = true;
+            }
         }
-
-        osg::Node* node = convertModelToSceneGraph(model,rotate);
+        
+        osg::Node* node = convertModelToSceneGraph(model,rotate,
+            noTesselateLargePolygons,noTriStripPolygons);
         return node;
     }
     
@@ -652,14 +719,32 @@ osgDB::ReaderWriter::ReadResult ReaderWriterOBJ::readNode(std::istream& fin, con
         obj::Model model;
         model.readOBJ(fin, options);
         
-        // code for checking the nonRotation
+        // code for checking the nonRotation, noTesselateLargePolygons,
+        // and noTriStripPolygons
         bool rotate = true;
-        if ((options!=NULL) && (options->getOptionString() == "noRotation"))
+        bool noTesselateLargePolygons = false;
+        bool noTriStripPolygons = false;
+        
+        if (options!=NULL)
         {
-            rotate = false;
+            if (options->getOptionString() == "noRotation")
+            {
+                rotate = false;
+            }
+            
+            if (options->getOptionString() == "noTesselateLargePolygons")
+            {
+                noTesselateLargePolygons = true;
+            }
+            
+            if (options->getOptionString() == "noTriStripPolygons")
+            {
+                noTesselateLargePolygons = true;
+            }
         }
-
-        osg::Node* node = convertModelToSceneGraph(model,rotate);
+        
+        osg::Node* node = convertModelToSceneGraph(model,rotate,
+            noTesselateLargePolygons,noTriStripPolygons);
         return node;
     }
     

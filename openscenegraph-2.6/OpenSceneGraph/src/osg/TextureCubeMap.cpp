@@ -15,6 +15,7 @@
 #include <osg/Image>
 #include <osg/State>
 #include <osg/TextureCubeMap>
+#include <osg/ImageSequence>
 #include <osg/Notify>
 
 #include <osg/GLU>
@@ -128,8 +129,40 @@ int TextureCubeMap::compare(const StateAttribute& sa) const
 
 void TextureCubeMap::setImage( unsigned int face, Image* image)
 {
+    if (_images[face] == image) return;
+
+    unsigned numImageSequencesBefore = 0;
+    for (unsigned int i=0; i<getNumImages(); ++i)
+    {
+        osg::ImageSequence* is = dynamic_cast<osg::ImageSequence*>(_images[i].get());
+        if (is) ++numImageSequencesBefore;
+    }
+
     _images[face] = image;
     _modifiedCount[face].setAllElementsTo(0);
+
+
+    // find out if we need to reset the update callback to handle the animation of ImageSequence
+    unsigned numImageSequencesAfter = 0;
+    for (unsigned int i=0; i<getNumImages(); ++i)
+    {
+        osg::ImageSequence* is = dynamic_cast<osg::ImageSequence*>(_images[i].get());
+        if (is) ++numImageSequencesAfter;
+    }
+
+    if (numImageSequencesBefore>0)
+    {
+        if (numImageSequencesAfter==0)
+        {
+            setUpdateCallback(0);
+            setDataVariance(osg::Object::STATIC);
+        }
+    }
+    else if (numImageSequencesAfter>0)
+    {
+        setUpdateCallback(new ImageSequence::UpdateCallback());
+        setDataVariance(osg::Object::DYNAMIC);
+    }
 }
 
 Image* TextureCubeMap::getImage(unsigned int face)
@@ -227,7 +260,7 @@ void TextureCubeMap::apply(State& state) const
             _textureWidth = _textureHeight = minimum( _textureWidth , _textureHeight );
         }
 
-        _textureObjectBuffer[contextID] = textureObject = generateTextureObject(
+        textureObject = generateTextureObject(
                 contextID,GL_TEXTURE_CUBE_MAP,_numMipmapLevels,_internalFormat,_textureWidth,_textureHeight,1,0);
         
         textureObject->bind();
@@ -252,6 +285,8 @@ void TextureCubeMap::apply(State& state) const
 
 
         }
+
+        _textureObjectBuffer[contextID] = textureObject;
 
         if (_unrefImageDataAfterApply && areAllTextureObjectsLoaded())
         {
@@ -344,24 +379,21 @@ void TextureCubeMap::copyTexSubImageCubeMap(State& state, int face, int xoffset,
         bool hardwareMipMapOn = false;
         if (needHardwareMipMap)
         {
-            const Texture::Extensions* tex_extensions = Texture::getExtensions(contextID,true);
-            bool generateMipMapSupported = tex_extensions->isGenerateMipMapSupported();
-
-            hardwareMipMapOn = _useHardwareMipMapGeneration && generateMipMapSupported;
+            hardwareMipMapOn = isHardwareMipmapGenerationEnabled(state);
 
             if (!hardwareMipMapOn)
             {
-                // have to swtich off mip mapping
-                notify(NOTICE)<<"Warning: TextureCubeMap::copyTexImage2D(,,,,) switch of mip mapping as hardware support not available."<<std::endl;
+                // have to switch off mip mapping
+                notify(NOTICE)<<"Warning: TextureCubeMap::copyTexImage2D(,,,,) switch off mip mapping as hardware support not available."<<std::endl;
                 _min_filter = LINEAR;
             }
         }
 
-        if (hardwareMipMapOn) glTexParameteri( target, GL_GENERATE_MIPMAP_SGIS,GL_TRUE);
+        GenerateMipmapMode mipmapResult = mipmapBeforeTexImage(state, hardwareMipMapOn);
 
         glCopyTexSubImage2D( target , 0, xoffset, yoffset, x, y, width, height);
 
-        if (hardwareMipMapOn) glTexParameteri( target, GL_GENERATE_MIPMAP_SGIS,GL_FALSE);
+        mipmapAfterTexImage(state, mipmapResult);
 
         // inform state that this texture is the current one bound.
         state.haveAppliedTextureAttribute(state.getActiveTextureUnit(), this);

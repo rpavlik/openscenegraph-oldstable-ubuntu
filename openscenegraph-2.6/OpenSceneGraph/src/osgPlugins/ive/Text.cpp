@@ -75,6 +75,23 @@ void Text::write(DataOutputStream* out){
     out->writeVec4(getColor());
     out->writeUInt(getDrawMode());
 
+    if ( out->getVersion() >= VERSION_0028 )
+    {
+        out->writeUInt(getBackdropType());
+
+        out->writeFloat(getBackdropHorizontalOffset());
+        out->writeFloat(getBackdropVerticalOffset());
+
+        out->writeVec4(getBackdropColor());
+        out->writeUInt(getBackdropImplementation());
+
+        out->writeUInt(getColorGradientMode());
+        out->writeVec4(getColorGradientTopLeft());
+        out->writeVec4(getColorGradientBottomLeft());
+        out->writeVec4(getColorGradientBottomRight());
+        out->writeVec4(getColorGradientTopRight());
+    }
+
     // text :: Modified from osgPlugins::osg
     const osgText::String& textstring = getText();
     bool isACString = true;
@@ -149,7 +166,7 @@ void Text::read(DataInputStream* in){
 
     setCharacterSize(c_height,aspectRatio);
 
-    setCharacterSizeMode((osgText::Text::CharacterSizeMode) in->readUInt());
+    setCharacterSizeMode((osgText::TextBase::CharacterSizeMode) in->readUInt());
 
     setMaximumWidth(in->readFloat());
     setMaximumHeight(in->readFloat());
@@ -159,7 +176,7 @@ void Text::read(DataInputStream* in){
         setLineSpacing(in->readFloat());
     }
 
-    setAlignment((osgText::Text::AlignmentType) in->readUInt());
+    setAlignment((osgText::TextBase::AlignmentType) in->readUInt());
 
     //Nothing to do...
     //setAxisAlignment((osgText::Text::AxisAlignment) in->readUint());
@@ -171,6 +188,27 @@ void Text::read(DataInputStream* in){
     setPosition(in->readVec3());
     setColor(in->readVec4());
     setDrawMode(in->readUInt());
+
+    if ( in->getVersion() >= VERSION_0028 )
+    {
+        setBackdropType((osgText::Text::BackdropType) in->readUInt());
+
+        float horizontalOffset,verticalOffset;
+        horizontalOffset = in->readFloat();
+        verticalOffset = in->readFloat();
+        setBackdropOffset(horizontalOffset,verticalOffset);
+
+        setBackdropColor(in->readVec4());
+        setBackdropImplementation((osgText::Text::BackdropImplementation) in->readUInt());
+        setColorGradientMode((osgText::Text::ColorGradientMode) in->readUInt());
+
+        osg::Vec4 colorGradientTopLeft,colorGradientBottomLeft,colorGradientBottomRight,colorGradientTopRight; 
+        colorGradientTopLeft = in->readVec4();
+        colorGradientBottomLeft = in->readVec4();
+        colorGradientBottomRight = in->readVec4();
+        colorGradientTopRight = in->readVec4();
+        setColorGradientCorners(colorGradientTopLeft,colorGradientBottomLeft,colorGradientBottomRight,colorGradientTopRight);
+    }
 
     if(in->readBool())
         setText(in->readString());
@@ -203,6 +241,6 @@ void Text::read(DataInputStream* in){
 
     }
     else{
-        throw Exception("ShadeModel::read(): Expected ShadeModel identification.");
+        throw Exception("Text::read(): Expected Text identification.");
     }
 }

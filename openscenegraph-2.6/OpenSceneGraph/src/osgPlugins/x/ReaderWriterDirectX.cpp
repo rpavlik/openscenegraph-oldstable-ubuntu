@@ -1,7 +1,7 @@
 // -*-c++-*-
 
 /*
- * $Id: ReaderWriterDirectX.cpp 7076 2007-07-06 13:54:26Z robert $
+ * $Id: ReaderWriterDirectX.cpp 8624 2008-07-17 13:51:14Z robert $
  *
  * DirectX file converter for OpenSceneGraph.
  * Copyright (c)2002 Ulrich Hertlein <u.hertlein@sandbox.de>
@@ -48,15 +48,14 @@
 class ReaderWriterDirectX : public osgDB::ReaderWriter
 {
 public:
-    ReaderWriterDirectX() { }
-
-    virtual const char* className() const {
-        return "DirectX Reader/Writer";
+    ReaderWriterDirectX()
+    {
+        supportsExtension("x","DirectX scene format");
+        supportsOption("flipTexture", "flip texture upside-down");
     }
 
-    virtual bool acceptsExtension(const std::string& extension) const
-    { 
-        return osgDB::equalCaseInsensitive(extension,"x");
+    virtual const char* className() const {
+        return "DirectX Reader";
     }
 
     virtual ReadResult readNode(const std::string& fileName, const osgDB::ReaderWriter::Options* options) const;
@@ -86,33 +85,34 @@ osgDB::ReaderWriter::ReadResult ReaderWriterDirectX::readNode(const std::string&
 
     // Load DirectX mesh
     DX::Object obj;
-    if (obj.load(fileName.c_str())) {
-
-        // code for setting up the database path so that internally referenced file are searched for on relative paths. 
-        osg::ref_ptr<Options> local_opt = options ? static_cast<Options*>(options->clone(osg::CopyOp::SHALLOW_COPY)) : new Options;
-        local_opt->setDatabasePath(osgDB::getFilePath(fileName));
-
-        // Options?
-        bool flipTexture = true;
-        float creaseAngle = 80.0f;
-        if (options) {
-            const std::string option = options->getOptionString();
-            if (option.find("flipTexture") != std::string::npos)
-                flipTexture = false;
-            if (option.find("creaseAngle") != std::string::npos) {
-                // TODO
-            }
-        }
-
-        // Convert to osg::Group
-        osg::Group* group = convertFromDX(obj, flipTexture, creaseAngle, local_opt.get());
-        if (!group)
-            return ReadResult::FILE_NOT_HANDLED;
-
-        return group;
+    if (obj.load(fileName.c_str()) == false) {
+        return ReadResult::ERROR_IN_READING_FILE;
     }
 
-    return ReadResult::FILE_NOT_HANDLED;
+    // code for setting up the database path so that internally referenced file are searched for on relative paths. 
+    osg::ref_ptr<Options> local_opt = options ? static_cast<Options*>(options->clone(osg::CopyOp::SHALLOW_COPY)) : new Options;
+    local_opt->setDatabasePath(osgDB::getFilePath(fileName));
+
+    // Options?
+    bool flipTexture = true;
+    float creaseAngle = 80.0f;
+    if (options) {
+        const std::string option = options->getOptionString();
+        if (option.find("flipTexture") != std::string::npos) {
+            flipTexture = false;
+        }
+        if (option.find("creaseAngle") != std::string::npos) {
+            // TODO
+        }
+    }
+
+    // Convert to osg::Group
+    osg::Group* group = convertFromDX(obj, flipTexture, creaseAngle, local_opt.get());
+    if (!group) {
+        return ReadResult::ERROR_IN_READING_FILE;
+    }
+
+    return group;
 }
 
 // Convert DirectX object
@@ -120,17 +120,19 @@ osg::Group * ReaderWriterDirectX::convertFromDX(DX::Object & obj,
                                                 bool flipTexture, float creaseAngle,
                                                 const osgDB::ReaderWriter::Options * options) const
 {
-    osg::Group * group = new osg::Group;
+    osg::ref_ptr<osg::Group> group = new osg::Group;
 
     for (unsigned int i = 0; i < obj.getNumMeshes(); ++i) {
         //std::cerr << "converting mesh " << i << std::endl;
         DX::Mesh & mesh = *obj.getMesh(i);
         osg::Geode * geode = convertFromDX(mesh, flipTexture, creaseAngle, options);
-        if (geode)
-            group->addChild(geode);
+        if (!geode) {
+            return 0;
+        }
+        group->addChild(geode);
     }
 
-    return group;
+    return group.release();
 }
 
 // Convert DirectX mesh to osg::Geode

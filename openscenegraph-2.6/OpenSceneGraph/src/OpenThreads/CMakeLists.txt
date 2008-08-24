@@ -3,14 +3,28 @@
 ADD_DEFINITIONS(-DOPENTHREADS_EXPORTS)
 
 SET(OPENTHREADS_MAJOR_VERSION 2)
-SET(OPENTHREADS_MINOR_VERSION 2)
-SET(OPENTHREADS_PATCH_VERSION 1)
-SET(OPENTHREADS_SOVERSION 10)
+SET(OPENTHREADS_MINOR_VERSION 3)
+SET(OPENTHREADS_PATCH_VERSION 0)
+SET(OPENTHREADS_SOVERSION 11)
 
 SET(OPENTHREADS_VERSION ${OPENTHREADS_MAJOR_VERSION}.${OPENTHREADS_MINOR_VERSION}.${OPENTHREADS_PATCH_VERSION})
 
+INCLUDE(CheckAtomicOps)
+
+################################################################################
+# Set Config file
+
+SET(OPENTHREADS_CONFIG_HEADER "${PROJECT_BINARY_DIR}/include/OpenThreads/Config")
+CONFIGURE_FILE("${CMAKE_CURRENT_SOURCE_DIR}/common/Config.in"
+               "${OPENTHREADS_CONFIG_HEADER}")
+
+# INSTALL_FILES(/include/OpenThreads/ FILES "${OPENTHREADS_CONFIG_HEADER}")
+
+################################################################################
+
 SET(HEADER_PATH ${OpenThreads_SOURCE_DIR}/include/OpenThreads)
 SET(OpenThreads_PUBLIC_HEADERS
+    ${HEADER_PATH}/Atomic
     ${HEADER_PATH}/Barrier
     ${HEADER_PATH}/Block
     ${HEADER_PATH}/Condition
@@ -21,6 +35,7 @@ SET(OpenThreads_PUBLIC_HEADERS
     ${HEADER_PATH}/ScopedLock  
     ${HEADER_PATH}/Thread
     ${HEADER_PATH}/Version
+    ${OPENTHREADS_CONFIG_HEADER}
 )
 
 # User Options
@@ -68,5 +83,5 @@ ELSE(WIN32)
     ENDIF(UNIX)
 ENDIF(WIN32)
 
-
-
+# Make sure everyone can find Config
+INCLUDE_DIRECTORIES(${PROJECT_BINARY_DIR}/include)

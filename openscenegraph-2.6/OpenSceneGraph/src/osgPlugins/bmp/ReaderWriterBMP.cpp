@@ -263,7 +263,7 @@ int *numComponents_ret)
                 int npixperbyte=8/inf.Colorbits; // no of pixels per byte
                 for (int ii=0; ii<inf.width/npixperbyte; ii++) {
                     unsigned char mask=0x00; // masked with index to extract colorbits bits
-                    unsigned char byte=imptr[(j*inf.width/npixperbyte)+ii];
+                    unsigned char byte=imptr[(j*doff/npixperbyte)+ii];
                     int jj;
                     for (jj=0; jj<inf.Colorbits; jj++) mask |= (0x80>>jj); // fill N High end bits
                     for (jj=0; jj<npixperbyte; jj++) {
@@ -315,8 +315,13 @@ int *numComponents_ret)
 class ReaderWriterBMP : public osgDB::ReaderWriter
 {
     public:
+    
+        ReaderWriterBMP()
+        {
+            supportsExtension("bmp","BMP Image format");
+        }
+    
         virtual const char* className() const { return "BMP Image Reader"; }
-        virtual bool acceptsExtension(const std::string& extension) const { return osgDB::equalCaseInsensitive(extension,"bmp"); }
 
         ReadResult readBMPStream(std::istream& fin) const
         {

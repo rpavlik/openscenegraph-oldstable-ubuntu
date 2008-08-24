@@ -13,6 +13,7 @@
 
 #include <osg/GLExtensions>
 #include <osg/TextureRectangle>
+#include <osg/ImageSequence>
 #include <osg/State>
 #include <osg/GLU>
 #include <osg/Notify>
@@ -123,10 +124,24 @@ int TextureRectangle::compare(const StateAttribute& sa) const
 
 void TextureRectangle::setImage(Image* image)
 {
+    if (_image == image) return;
+
+    if (dynamic_cast<osg::ImageSequence*>(_image.get()))
+    {
+        setUpdateCallback(0);
+        setDataVariance(osg::Object::STATIC);
+    }
+
     // delete old texture objects.
     dirtyTextureObject();
 
     _image = image;
+    
+    if (dynamic_cast<osg::ImageSequence*>(_image.get()))
+    {
+        setUpdateCallback(new ImageSequence::UpdateCallback());
+        setDataVariance(osg::Object::DYNAMIC);
+    }
 }
 
 
@@ -197,7 +212,7 @@ void TextureRectangle::apply(State& state) const
         OpenThreads::ScopedLock<OpenThreads::Mutex> lock(s_mutex);
 
         // we don't have a applyTexImage1D_subload yet so can't reuse.. so just generate a new texture object.        
-        _textureObjectBuffer[contextID] = textureObject = generateTextureObject(contextID,GL_TEXTURE_RECTANGLE);
+        textureObject = generateTextureObject(contextID,GL_TEXTURE_RECTANGLE);
         
         textureObject->bind();
 
@@ -206,6 +221,8 @@ void TextureRectangle::apply(State& state) const
         applyTexImage_load(GL_TEXTURE_RECTANGLE, _image.get(), state, _textureWidth, _textureHeight);
 
         textureObject->setAllocated(1,_internalFormat,_textureWidth,_textureHeight,1,0);
+        
+        _textureObjectBuffer[contextID] = textureObject;
 
         if (_unrefImageDataAfterApply && areAllTextureObjectsLoaded() && _image->getDataVariance()==STATIC)
         {

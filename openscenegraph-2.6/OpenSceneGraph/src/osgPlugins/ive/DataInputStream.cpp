@@ -31,6 +31,7 @@
 #include "ShadeModel.h"
 #include "Point.h"
 #include "LineWidth.h"
+#include "LineStipple.h"
 #include "Texture1D.h"
 #include "Texture2D.h"
 #include "Texture3D.h"
@@ -49,8 +50,11 @@
 #include "Viewport.h"
 #include "Scissor.h"
 #include "Image.h"
+#include "ImageSequence.h"
 #include "PointSprite.h"
 #include "Multisample.h"
+#include "Fog.h"
+#include "Light.h"
 
 
 #include "Group.h"
@@ -94,6 +98,9 @@
 #include "ImageLayer.h"
 #include "HeightFieldLayer.h"
 #include "CompositeLayer.h"
+
+#include "FadeText.h"
+#include "Text3D.h"
 
 #include <osg/Endian>
 #include <osg/Notify>
@@ -950,6 +957,31 @@ osg::Image* DataInputStream::readImage(std::string filename)
     return image;
 }
 
+osg::Image* DataInputStream::readImage()
+{
+    if ( getVersion() >= VERSION_0029 )
+    {
+        int id = peekInt();
+        if(id == IVEIMAGESEQUENCE)
+        {
+            osg::ImageSequence* image = new osg::ImageSequence();
+            ((ive::ImageSequence*)image)->read(this);
+            return image;
+        }
+        else
+        {
+            readInt();
+            IncludeImageMode includeImg = (IncludeImageMode)readChar();
+            return readImage(includeImg);
+        }
+    }
+    else
+    {
+        IncludeImageMode includeImg = (IncludeImageMode)readChar();
+        return readImage(includeImg);
+    }
+}
+
 osg::Image* DataInputStream::readImage(IncludeImageMode mode)
 {
     switch(mode) {
@@ -1177,10 +1209,22 @@ osg::StateAttribute* DataInputStream::readStateAttribute()
         attribute = new osg::Multisample();
         ((ive::Multisample*)(attribute))->read(this);
     }
+    else if(attributeID == IVELINESTIPPLE){
+        attribute = new osg::LineStipple();
+        ((ive::LineStipple*)(attribute))->read(this);
+    }
     else if(attributeID == IVESTENCIL){
         attribute = new osg::Stencil();
         ((ive::Stencil*)(attribute))->read(this);
     }
+    else if(attributeID == IVEFOG){
+        attribute = new osg::Fog();
+        ((ive::Fog*)(attribute))->read(this);
+    }
+    else if(attributeID == IVELIGHT){
+        attribute = new osg::Light();
+        ((ive::Light*)(attribute))->read(this);
+    }    
     else{
         throw Exception("Unknown StateAttribute in StateSet::read()");
     }
@@ -1269,7 +1313,15 @@ osg::Drawable* DataInputStream::readDrawable()
     else if(drawableTypeID == IVETEXT){
         drawable = new osgText::Text();
         ((Text*)(drawable))->read(this);
-    }    
+    }   
+    else if(drawableTypeID == IVEFADETEXT){
+        drawable = new osgText::FadeText();
+        ((FadeText*)(drawable))->read(this);
+    }
+    else if(drawableTypeID == IVETEXT3D){
+        drawable = new osgText::Text3D();
+        ((Text3D*)(drawable))->read(this);
+    }
     else
         throw Exception("Unknown drawable drawableTypeIDentification in Geode::read()");
 

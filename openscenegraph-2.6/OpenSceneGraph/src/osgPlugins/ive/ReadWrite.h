@@ -38,6 +38,7 @@ namespace ive {
 #define IVECAMERAVIEW                   0x00000029
 #define IVEAUTOTRANSFORM                0x00000030
 #define IVEOCCLUSIONQUERYNODE           0x00000031
+#define IVEIMAGESEQUENCE                0x00000032
 
 // Node callbacks
 #define IVENODECALLBACK                 0x00000050
@@ -83,6 +84,8 @@ namespace ive {
 #define IVETEXTURERECTANGLE             0x00001130
 #define IVEPOINTSPRITE                  0x00001131
 #define IVEMULTISAMPLE                  0x00001132
+#define IVEFOG                          0x00001133
+#define IVELINESTIPPLE                  0x00001134
 
 // Drawables
 #define IVEDRAWABLE                     0x00001000
@@ -130,6 +133,9 @@ namespace ive {
 #define IVEPROXYLAYER                   0x00200007
 #define IVETERRAINTECHNIQUE             0x00200008
 #define IVEGEOMETRYTECHNIQUE            0x00200009
+#define IVEVALIDDATAOPERATOR            0x0020000A
+#define IVEVALIDRANGE                    0x0020000B
+#define IVENODATAVALUE                    0x0020000C
 //#define IVETERRAIN                      0x0020000A
 
 // osgFX classes
@@ -137,6 +143,9 @@ namespace ive {
 
 //osgText classes
 #define IVETEXT                         0x10000001
+
+#define IVETEXT3D                       0x10000002
+#define IVEFADETEXT                     0x10000003
 
 class ReadWrite{
 

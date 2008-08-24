@@ -12,6 +12,7 @@
 */
 #include <osg/GLExtensions>
 #include <osg/Texture1D>
+#include <osg/ImageSequence>
 #include <osg/State>
 #include <osg/GLU>
 
@@ -87,12 +88,25 @@ int Texture1D::compare(const StateAttribute& sa) const
 
 void Texture1D::setImage(Image* image)
 {
+    if (_image == image) return;
+
+    if (dynamic_cast<osg::ImageSequence*>(_image.get()))
+    {
+        setUpdateCallback(0);
+        setDataVariance(osg::Object::STATIC);
+    }
+
     // delete old texture objects.
     dirtyTextureObject();
 
     _image = image;
     _modifiedCount.setAllElementsTo(0);
-
+    
+    if (dynamic_cast<osg::ImageSequence*>(_image.get()))
+    {
+        setUpdateCallback(new ImageSequence::UpdateCallback());
+        setDataVariance(osg::Object::DYNAMIC);
+    }
 }
 
 
@@ -150,7 +164,7 @@ void Texture1D::apply(State& state) const
     {
 
         // we don't have a applyTexImage1D_subload yet so can't reuse.. so just generate a new texture object.        
-        _textureObjectBuffer[contextID] = textureObject = generateTextureObject(contextID,GL_TEXTURE_1D);
+        textureObject = generateTextureObject(contextID,GL_TEXTURE_1D);
 
         textureObject->bind();
 
@@ -162,6 +176,8 @@ void Texture1D::apply(State& state) const
 
         // update the modified count to show that it is upto date.
         getModifiedCount(contextID) = _image->getModifiedCount();
+    
+        _textureObjectBuffer[contextID] = textureObject;
     
         if (_unrefImageDataAfterApply && areAllTextureObjectsLoaded() && _image->getDataVariance()==STATIC)
         {

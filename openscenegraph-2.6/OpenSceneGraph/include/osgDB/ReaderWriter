@@ -14,14 +14,14 @@
 #ifndef OSGDB_READERWRITER
 #define OSGDB_READERWRITER 1
 
-#include <osg/Referenced>
 #include <osg/Image>
 #include <osg/Shape>
 #include <osg/Node>
 
-#include <osgDB/Export>
+#include <osgDB/AuthenticationMap>
 
 #include <deque>
+#include <list>
 #include <iosfwd>
 
 namespace osgDB {
@@ -47,7 +47,19 @@ class OSGDB_EXPORT ReaderWriter : public osg::Object
 
         META_Object(osgDB,ReaderWriter);
 
-        virtual bool acceptsExtension(const std::string& /*extension*/) const { return false; }
+        typedef std::map<std::string, std::string> FormatDescriptionMap;
+
+        /** return which protocols are supported by ReaderWriter. */
+        virtual const FormatDescriptionMap& supportedProtocols() const { return _supportedProtocols; }
+        
+        /** return which list of file extensions supported by ReaderWriter. */
+        virtual const FormatDescriptionMap& supportedExtensions() const { return _supportedExtensions; }
+        
+        /** return which list of file extensions supported by ReaderWriter. */
+        virtual const FormatDescriptionMap& supportedOptions() const { return _supportedOptions; }
+
+        /** return true if ReaderWriter accepts specified file extension.*/
+        virtual bool acceptsExtension(const std::string& /*extension*/) const;
 
         /** Options base class used for passing options into plugins to control their operation.*/
         class Options : public osg::Object
@@ -86,21 +98,33 @@ class OSGDB_EXPORT ReaderWriter : public osg::Object
                                           CACHE_OBJECTS |
                                           CACHE_SHADERS
                 };
+                
+                /// range of options of whether to build kdtrees automatically on loading
+                enum BuildKdTreesHint
+                {
+                    NO_PREFERENCE,
+                    DO_NOT_BUILD_KDTREES,
+                    BUILD_KDTREES
+                };
             
 
                 Options():
                     osg::Object(true),
-                    _objectCacheHint(CACHE_ARCHIVES) {}
+                    _objectCacheHint(CACHE_ARCHIVES),
+                    _buildKdTreesHint(NO_PREFERENCE) {}
+                    
                 Options(const std::string& str):
                     osg::Object(true),
                     _str(str), 
-                    _objectCacheHint(CACHE_ARCHIVES) {}
+                    _objectCacheHint(CACHE_ARCHIVES),
+                    _buildKdTreesHint(NO_PREFERENCE) {}
                 
                 Options(const Options& options,const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY):
                     osg::Object(options,copyop),
                     _str(options._str),
                     _databasePaths(options._databasePaths),
-                    _objectCacheHint(options._objectCacheHint) {}
+                    _objectCacheHint(options._objectCacheHint),
+                    _buildKdTreesHint(options._buildKdTreesHint) {}
 
                 META_Object(osgDB,Options);
 
@@ -119,11 +143,27 @@ class OSGDB_EXPORT ReaderWriter : public osg::Object
                 /** Get the const database path which is used a hint of where to look when loading models.*/
                 const FilePathList& getDatabasePathList() const { return _databasePaths; }
 
+
                 /** Set whether the Registry::ObjectCache should be used by default.*/
                 void setObjectCacheHint(CacheHintOptions useObjectCache) { _objectCacheHint = useObjectCache; }
 
                 /** Get whether the Registry::ObjectCache should be used by default.*/
                 CacheHintOptions getObjectCacheHint() const { return _objectCacheHint; }
+
+
+                /** Set whether the KdTrees should be built for geometry in the loader model. */
+                void setBuildKdTreesHint(BuildKdTreesHint hint) { _buildKdTreesHint = hint; }
+
+                /** Get whether the KdTrees should be built for geometry in the loader model. */
+                BuildKdTreesHint getBuildKdTreesHint() const { return _buildKdTreesHint; }
+
+
+                /** Set the password map to be used by plugins when access files from secure locations.*/
+                void setAuthenticationMap(AuthenticationMap* authenticationMap) { _authenticationMap = authenticationMap; }
+
+                /** Get the password map to be used by plugins when access files from secure locations.*/
+                const AuthenticationMap* getAuthenticationMap() const { return _authenticationMap.get(); }
+
 
                 /** Sets a plugindata value PluginData with a string */
                 void setPluginData(const std::string& s, void* v) const { _pluginData[s] = v; }
@@ -145,9 +185,11 @@ class OSGDB_EXPORT ReaderWriter : public osg::Object
 
                 virtual ~Options() {}
 
-                std::string         _str;
-                FilePathList        _databasePaths;
-                CacheHintOptions    _objectCacheHint;
+                std::string                     _str;
+                FilePathList                    _databasePaths;
+                CacheHintOptions                _objectCacheHint;
+                BuildKdTreesHint                _buildKdTreesHint;
+                osg::ref_ptr<AuthenticationMap> _authenticationMap;
 
                 typedef std::map<std::string,void*> PluginDataMap;
                 mutable PluginDataMap _pluginData;
@@ -160,11 +202,12 @@ class OSGDB_EXPORT ReaderWriter : public osg::Object
 
                 enum ReadStatus
                 {
-                    FILE_NOT_HANDLED,
-                    FILE_NOT_FOUND,
-                    FILE_LOADED,
-                    FILE_LOADED_FROM_CACHE,
-                    ERROR_IN_READING_FILE
+                    FILE_NOT_HANDLED, //!< File is not appropriate for this file reader, due to some incompatibility, but *not* a read error.
+                    FILE_NOT_FOUND, //!< File could not be found or could not be read.
+                    FILE_LOADED, //!< File successfully found, loaded, and converted into osg.
+                    FILE_LOADED_FROM_CACHE, //!< File found in cache and returned.
+                    ERROR_IN_READING_FILE, //!< File found, loaded, but an error was encountered during processing.
+                    FILE_REQUESTED //!< Asyncronous file read has been requested, but returning immediatiely, keep polling plugin till file read has been completed.
                 };
 
                 ReadResult(ReadStatus status=FILE_NOT_HANDLED):_status(status) {}
@@ -210,6 +253,7 @@ class OSGDB_EXPORT ReaderWriter : public osg::Object
                 ReadStatus                  _status;
                 std::string                 _message;
                 osg::ref_ptr<osg::Object>   _object;
+
         };
 
         class WriteResult
@@ -280,6 +324,15 @@ class OSGDB_EXPORT ReaderWriter : public osg::Object
         virtual WriteResult writeNode(const osg::Node& /*node*/,std::ostream& /*fout*/,const Options* =NULL) const { return WriteResult(WriteResult::FILE_NOT_HANDLED); }
         virtual WriteResult writeShader(const osg::Shader& /*shader*/,std::ostream& /*fout*/,const Options* =NULL) const { return WriteResult(WriteResult::FILE_NOT_HANDLED); }
 
+    protected:
+    
+        void supportsProtocol(const std::string& fmt, const std::string& description);
+        void supportsExtension(const std::string& fmt, const std::string& description);
+        void supportsOption(const std::string& fmt, const std::string& description);
+
+        FormatDescriptionMap _supportedProtocols;
+        FormatDescriptionMap _supportedExtensions;
+        FormatDescriptionMap _supportedOptions;
 };
 
 }

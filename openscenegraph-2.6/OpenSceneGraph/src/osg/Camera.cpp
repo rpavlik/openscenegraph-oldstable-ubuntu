@@ -258,17 +258,25 @@ void Camera::attach(BufferComponent buffer, GLenum internalFormat)
     _bufferAttachmentMap[buffer]._internalFormat = internalFormat;
 }
 
-void Camera::attach(BufferComponent buffer, osg::Texture* texture, unsigned int level, unsigned int face, bool mipMapGeneration)
+void Camera::attach(BufferComponent buffer, osg::Texture* texture, unsigned int level, unsigned int face, bool mipMapGeneration,
+                    unsigned int multisampleSamples, 
+                    unsigned int multisampleColorSamples)
 {
     _bufferAttachmentMap[buffer]._texture = texture;
     _bufferAttachmentMap[buffer]._level = level;
     _bufferAttachmentMap[buffer]._face = face;
     _bufferAttachmentMap[buffer]._mipMapGeneration = mipMapGeneration;
+    _bufferAttachmentMap[buffer]._multisampleSamples = multisampleSamples;
+    _bufferAttachmentMap[buffer]._multisampleColorSamples = multisampleColorSamples;
 }
 
-void Camera::attach(BufferComponent buffer, osg::Image* image)
+void Camera::attach(BufferComponent buffer, osg::Image* image,
+                    unsigned int multisampleSamples, 
+                    unsigned int multisampleColorSamples)
 {
     _bufferAttachmentMap[buffer]._image = image;
+    _bufferAttachmentMap[buffer]._multisampleSamples = multisampleSamples;
+    _bufferAttachmentMap[buffer]._multisampleColorSamples = multisampleColorSamples;
 }
 
 void Camera::detach(BufferComponent buffer)
@@ -339,6 +347,18 @@ bool Camera::computeWorldToLocalMatrix(Matrix& matrix,NodeVisitor*) const
         matrix = inverse;
     }
     return true;
+}
+
+void Camera::inheritCullSettings(const CullSettings& settings, unsigned int inheritanceMask)
+{
+    CullSettings::inheritCullSettings(settings, inheritanceMask);
+    
+    if (inheritanceMask & CLEAR_COLOR) 
+    {
+        //osg::notify(osg::NOTICE)<<"Inheriting slave Camera"<<std::endl;
+        const Camera* camera = dynamic_cast<const Camera*>(&settings);
+        _clearColor = camera->_clearColor;
+    }
 }
 
 void Camera::createCameraThread()

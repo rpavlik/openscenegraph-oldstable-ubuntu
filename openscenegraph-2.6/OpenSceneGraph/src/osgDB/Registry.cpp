@@ -39,6 +39,9 @@
     using std::tolower;
 #endif
 
+#ifndef OSG_DEBUG_POSTFIX
+#define OSG_DEBUG_POSTFIX "d"
+#endif
 
 using namespace osg;
 using namespace osgDB;
@@ -50,6 +53,8 @@ static osg::ApplicationUsageProxy Registry_e1(osg::ApplicationUsage::ENVIRONMENT
 static osg::ApplicationUsageProxy Registry_e0(osg::ApplicationUsage::ENVIRONMENTAL_VARIABLE,"OSG_FILE_PATH <path>[;path]..","Paths for locating datafiles");
 static osg::ApplicationUsageProxy Registry_e1(osg::ApplicationUsage::ENVIRONMENTAL_VARIABLE,"OSG_LIBRARY_PATH <path>[;path]..","Paths for locating libraries/ plugins");
 #endif
+
+static osg::ApplicationUsageProxy Registry_e2(osg::ApplicationUsage::ENVIRONMENTAL_VARIABLE,"OSG_BUILD_KDTREES on/off","Enable/disable the automatic building of KdTrees for each loaded Geometry.");
 
 
 class Registry::AvailableReaderWriterIterator
@@ -155,6 +160,17 @@ Registry::Registry()
     // comment out because it was causing problems under OSX - causing it to crash osgconv when constructing ostream in osg::notify().
     // notify(INFO) << "Constructing osg::Registry"<<std::endl;
 
+    _buildKdTreesHint = ReaderWriter::Options::NO_PREFERENCE;
+    _kdTreeBuilder = new osg::KdTreeBuilder;
+    
+    const char* kdtree_str = getenv("OSG_BUILD_KDTREES");
+    if (kdtree_str)
+    {
+        bool switchOff = (strcmp(kdtree_str, "off")==0 || strcmp(kdtree_str, "OFF")==0 || strcmp(kdtree_str, "Off")==0 );
+        if (switchOff) _buildKdTreesHint = ReaderWriter::Options::DO_NOT_BUILD_KDTREES;
+        else _buildKdTreesHint = ReaderWriter::Options::BUILD_KDTREES;
+    }
+
     _createNodeFromImage = false;
     _openingLibrary = false;
 
@@ -162,6 +178,8 @@ Registry::Registry()
     _archiveExtList.push_back("osga");
     
     initFilePathLists();
+
+
 
     // register file extension alias.
     const char* flt_str = getenv("OSG_OPEN_FLIGHT_PLUGIN");
@@ -233,6 +251,8 @@ Registry::Registry()
     #if defined(USE_QUICKTIME)
         addFileExtensionAlias("mov", "qt");
         addFileExtensionAlias("live", "qt");
+        addFileExtensionAlias("mpg", "qt");
+        addFileExtensionAlias("avi", "qt");
     #endif
 #endif
 
@@ -277,6 +297,8 @@ Registry::~Registry()
 
 void Registry::destruct()
 {
+    // osg::notify(osg::NOTICE)<<"Registry::destruct()"<<std::endl;
+
     // switch off the pager and its associated thread before we clean up 
     // rest of the Registry.
     _databasePager = 0;
@@ -381,7 +403,7 @@ void Registry::readCommandLine(osg::ArgumentParser& arguments)
 
     while(arguments.read("-O",value))
     {
-        setOptions(new osgDB::ReaderWriter::Options(value));
+        setOptions(new ReaderWriter::Options(value));
     }
 }
 
@@ -601,7 +623,7 @@ std::string Registry::createLibraryNameForExtension(const std::string& ext)
     return prepend+"mingw_"+"osgdb_"+lowercase_ext+".dll";
 #elif defined(WIN32)
     #ifdef _DEBUG
-        return prepend+"osgdb_"+lowercase_ext+"d.dll";
+        return prepend+"osgdb_"+lowercase_ext+ OSG_DEBUG_POSTFIX +".dll";
     #else
         return prepend+"osgdb_"+lowercase_ext+".dll";
     #endif
@@ -611,7 +633,12 @@ std::string Registry::createLibraryNameForExtension(const std::string& ext)
     // why don't we use PLUGIN_EXT from the makefiles here?
     return prepend+"osgdb_"+lowercase_ext+".sl";
 #else
-    return prepend+"osgdb_"+lowercase_ext+".so";
+    #ifdef _DEBUG
+#pragma message(OSG_DEBUG_POSTFIX)
+         return prepend+"osgdb_"+lowercase_ext+ OSG_DEBUG_POSTFIX + ".so";
+    #else
+         return prepend+"osgdb_"+lowercase_ext+".so";
+    #endif
 #endif
 
 }
@@ -624,7 +651,7 @@ std::string Registry::createLibraryNameForNodeKit(const std::string& name)
     return "lib"+name+".dll";
 #elif defined(WIN32)
     #ifdef _DEBUG
-        return name+"d.dll";
+        return name+OSG_DEBUG_POSTFIX +".dll";
     #else
         return name+".dll";
     #endif
@@ -634,7 +661,11 @@ std::string Registry::createLibraryNameForNodeKit(const std::string& name)
     // why don't we use PLUGIN_EXT from the makefiles here?
     return "lib"+name+".sl";
 #else
-    return "lib"+name+".so";
+    #ifdef _DEBUG
+        return "lib"+name+OSG_DEBUG_POSTFIX +".so";
+    #else
+        return "lib"+name+".so";
+    #endif
 #endif
 }
 
@@ -670,6 +701,8 @@ bool Registry::closeLibrary(const std::string& fileName)
 
 void Registry::closeAllLibraries()
 {
+    // osg::notify(osg::NOTICE)<<"Registry::closeAllLibraries()"<<std::endl;
+
     _dlList.clear();
 }
 
@@ -1419,32 +1452,6 @@ ReaderWriter::ReadResult Registry::read(const ReadFunctor& readFunctor)
         }
         else
         {
-            ReaderWriter* rw = getReaderWriterForExtension("net");
-            if (rw)
-            {
-                std::string serverName = getServerAddress(readFunctor._filename);
-                std::string serverFile = getServerFileName(readFunctor._filename);
-                osg::notify(osg::INFO)<<"Contains sever address : "<<serverName<<std::endl;
-                osg::notify(osg::INFO)<<"         file name on server : "<<serverFile<<std::endl;
-
-                if (serverName.empty())
-                {
-                    return ReaderWriter::ReadResult("Warning: Server address invalid.");
-                }
-
-                if (serverFile.empty())
-                {
-                    return ReaderWriter::ReadResult("Warning: Server file name invalid.");
-                }
-
-                std::string& filename = const_cast<std::string&>(readFunctor._filename);
-                filename = serverName+':'+serverFile;
-                return readFunctor.doRead(*rw);
-            }
-            else
-            {
-                return  ReaderWriter::ReadResult("Warning: Could not find the .net plugin to read from server.");
-            }
             return  ReaderWriter::ReadResult("Warning: Could not find the .curl plugin to read from server.");
         }
     }

@@ -32,6 +32,7 @@
 #include "ShadeModel.h"
 #include "Point.h"
 #include "LineWidth.h"
+#include "LineStipple.h"
 #include "Texture1D.h"
 #include "Texture2D.h"
 #include "Texture3D.h"
@@ -52,8 +53,11 @@
 #include "Viewport.h"
 #include "Scissor.h"
 #include "Image.h"
+#include "ImageSequence.h"
 #include "PointSprite.h"
 #include "Multisample.h"
+#include "Fog.h"
+#include "Light.h"
 
 #include "Group.h"
 #include "MatrixTransform.h"
@@ -761,8 +765,9 @@ void DataOutputStream::writeStateAttribute(const osg::StateAttribute* attribute)
         else if(dynamic_cast<const osg::LineWidth*>(attribute)){
             ((ive::LineWidth*)(attribute))->write(this);
         }
-        else if(dynamic_cast<const osg::LineWidth*>(attribute)){
-            ((ive::LineWidth*)(attribute))->write(this);
+        // This is a LineStipple
+        else if(dynamic_cast<const osg::LineStipple*>(attribute)){
+            ((ive::LineStipple*)(attribute))->write(this);
         }
         // This is a Texture1D
         else if(dynamic_cast<const osg::Texture1D*>(attribute)){
@@ -827,6 +832,14 @@ void DataOutputStream::writeStateAttribute(const osg::StateAttribute* attribute)
         // This is a Multisample
         else if(dynamic_cast<const osg::Multisample*>(attribute)){
             ((ive::Multisample*)(attribute))->write(this);
+        }
+        // This is a Fog
+        else if(dynamic_cast<const osg::Fog*>(attribute)){
+            ((ive::Fog*)(attribute))->write(this);
+        }
+        // This is a Light
+        else if(dynamic_cast<const osg::Light*>(attribute)){
+            ((ive::Light*)(attribute))->write(this);
         }
 
         else{
@@ -1079,6 +1092,29 @@ void DataOutputStream::writeNode(const osg::Node* node)
             throw Exception("Unknown node in Group::write()");
 
         if (_verboseOutput) std::cout<<"read/writeNode() ["<<id<<"]"<<std::endl;
+    }
+}
+
+void DataOutputStream::writeImage(osg::Image *image)
+{
+    if ( getVersion() >= VERSION_0029)
+    {
+        osg::ImageSequence* is = dynamic_cast<osg::ImageSequence*>(image);
+        if (is)
+        {
+            ((ive::ImageSequence*)(is))->write(this);
+        }
+        else
+        {
+            writeInt(IVEIMAGE);
+            writeChar(getIncludeImageMode());
+            writeImage(getIncludeImageMode(),image);
+        }
+    }
+    else
+    {
+        writeChar(getIncludeImageMode());
+        writeImage(getIncludeImageMode(),image);
     }
 }
 

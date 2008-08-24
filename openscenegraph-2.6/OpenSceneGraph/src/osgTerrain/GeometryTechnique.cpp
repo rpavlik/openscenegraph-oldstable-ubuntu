@@ -25,6 +25,7 @@
 #include <osg/TexEnvCombine>
 #include <osg/Program>
 #include <osg/Math>
+#include <osg/Timer>
 
 using namespace osgTerrain;
 
@@ -101,7 +102,7 @@ void GeometryTechnique::setFilterMatrixAs(FilterType filterType)
 
 void GeometryTechnique::init()
 {
-    // osg::notify(osg::NOTICE)<<"Doing GeometryTechnique::init()"<<std::endl;
+    osg::notify(osg::INFO)<<"Doing GeometryTechnique::init()"<<std::endl;
     
     if (!_terrainTile) return;
 
@@ -119,8 +120,6 @@ void GeometryTechnique::init()
     // smoothGeometry();
 
     if (buffer._transform.valid()) buffer._transform->setThreadSafeRefUnref(true);
-
-    _dirty = false;    
 
     swapBuffers();
 }
@@ -234,6 +233,8 @@ void GeometryTechnique::generateGeometry(Locator* masterLocator, const osg::Vec3
     double i_sampleFactor = 1.0;
     double j_sampleFactor = 1.0;
 
+    // osg::notify(osg::NOTICE)<<"Sample ratio="<<sampleRatio<<std::endl;
+
     if (sampleRatio!=1.0f)
     {
     
@@ -278,7 +279,7 @@ void GeometryTechnique::generateGeometry(Locator* masterLocator, const osg::Vec3
     
 
     float minHeight = 0.0;
-    float scaleHeight = 1.0;
+    float scaleHeight = _terrainTile->getTerrain() ? _terrainTile->getTerrain()->getVerticalScale() : 1.0f;
 
     // allocate and assign tex coords
     typedef std::pair< osg::ref_ptr<osg::Vec2Array>, Locator* > TexCoordLocatorPair;
@@ -341,7 +342,7 @@ void GeometryTechnique::generateGeometry(Locator* masterLocator, const osg::Vec3
                 float value = 0.0f;
                 validValue = elevationLayer->getValidValue(i_equiv,j_equiv, value);
                 // osg::notify(osg::INFO)<<"i="<<i<<" j="<<j<<" z="<<value<<std::endl;
-                ndc.z() = value;
+                ndc.z() = value*scaleHeight;
             }
             
             if (validValue)
@@ -373,7 +374,7 @@ void GeometryTechnique::generateGeometry(Locator* masterLocator, const osg::Vec3
 
                 if (elevations.valid())
                 {
-                    (*elevations).push_back((ndc.z()-minHeight)*scaleHeight);
+                    (*elevations).push_back(ndc.z());
                 }
 
                 // compute the local normal
@@ -644,6 +645,20 @@ void GeometryTechnique::generateGeometry(Locator* masterLocator, const osg::Vec3
 
     //geometry->setUseDisplayList(false);
     geometry->setUseVertexBufferObjects(true);
+    
+    
+    if (osgDB::Registry::instance()->getBuildKdTreesHint()==osgDB::ReaderWriter::Options::BUILD_KDTREES &&
+        osgDB::Registry::instance()->getKdTreeBuilder())
+    {
+    
+        
+        //osg::Timer_t before = osg::Timer::instance()->tick();
+        //osg::notify(osg::NOTICE)<<"osgTerrain::GeometryTechnique::build kd tree"<<std::endl;
+        osg::ref_ptr<osg::KdTreeBuilder> builder = osgDB::Registry::instance()->getKdTreeBuilder()->clone();
+        buffer._geode->accept(*builder);
+        //osg::Timer_t after = osg::Timer::instance()->tick();
+        //osg::notify(osg::NOTICE)<<"KdTree build time "<<osg::Timer::instance()->delta_m(before, after)<<std::endl;
+    }
 }
 
 void GeometryTechnique::applyColorLayers()
@@ -777,7 +792,7 @@ void GeometryTechnique::traverse(osg::NodeVisitor& nv)
     // if app traversal update the frame count.
     if (nv.getVisitorType()==osg::NodeVisitor::UPDATE_VISITOR)
     {
-        if (_dirty) _terrainTile->init();
+        if (_terrainTile->getDirty()) _terrainTile->init();
 
         osgUtil::UpdateVisitor* uv = dynamic_cast<osgUtil::UpdateVisitor*>(&nv);
         if (uv)
@@ -798,7 +813,7 @@ void GeometryTechnique::traverse(osg::NodeVisitor& nv)
     }
 
 
-    if (_dirty) 
+    if (_terrainTile->getDirty()) 
     {
         osg::notify(osg::INFO)<<"******* Doing init ***********"<<std::endl;
         _terrainTile->init();
@@ -811,10 +826,5 @@ void GeometryTechnique::traverse(osg::NodeVisitor& nv)
 
 void GeometryTechnique::cleanSceneGraph()
 {
-}
-
-void GeometryTechnique::dirty()
-{
-    TerrainTechnique::dirty();
 }
 

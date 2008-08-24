@@ -13,6 +13,7 @@
 
 #include <osg/GLExtensions>
 #include <osg/Texture2D>
+#include <osg/ImageSequence>
 #include <osg/State>
 #include <osg/Notify>
 #include <osg/GLU>
@@ -108,8 +109,22 @@ int Texture2D::compare(const StateAttribute& sa) const
 
 void Texture2D::setImage(Image* image)
 {
+    if (_image == image) return;
+
+    if (dynamic_cast<osg::ImageSequence*>(_image.get()))
+    {
+        setUpdateCallback(0);
+        setDataVariance(osg::Object::STATIC);
+    }
+
     _image = image;
     _modifiedCount.setAllElementsTo(0);
+    
+    if (dynamic_cast<osg::ImageSequence*>(_image.get()))
+    {
+        setUpdateCallback(new ImageSequence::UpdateCallback());
+        setDataVariance(osg::Object::DYNAMIC);
+    }
 }
 
 
@@ -184,7 +199,7 @@ void Texture2D::apply(State& state) const
         computeRequiredTextureDimensions(state,*image,_textureWidth, _textureHeight, _numMipmapLevels);
         
         
-        _textureObjectBuffer[contextID] = textureObject = generateTextureObject(
+         textureObject = generateTextureObject(
                 contextID,GL_TEXTURE_2D,_numMipmapLevels,_internalFormat,_textureWidth,_textureHeight,1,0);
         
         textureObject->bind();
@@ -210,6 +225,7 @@ void Texture2D::apply(State& state) const
         // update the modified tag to show that it is upto date.
         getModifiedCount(contextID) = image->getModifiedCount();
 
+        _textureObjectBuffer[contextID] = textureObject;
 
         if (_unrefImageDataAfterApply && areAllTextureObjectsLoaded() && image->getDataVariance()==STATIC)
         {
@@ -311,25 +327,21 @@ void Texture2D::copyTexImage2D(State& state, int x, int y, int width, int height
     bool hardwareMipMapOn = false;
     if (needHardwareMipMap)
     {
-        const Extensions* extensions = getExtensions(contextID,true);
-        bool generateMipMapSupported = extensions->isGenerateMipMapSupported();
-
-        hardwareMipMapOn = _useHardwareMipMapGeneration && generateMipMapSupported;
+        hardwareMipMapOn = isHardwareMipmapGenerationEnabled(state);
         
         if (!hardwareMipMapOn)
         {
-            // have to swtich off mip mapping
-            notify(NOTICE)<<"Warning: Texture2D::copyTexImage2D(,,,,) switch of mip mapping as hardware support not available."<<std::endl;
+            // have to switch off mip mapping
+            notify(NOTICE)<<"Warning: Texture2D::copyTexImage2D(,,,,) switch off mip mapping as hardware support not available."<<std::endl;
             _min_filter = LINEAR;
         }
     }
     
-    if (hardwareMipMapOn) glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP_SGIS,GL_TRUE);
+    GenerateMipmapMode mipmapResult = mipmapBeforeTexImage(state, hardwareMipMapOn);
 
     glCopyTexImage2D( GL_TEXTURE_2D, 0, _internalFormat, x, y, width, height, 0 );
 
-    if (hardwareMipMapOn) glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP_SGIS,GL_FALSE);
-
+    mipmapAfterTexImage(state, mipmapResult);
 
     _textureWidth = width;
     _textureHeight = height;
@@ -362,24 +374,21 @@ void Texture2D::copyTexSubImage2D(State& state, int xoffset, int yoffset, int x,
         bool hardwareMipMapOn = false;
         if (needHardwareMipMap)
         {
-            const Extensions* extensions = getExtensions(contextID,true);
-            bool generateMipMapSupported = extensions->isGenerateMipMapSupported();
-
-            hardwareMipMapOn = _useHardwareMipMapGeneration && generateMipMapSupported;
+            hardwareMipMapOn = isHardwareMipmapGenerationEnabled(state);
 
             if (!hardwareMipMapOn)
             {
-                // have to swtich off mip mapping
-                notify(NOTICE)<<"Warning: Texture2D::copyTexImage2D(,,,,) switch of mip mapping as hardware support not available."<<std::endl;
+                // have to switch off mip mapping
+                notify(NOTICE)<<"Warning: Texture2D::copyTexImage2D(,,,,) switch off mip mapping as hardware support not available."<<std::endl;
                 _min_filter = LINEAR;
             }
         }
 
-        if (hardwareMipMapOn) glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP_SGIS,GL_TRUE);
+        GenerateMipmapMode mipmapResult = mipmapBeforeTexImage(state, hardwareMipMapOn);
 
         glCopyTexSubImage2D( GL_TEXTURE_2D, 0, xoffset, yoffset, x, y, width, height);
 
-        if (hardwareMipMapOn) glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP_SGIS,GL_FALSE);
+        mipmapAfterTexImage(state, mipmapResult);
 
         // inform state that this texture is the current one bound.
         state.haveAppliedTextureAttribute(state.getActiveTextureUnit(), this);
