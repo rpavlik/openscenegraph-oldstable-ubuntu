@@ -4,9 +4,10 @@ Priority: optional
 Maintainer: Loic Dachary (OuoU) <loic@debian.org>
 Build-Depends: debhelper (>= 4.0.0), dpatch, cmake, g++ (>= 3.3.0), libungif4-dev | giflib-dev, libjpeg-dev, libtiff-dev, lib3ds-dev, libfreetype6-dev, libpng12-dev, libcoin40-dev, libjasper-dev, libgdal-dev, libx11-dev, libxmu-dev, libglut-dev, ccache, xlibmesa-gl-dev | libgl-dev, xlibmesa-glu-dev | libglu-dev, doxygen, libxine-dev
 Standards-Version: 3.7.2
+Uploaders: Cyril Brulebois <cyril.brulebois@enst-bretagne.fr>
 
 Package: libopenthreads-dev
-Section: libdevel
+Section: devel
 Architecture: any
 Depends: libopenthreads7 (= ${Source-Version})
 Description: Object-Oriented (OO) thread interface for C++ programmers, development files
@@ -29,7 +30,7 @@ Description: Object-Oriented (OO) thread interface for C++ programmers, developm
  in a shared object library. 
 
 Package: openthreads-doc
-Section: doc
+Section: devel
 Architecture: all
 Description: Documentation for Object-Oriented (OO) thread interface
  This library is intended to provide a minimal & complete Object-Oriented (OO) 
@@ -39,7 +40,7 @@ Description: Documentation for Object-Oriented (OO) thread interface
  in a shared object library. 
 
 Package: libopenscenegraph-dev
-Section: libdevel
+Section: devel
 Architecture: any
 Depends: libopenthreads-dev, xlibmesa-gl-dev | libgl-dev, xlibmesa-glu-dev | libglu-dev, libopenscenegraph7 (= ${Source-Version})
 Description: 3D scenegraph development files
@@ -67,7 +68,7 @@ Description: 3D scenegraph
 
 
 Package: openscenegraph-doc
-Section: doc
+Section: devel
 Architecture: all
 Description: 3D scenegraph documentation
  A portable, high level graphics toolkit for the development of high

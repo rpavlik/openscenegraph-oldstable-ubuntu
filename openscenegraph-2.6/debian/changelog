@@ -1,29 +1,31 @@
-openscenegraph (2.4.0-2) unstable; urgency=low
+openscenegraph (2.6.0-1) experimental; urgency=low
 
-  * Remove Cyril Brulebois from Uploaders on his request.
+  * New upstream release.
+  * Debian patches are no longer needed with the new upstream sources and
+    are therefore removed.
+  * libopenscenegraph7 bumped to 44.
+  * libopenthreads7 bumped to 11.
+  * Added myself to Uploaders to clarify that I'm involved at request
+    by Loic. Loic may remove it later when needed.
 
-  * debian/rules: don't try to be smart about -j because it can lead to -j0
-    (Closes: #477353)
+ -- Ola Lundqvist <opal@debian.org>  Wed, 20 Aug 2008 07:47:50 +0200
 
-  * openthreads-doc and openscenegraph-doc in section doc
-  
-  * debian/rules: man pages files end with .1
+openscenegraph (2.4.0-1.1) unstable; urgency=low
 
-  * debian/control.unstable: control and control.unstable must be the same
+  * Non-maintainer upload.
+  * No longer try to detect (using /proc/cpuinfo when available) how many
+    CPUs are available, fixing the FTBFS (due to -j0) on various platforms
+    (Closes: #477353). The right way to do it is to support parallel=n in
+    DEB_BUILD_OPTIONS (see Debian Policy §4.9.1), and adequate support has
+    been implemented.
+  * Add patch to fix FTBFS due to the build system now refusing to handle
+    whitespaces (Policy CMP0004 say the logs), thanks to Andreas Putzo who
+    provided it (Closes: #482239):
+     - debian/patches/fix-cmp0004-build-failure.dpatch
+  * Remove myself from Uploaders, as requested a while ago, done by Luk in
+    his 2.2.0-2.1 NMU, which was never acknowledged.
 
-  * debian/control: change libopenscenegraph-dev and 
-    libopenscenegraph-dev to libdevel instead of devel
-
-  * debian/osgapplications.1, debian/osgexamples.1:
-    names and years updates
-
-  * debian/osgapplications.1, debian/osgexamples.1,
-    debian/rules: be whatis friendly by creating proper name entries
-
-  * debian/changelog, debian/control, 
-    debian/rules: simpler -j option for make + updated list of man pages
-
- -- Loic Dachary (OuoU) <loic@debian.org>  Thu, 01 May 2008 19:56:49 +0200
+ -- Cyril Brulebois <kibi@debian.org>  Tue, 29 Jul 2008 04:34:38 +0200
 
 openscenegraph (2.4.0-1) unstable; urgency=low
 
