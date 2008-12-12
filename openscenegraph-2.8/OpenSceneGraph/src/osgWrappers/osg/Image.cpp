@@ -12,6 +12,7 @@
 
 #include <osg/BufferObject>
 #include <osg/CopyOp>
+#include <osg/FrameStamp>
 #include <osg/Image>
 #include <osg/NodeVisitor>
 #include <osg/Object>
@@ -28,6 +29,13 @@
 #endif
 
 TYPE_NAME_ALIAS(std::vector< unsigned int >, osg::Image::MipmapDataType)
+
+BEGIN_ENUM_REFLECTOR(osg::Image::WriteHint)
+	I_DeclaringFile("osg/Image");
+	I_EnumLabel(osg::Image::NO_PREFERENCE);
+	I_EnumLabel(osg::Image::STORE_INLINE);
+	I_EnumLabel(osg::Image::EXTERNAL_FILE);
+END_REFLECTOR
 
 BEGIN_ENUM_REFLECTOR(osg::Image::AllocationMode)
 	I_DeclaringFile("osg/Image");
@@ -90,6 +98,16 @@ BEGIN_OBJECT_REFLECTOR(osg::Image)
 	I_Method0(const std::string &, getFileName,
 	          Properties::NON_VIRTUAL,
 	          __C5_std_string_R1__getFileName,
+	          "",
+	          "");
+	I_Method1(void, setWriteHint, IN, osg::Image::WriteHint, writeHint,
+	          Properties::NON_VIRTUAL,
+	          __void__setWriteHint__WriteHint,
+	          "",
+	          "");
+	I_Method0(osg::Image::WriteHint, getWriteHint,
+	          Properties::NON_VIRTUAL,
+	          __WriteHint__getWriteHint,
 	          "",
 	          "");
 	I_Method1(void, setAllocationMode, IN, osg::Image::AllocationMode, mode,
@@ -357,6 +375,21 @@ BEGIN_OBJECT_REFLECTOR(osg::Image)
 	          __void__update__NodeVisitor_P1,
 	          "",
 	          "");
+	I_Method3(void, sendPointerEvent, IN, int, x, IN, int, y, IN, int, buttonMask,
+	          Properties::VIRTUAL,
+	          __void__sendPointerEvent__int__int__int,
+	          "method for sending pointer events to images that are acting as front ends to interactive surfaces such as a vnc or browser window. ",
+	          "");
+	I_Method2(void, sendKeyEvent, IN, int, key, IN, bool, keyDown,
+	          Properties::VIRTUAL,
+	          __void__sendKeyEvent__int__bool,
+	          "method for sending key events to images that are acting as front ends to interactive surfaces such as a vnc or browser window. ",
+	          "");
+	I_Method1(void, setFrameLastRendered, IN, const osg::FrameStamp *, frameStamp,
+	          Properties::VIRTUAL,
+	          __void__setFrameLastRendered__C5_osg_FrameStamp_P1,
+	          "method for passing frame information to the custom Image classes, to be called only when objects associated with imagery are not culled. ",
+	          "");
 	I_StaticMethod1(bool, isPackedType, IN, GLenum, type,
 	                __bool__isPackedType__GLenum_S,
 	                "",
@@ -406,6 +439,9 @@ BEGIN_OBJECT_REFLECTOR(osg::Image)
 	I_SimpleProperty(const std::string &, FileName, 
 	                 __C5_std_string_R1__getFileName, 
 	                 __void__setFileName__C5_std_string_R1);
+	I_SimpleProperty(const osg::FrameStamp *, FrameLastRendered, 
+	                 0, 
+	                 __void__setFrameLastRendered__C5_osg_FrameStamp_P1);
 	I_SimpleProperty(unsigned int, ImageSizeInBytes, 
 	                 __unsigned_int__getImageSizeInBytes, 
 	                 0);
@@ -442,6 +478,9 @@ BEGIN_OBJECT_REFLECTOR(osg::Image)
 	I_SimpleProperty(unsigned int, TotalSizeInBytesIncludingMipmaps, 
 	                 __unsigned_int__getTotalSizeInBytesIncludingMipmaps, 
 	                 0);
+	I_SimpleProperty(osg::Image::WriteHint, WriteHint, 
+	                 __WriteHint__getWriteHint, 
+	                 __void__setWriteHint__WriteHint);
 END_REFLECTOR
 
 STD_VECTOR_REFLECTOR(std::vector< unsigned int >)

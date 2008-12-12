@@ -1,15 +1,21 @@
 
 IF   (DYNAMIC_OPENSCENEGRAPH)
     ADD_DEFINITIONS(-DOSGDB_LIBRARY)
+
+    # Add a default plugin search path component
+    ADD_DEFINITIONS(-DOSG_DEFAULT_LIBRARY_PATH=${CMAKE_INSTALL_PREFIX}/lib${LIB_POSTFIX}/${OSG_PLUGINS})
 ELSE (DYNAMIC_OPENSCENEGRAPH)
     ADD_DEFINITIONS(-DOSG_LIBRARY_STATIC)
 ENDIF(DYNAMIC_OPENSCENEGRAPH)
+
+
 
 SET(LIB_NAME osgDB)
 SET(HEADER_PATH ${OpenSceneGraph_SOURCE_DIR}/include/${LIB_NAME})
 SET(LIB_PUBLIC_HEADERS
     ${HEADER_PATH}/Archive
     ${HEADER_PATH}/AuthenticationMap
+    ${HEADER_PATH}/ConvertUTF
     ${HEADER_PATH}/DatabasePager
     ${HEADER_PATH}/DotOsgWrapper
     ${HEADER_PATH}/DynamicLibrary
@@ -17,8 +23,10 @@ SET(LIB_PUBLIC_HEADERS
     ${HEADER_PATH}/Field
     ${HEADER_PATH}/FieldReader
     ${HEADER_PATH}/FieldReaderIterator
+    ${HEADER_PATH}/FileCache
     ${HEADER_PATH}/FileNameUtils
     ${HEADER_PATH}/FileUtils
+    ${HEADER_PATH}/fstream
     ${HEADER_PATH}/ImageOptions
     ${HEADER_PATH}/ImagePager
     ${HEADER_PATH}/Input
@@ -28,6 +36,7 @@ SET(LIB_PUBLIC_HEADERS
     ${HEADER_PATH}/ReaderWriter
     ${HEADER_PATH}/ReadFile
     ${HEADER_PATH}/Registry
+    ${HEADER_PATH}/Serializer
     ${HEADER_PATH}/SharedStateManager
     ${HEADER_PATH}/Version
     ${HEADER_PATH}/WriteFile
@@ -39,14 +48,17 @@ ADD_LIBRARY(${LIB_NAME}
     ${LIB_PUBLIC_HEADERS}
     Archive.cpp
     AuthenticationMap.cpp
+    ConvertUTF.cpp
     DatabasePager.cpp
     DotOsgWrapper.cpp
     DynamicLibrary.cpp
     Field.cpp
     FieldReader.cpp
     FieldReaderIterator.cpp
+    FileCache.cpp
     FileNameUtils.cpp
     FileUtils.cpp
+    fstream.cpp
     ImageOptions.cpp
     ImagePager.cpp
     Input.cpp
@@ -82,6 +94,8 @@ IF(OPENVRML_FOUND)
         ADD_DEFINITIONS(-DUSE_VRML)
 ENDIF(OPENVRML_FOUND)
 
+
+ADD_DEFINITIONS(-DOSG_PLUGIN_EXTENSION=${CMAKE_SHARED_LIBRARY_SUFFIX})
 
 LINK_INTERNAL(${LIB_NAME}     
     osg

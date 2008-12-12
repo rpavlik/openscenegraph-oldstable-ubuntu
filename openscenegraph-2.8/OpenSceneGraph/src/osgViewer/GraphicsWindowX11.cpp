@@ -668,8 +668,8 @@ bool GraphicsWindowX11::createWindow()
                              _traits->y,
                              _traits->width, _traits->height, 0,
                              _visualInfo->depth, InputOutput,
-                             _visualInfo->visual, mask, &swatt );
-                             
+                             _visualInfo->visual, mask, &swatt );                          
+
     if (!_window)
     {
         osg::notify(osg::NOTICE)<<"Error: Unable to create Window."<<std::endl;
@@ -705,9 +705,10 @@ bool GraphicsWindowX11::createWindow()
     // now update the window dimensions to account for any size changes made by the window manager,
     XGetWindowAttributes( _display, _window, &watt );
     
-    if (_traits->width != watt.width && _traits->height != watt.height)
+    if (_traits->x != watt.x || _traits->y != watt.y
+        ||_traits->width != watt.width || _traits->height != watt.height)
     {
-        resized( _traits->x, _traits->y, _traits->width, _traits->height );
+        resized( watt.x, watt.y, watt.width, watt.height );
     }
         
     //osg::notify(osg::NOTICE)<<"After sync apply.x = "<<watt.x<<" watt.y="<<watt.y<<" width="<<watt.width<<" height="<<watt.height<<std::endl;
@@ -1743,4 +1744,34 @@ RegisterWindowingSystemInterfaceProxy createWindowingSystemInterfaceProxy;
 extern "C" void graphicswindow_X11(void)
 {
     osg::GraphicsContext::setWindowingSystemInterface(new X11WindowingSystemInterface);
+}
+
+
+void GraphicsWindowX11::raiseWindow()
+{
+    Display* display = getDisplayToUse();
+    XWindowAttributes winAttrib;
+
+    Window root_return, parent_return, *children;
+    unsigned int nchildren, i=0;
+    XTextProperty windowName;
+    bool xraise = false;
+    
+
+    XQueryTree(display, _parent, &root_return, &parent_return, &children, &nchildren);
+    while (!xraise &&  i<nchildren)
+    {
+    XGetWMName(display,children[i++],&windowName);
+        if ((windowName.nitems != 0) && (strcmp(_traits->windowName.c_str(),(const char *)windowName.value) == 0)) xraise = true;
+    }
+    if (xraise) XRaiseWindow(display,_window);
+    else 
+    {
+    XGetWindowAttributes(display, _window, &winAttrib);
+    XReparentWindow(display, _window, _parent, winAttrib.x, winAttrib.y);
+    }
+    XFree(children);
+
+    XFlush(display); 
+    XSync(display,0);
 }

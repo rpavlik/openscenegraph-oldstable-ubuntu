@@ -19,14 +19,24 @@ if(COMMAND cmake_policy)
     # Works around warnings about escaped quotes in ADD_DEFINITIONS
     # statements.
     cmake_policy(SET CMP0005 NEW)
+
+    # cmake-2.6.1 introduces policy cmp0008 decide how to treat full path libraries that do not appear to be valid library file names
+    # quote from cvslog "Such libraries worked by accident in the VS IDE and Xcode generators in CMake 2.4 and below."
+    if(POLICY CMP0008)
+        cmake_policy(SET CMP0008 OLD)
+    endif(POLICY CMP0008)
 endif(COMMAND cmake_policy)
 
 PROJECT(OpenSceneGraph)
 
 SET(OPENSCENEGRAPH_MAJOR_VERSION 2)
-SET(OPENSCENEGRAPH_MINOR_VERSION 6)
-SET(OPENSCENEGRAPH_PATCH_VERSION 0)
-SET(OPENSCENEGRAPH_SOVERSION 44)
+SET(OPENSCENEGRAPH_MINOR_VERSION 7)
+SET(OPENSCENEGRAPH_PATCH_VERSION 6)
+SET(OPENSCENEGRAPH_SOVERSION 51)
+
+# set to 0 when not a release candidate, non zero means that any generated 
+# svn tags will be treated as release candidates of given number
+SET(OPENSCENEGRAPH_RELEASE_CANDIDATE 0)
 
 SET(OPENSCENEGRAPH_VERSION ${OPENSCENEGRAPH_MAJOR_VERSION}.${OPENSCENEGRAPH_MINOR_VERSION}.${OPENSCENEGRAPH_PATCH_VERSION})
 
@@ -81,6 +91,65 @@ IF(CMAKE_SYSTEM MATCHES IRIX)
     SET(CMAKE_THREAD_LIBS_INIT "" CACHE INTERNAL "")
 ENDIF(CMAKE_SYSTEM MATCHES IRIX)
 
+OPTION(OSG_MAINTAINER "Enable OpenSceneGraph maintainer build methods, such as making svn branches, tags, updating ChangeLog." OFF)
+IF (OSG_MAINTAINER)
+
+    SET(OPENSCENEGRAPH_SVN "trunk")
+    #SET(OPENSCENEGRAPH_SVN "branches")
+    SET(OPENSCENEGRAPH_BRANCH OpenSceneGraph-${OPENSCENEGRAPH_MAJOR_VERSION}.${OPENSCENEGRAPH_MINOR_VERSION})
+
+    #
+    # Provide target for tagging a release
+    #
+    SET(SVNCOMMAND svn)
+    SET(SVNTRUNKDIR     http://www.openscenegraph.org/svn/osg/OpenSceneGraph/trunk)
+    SET(SVNTAGDIR       http://www.openscenegraph.org/svn/osg/OpenSceneGraph/tags)
+    SET(SVNBRANCHDIR    http://www.openscenegraph.org/svn/osg/OpenSceneGraph/branch)
+
+    IF   (OPENSCENEGRAPH_SVN STREQUAL "trunk")
+        SET(SVNSOURCEDIR ${SVNTRUNKDIR})
+    ELSE (OPENSCENEGRAPH_SVN STREQUAL "trunk")
+        SET(SVNSOURCEDIR ${SVNBRANCH_DIR}/${OPENSCENEGRAPH_BRANCH})
+    ENDIF(OPENSCENEGRAPH_SVN STREQUAL "trunk")
+
+
+    IF   (OPENSCENEGRAPH_RELEASE_CANDIDATE EQUAL 0)
+        SET(RELEASE_NAME OpenSceneGraph-${OPENSCENEGRAPH_VERSION})
+    ELSE (OPENSCENEGRAPH_RELEASE_CANDIDATE EQUAL 0)
+        SET(RELEASE_NAME OpenSceneGraph-${OPENSCENEGRAPH_VERSION}-rc${OPENSCENEGRAPH_RELEASE_CANDIDATE})
+    ENDIF(OPENSCENEGRAPH_RELEASE_CANDIDATE EQUAL 0)
+
+
+    ADD_CUSTOM_TARGET(tag-test
+        COMMAND echo ${SVNCOMMAND} copy ${SVNSOURCEDIR} ${SVNTAGDIR}/${RELEASE_NAME} -m "Release ${RELEASE_NAME}"
+    )
+
+    ADD_CUSTOM_TARGET(tag-run
+        COMMAND ${SVNCOMMAND} copy ${SVNSOURCEDIR} ${SVNTAGDIR}/${RELEASE_NAME} -m "Release ${RELEASE_NAME}"
+    )
+
+    ADD_CUSTOM_TARGET(branch-test
+        COMMAND echo ${SVNCOMMAND} copy ${SVNSOURCEDIR} ${SVNBRANCHDIR}/${OPENSCENEGRAPH_BRANCH} -m "Branch ${OPENSCENEGRAPH_BRANCH}"
+    )
+
+    ADD_CUSTOM_TARGET(branch-run
+        COMMAND ${SVNCOMMAND} copy ${SVNSOURCEDIR} ${SVNBRANCHDIR}/${OPENSCENEGRAPH_BRANCH} -m "Branch ${OPENSCENEGRAPH_BRANCH}"
+    )
+
+    #
+    # Provide target for generating ChangeLog
+    #
+    SET(SVN2LOG ~/bin/svn2log.py)
+    SET(GENERATELOGS ${SVNCOMMAND} log -v --xml | python ${SVN2LOG} -L -H)
+
+    ADD_CUSTOM_TARGET(ChangeLog
+        COMMAND ${SVNCOMMAND} update
+        COMMAND ${GENERATELOGS}
+    )
+    
+ENDIF(OSG_MAINTAINER)
+
+
 # Find OpenGL
 FIND_PACKAGE(OpenGL)
 
@@ -121,6 +190,11 @@ IF(WIN32)
         IF(WIN32_USE_MP)
             SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
         ENDIF(WIN32_USE_MP)
+
+        # turn off various warnings
+        foreach(warning 4244 4251 4267 4275 4290 4786 4305 4996)
+            SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd${warning}")
+        endforeach(warning)
 
         # More MSVC specific compilation flags
         ADD_DEFINITIONS(-D_SCL_SECURE_NO_WARNINGS)
@@ -194,6 +268,13 @@ MARK_AS_ADVANCED(OSG_USE_FLOAT_BOUNDINGSPHERE)
 OPTION(OSG_USE_FLOAT_BOUNDINGBOX "Set to ON to build OpenSceneGraph with float BoundingBox instead of double." ON)
 MARK_AS_ADVANCED(OSG_USE_FLOAT_BOUNDINGBOX)
 
+OPTION(OSG_USE_UTF8_FILENAME "Set to ON to use a UTF8 locale for filenames instead of the default locale." OFF)
+MARK_AS_ADVANCED(OSG_USE_UTF8_FILENAME)
+
+OPTION(OSG_DISABLE_MSVC_WARNINGS "Set to OFF to not disable MSVC wartnings genertated by OSG headers." ON)
+MARK_AS_ADVANCED(OSG_DISABLE_MSVC_WARNINGS)
+
+OPTION(OSG_USE_REF_PTR_IMPLICIT_OUTPUT_CONVERSION "Set to ON to use the ref_ptr<> T* operator() output conversion. " ON)
 
 ################################################################################
 # Set Config file
@@ -218,6 +299,7 @@ FIND_PACKAGE(SDL)
 FIND_PACKAGE(FOX)
 FIND_PACKAGE(Inventor)
 FIND_PACKAGE(Jasper)
+FIND_PACKAGE(OpenEXR)
 FIND_PACKAGE(COLLADA)
 FIND_PACKAGE(Xine)
 FIND_PACKAGE(OpenVRML)
@@ -225,6 +307,11 @@ FIND_PACKAGE(Performer)
 FIND_PACKAGE(ZLIB)
 FIND_PACKAGE(GDAL)
 FIND_PACKAGE(CURL)
+FIND_PACKAGE(ZLIB)
+FIND_PACKAGE(ITK)
+FIND_PACKAGE(LibVNCServer)
+FIND_PACKAGE(OurDCMTK)
+FIND_PACKAGE(XUL)
 
 SET(wxWidgets_USE_LIBS base core gl net)
 FIND_PACKAGE(wxWidgets)
@@ -266,8 +353,12 @@ IF(PKG_CONFIG_FOUND)
 
     PKG_CHECK_MODULES(RSVG librsvg-2.0)
     PKG_CHECK_MODULES(CAIRO cairo)
+    PKG_CHECK_MODULES(POPPLER poppler-glib)
 
 ENDIF(PKG_CONFIG_FOUND)
+
+
+
 
 #
 # Test to determine if we want the "tripledot" form of the GLU tesselator callback.
@@ -302,7 +393,7 @@ IF(NOT DEFAULT_GLU_TESS_CALLBACK_TRIPLEDOT)
     ENDIF(WIN32 OR CMAKE_SYSTEM_NAME MATCHES "Linux")
 ENDIF(NOT DEFAULT_GLU_TESS_CALLBACK_TRIPLEDOT)
 
-OPTION(OSG_GLU_TESS_CALLBACK_TRIPLEDOT "Set to ON to build build with variable parameter (...) version of GLU tesselator callback" ${DEFAULT_GLU_TESS_CALLBACK_TRIPLEDOT})
+OPTION(OSG_GLU_TESS_CALLBACK_TRIPLEDOT "Set to ON to build with variable parameter (...) version of GLU tesselator callback" ${DEFAULT_GLU_TESS_CALLBACK_TRIPLEDOT})
 IF(OSG_GLU_TESS_CALLBACK_TRIPLEDOT)
     ADD_DEFINITIONS(-DGLU_TESS_CALLBACK_TRIPLEDOT)
 ENDIF(OSG_GLU_TESS_CALLBACK_TRIPLEDOT)
@@ -348,17 +439,19 @@ ENDIF("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
 # Installation stuff
 
 SET(CMAKE_DEBUG_POSTFIX "d" CACHE STRING "add a postfix, usually d on windows")
-IF(${CMAKE_MAJOR_VERSION} EQUAL 2 AND ${CMAKE_MINOR_VERSION} GREATER 4)
-  ADD_DEFINITIONS(-DOSG_DEBUG_POSTFIX="${CMAKE_DEBUG_POSTFIX}")
-ELSE(${CMAKE_MAJOR_VERSION} EQUAL 2 AND ${CMAKE_MINOR_VERSION} GREATER 4)
-  ADD_DEFINITIONS(-DOSG_DEBUG_POSTFIX='\"${CMAKE_DEBUG_POSTFIX}\"')
-ENDIF(${CMAKE_MAJOR_VERSION} EQUAL 2 AND ${CMAKE_MINOR_VERSION} GREATER 4)
+ADD_DEFINITIONS(-DOSG_DEBUG_POSTFIX=${CMAKE_DEBUG_POSTFIX})
+
 IF(UNIX AND NOT WIN32 AND NOT APPLE)
   IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
     ADD_DEFINITIONS("-D_DEBUG")
   ENDIF(CMAKE_BUILD_TYPE STREQUAL "Debug")
 ENDIF(UNIX AND NOT WIN32 AND NOT APPLE)
 
+IF(CYGWIN)
+  IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    ADD_DEFINITIONS("-D_DEBUG")
+  ENDIF(CMAKE_BUILD_TYPE STREQUAL "Debug")
+ENDIF(CYGWIN)
 
 IF(UNIX AND NOT WIN32 AND NOT APPLE)
   IF(CMAKE_SIZEOF_VOID_P MATCHES "8")
@@ -461,6 +554,12 @@ IF   (BUILD_OSG_EXAMPLES)
     ADD_SUBDIRECTORY(examples)
 ENDIF(BUILD_OSG_EXAMPLES)
 
+# OSG Examples
+OPTION(BUILD_OSG_ANIMATIONTEST "Enable to build OSG Examples" OFF)
+IF   (BUILD_OSG_ANIMATIONTEST)
+    ADD_SUBDIRECTORY(test)
+ENDIF(BUILD_OSG_ANIMATIONTEST)
+
 # This is for an advanced option to give aggressive warnings
 # under different compilers. If yours is not implemented, this option
 # will not be made available.
@@ -551,6 +650,18 @@ IF(APPLE)
 
 ENDIF(APPLE)
 
+
+#
+# Provide target for generating wrappers
+#
+SET(GENWRAPPER genwrapper)
+
+ADD_CUSTOM_TARGET(wrappers
+    COMMAND ${GENWRAPPER} -c ${OpenSceneGraph_SOURCE_DIR}/src/osgWrappers/genwrapper.conf -t ${OpenSceneGraph_SOURCE_DIR}/src/osgWrappers/Doxyfile.template -d ${OpenSceneGraph_SOURCE_DIR} | doxygen -
+    COMMAND ${GENWRAPPER} -c ${OpenSceneGraph_SOURCE_DIR}/src/osgWrappers/genwrapper.conf -l ${OpenSceneGraph_SOURCE_DIR}
+)
+
+
 OPTION(BUILD_REF_DOCS "Build OpenSceneGraph reference documentation using doxygen (use: make DoxygenDoc)" OFF)
 
 IF(BUILD_REF_DOCS)
@@ -602,6 +713,13 @@ IF(BUILD_DOCUMENTATION)
     )
 ENDIF(BUILD_DOCUMENTATION)
 
+OPTION(BUILD_DASHBOARD_REPORTS "Set to ON to activate reporting of OpenSceneGraph builds here http://www.cdash.org/CDashPublic/index.php?project=OpenSceneGraph" OFF)
+IF(BUILD_DASHBOARD_REPORTS)
+# The following are required to uses Dart and the Cdash dashboard
+# viewable here : http://www.cdash.org/CDashPublic/index.php?project=OpenSceneGraph
+    INCLUDE(Dart)
+ENDIF(BUILD_DASHBOARD_REPORTS)
+
 # This needs to be run very last so other parts of the scripts can take
 # advantage of this.
 IF(NOT OSG_CONFIG_HAS_BEEN_RUN_BEFORE)
@@ -618,4 +736,3 @@ CONFIGURE_FILE(
   IMMEDIATE @ONLY)
 ADD_CUSTOM_TARGET(uninstall
   "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake")
-

@@ -230,7 +230,7 @@ FltExportVisitor::apply( osg::LOD& lodNode )
         writeComment( lodNode );
 
         // Traverse each child of the LOD
-        writePushTraverseWritePop( *lodChild );
+        writePushTraverseChildWritePop( *lodChild );
     }
 
 }
@@ -256,22 +256,24 @@ FltExportVisitor::apply( osg::MatrixTransform& node )
             (*m) *= *rm;
     }
 
-    std::vector< osg::Referenced* > saveUserDataList;
+    typedef std::vector< osg::ref_ptr< osg::Referenced > > UserDataList;
+    
+    UserDataList saveUserDataList( node.getNumChildren() );
+
     unsigned int idx;
-    for( idx=0; idx<node.getNumChildren(); idx++ )
+    for( idx=0; idx<node.getNumChildren(); ++idx )
     {
-        saveUserDataList.push_back( node.getChild( idx )->getUserData() );
+        saveUserDataList[ idx ] = node.getChild( idx )->getUserData();
         node.getChild( idx )->setUserData( m.get() );
     }
 
     traverse( (osg::Node&)node );
 
     // Restore saved UserData.
-    unsigned int nd = node.getNumChildren();
-    while (nd--)
-        node.getChild( nd )->setUserData(
-            saveUserDataList[ nd ] );
-
+    for( idx=0; idx< node.getNumChildren(); ++idx )
+    {
+      node.getChild( idx )->setUserData( saveUserDataList[ idx ].get() );
+    }
 }
 
 void
@@ -280,27 +282,29 @@ FltExportVisitor::apply( osg::PositionAttitudeTransform& node )
     _firstNode = false;
     ScopedStatePushPop guard( this, node.getStateSet() );
 
-    osg::ref_ptr<osg::RefMatrix> m = new osg::RefMatrix;
+    osg::ref_ptr<osg::RefMatrix> m = new osg::RefMatrix(
+        osg::Matrix::translate( -node.getPivotPoint() ) *
+        osg::Matrix::scale( node.getScale() ) *
+        osg::Matrix::rotate( node.getAttitude() ) *
+        osg::Matrix::translate( node.getPosition() ) );
 
-    const osg::Vec3d& trans = node.getPosition();
-    const osg::Quat& rot = node.getAttitude();
-    m->set(osg::Matrix::translate(trans) * osg::Matrix::rotate(rot) );
+    typedef std::vector< osg::ref_ptr< osg::Referenced > > UserDataList;
+    UserDataList saveUserDataList( node.getNumChildren() );
 
-    std::vector< osg::Referenced* > saveUserDataList;
     unsigned int idx;
-    for( idx=0; idx<node.getNumChildren(); idx++ )
+    for( idx=0; idx<node.getNumChildren(); ++idx )
     {
-        saveUserDataList.push_back( node.getChild( idx )->getUserData() );
+        saveUserDataList[ idx ] = node.getChild( idx )->getUserData();
         node.getChild( idx )->setUserData( m.get() );
     }
 
     traverse( (osg::Node&)node );
 
     // Restore saved UserData.
-    unsigned int nd = node.getNumChildren();
-    while (nd--)
-        node.getChild( nd )->setUserData(
-            saveUserDataList[ nd ] );
+    for( idx=0; idx<node.getNumChildren(); ++idx )
+    {
+        node.getChild( idx )->setUserData( saveUserDataList[ idx ].get() );
+    }
 
 }
 
@@ -501,7 +505,7 @@ FltExportVisitor::complete( const osg::Node& node )
     // Copy record data temp file into final OpenFlight file.
     // Yee-uck. TBD need better stream copy routine.
     char buf;
-    std::ifstream recIn;
+    osgDB::ifstream recIn;
     recIn.open( _recordsTempName.c_str(), std::ios::in | std::ios::binary );
     while (!recIn.eof() )
     {

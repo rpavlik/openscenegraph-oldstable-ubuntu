@@ -33,6 +33,7 @@
 #include <osgDB/Registry>
 #include <osgDB/ReadFile>
 #include <osgDB/FileUtils>
+#include <osgDB/fstream>
 
 #include "Exception.h"
 #include "Geode.h"
@@ -89,7 +90,7 @@ class ReaderWriterAC : public osgDB::ReaderWriter
             if (fileName.empty()) return ReadResult::FILE_NOT_FOUND;
 
             // allocate per file data and start reading
-            std::ifstream fin;
+            osgDB::ifstream fin;
             fin.open(fileName.c_str(), std::ios::in);
             if (!fin.is_open()) return ReadResult::FILE_NOT_FOUND;
 
@@ -124,7 +125,7 @@ class ReaderWriterAC : public osgDB::ReaderWriter
             std::vector<unsigned int>iNumMaterials;
             const_cast<osg::Node&>(node).accept(vs); // this parses the tree to streamd Geodes
             std::vector<const osg::Geode *> glist=vs.getGeodes();
-            std::ofstream fout(fileName.c_str(), std::ios::out | std::ios::binary);
+            osgDB::ofstream fout(fileName.c_str(), std::ios::out | std::ios::binary);
             // Write out the file header
             std::vector<const osg::Geode *>::iterator itr;
             fout << "AC3Db" << std::endl;
@@ -326,16 +327,22 @@ class TextureData
 {
   public:
     TextureData() :
-        mTranslucent(false)
+        mTranslucent(false),
+        mRepeat(true)
     {
     }
 
-    bool setTexture(const std::string& name, const osgDB::ReaderWriter::Options* options)
+    bool setTexture(const std::string& name, const osgDB::ReaderWriter::Options* options, osg::TexEnv* modulateTexEnv)
     {
-        mTexture2D = new osg::Texture2D;
-        mTexture2D->setDataVariance(osg::Object::STATIC);
-        mTexture2D->setWrap(osg::Texture2D::WRAP_S, osg::Texture2D::REPEAT);
-        mTexture2D->setWrap(osg::Texture2D::WRAP_T, osg::Texture2D::REPEAT);
+        mTexture2DRepeat = new osg::Texture2D;
+        mTexture2DRepeat->setDataVariance(osg::Object::STATIC);
+        mTexture2DRepeat->setWrap(osg::Texture2D::WRAP_S, osg::Texture2D::REPEAT);
+        mTexture2DRepeat->setWrap(osg::Texture2D::WRAP_T, osg::Texture2D::REPEAT);
+
+        mTexture2DClamp = new osg::Texture2D;
+        mTexture2DClamp->setDataVariance(osg::Object::STATIC);
+        mTexture2DClamp->setWrap(osg::Texture2D::WRAP_S, osg::Texture2D::CLAMP_TO_EDGE);
+        mTexture2DClamp->setWrap(osg::Texture2D::WRAP_T, osg::Texture2D::CLAMP_TO_EDGE);
 
         std::string absFileName = osgDB::findDataFile(name, options);
         if (absFileName.empty())
@@ -349,9 +356,18 @@ class TextureData
             osg::notify(osg::FATAL) << "osgDB ac3d reader: could not read texture \"" << name << "\"" << std::endl;
             return false;
         }
-        mTexture2D->setImage(mImage.get());
+        mTexture2DRepeat->setImage(mImage.get());
+        mTexture2DClamp->setImage(mImage.get());
         mTranslucent = mImage->isImageTranslucent();
+
+        // Use a shared modulate TexEnv
+        mModulateTexEnv = modulateTexEnv;
+
         return true;
+    }
+    void setRepeat(bool repeat)
+    {
+        mRepeat = repeat;
     }
     bool valid() const
     {
@@ -367,19 +383,22 @@ class TextureData
     {
         if (!valid())
             return;
-        osg::TexEnv* texEnv = new osg::TexEnv;
-        texEnv->setDataVariance(osg::Object::STATIC);
-        texEnv->setMode(osg::TexEnv::MODULATE);
-        stateSet->setTextureAttribute(0, texEnv);
-        stateSet->setTextureAttribute(0, mTexture2D.get());
+        stateSet->setTextureAttribute(0, mModulateTexEnv.get());
+        if (mRepeat)
+           stateSet->setTextureAttribute(0, mTexture2DRepeat.get());
+        else
+           stateSet->setTextureAttribute(0, mTexture2DClamp.get());
         stateSet->setTextureMode(0, GL_TEXTURE_2D, osg::StateAttribute::ON);
         if (mTranslucent)
             setTranslucent(stateSet);
     }
 private:
-    osg::ref_ptr<osg::Texture2D> mTexture2D;
+    osg::ref_ptr<osg::TexEnv> mModulateTexEnv;
+    osg::ref_ptr<osg::Texture2D> mTexture2DClamp;
+    osg::ref_ptr<osg::Texture2D> mTexture2DRepeat;
     osg::ref_ptr<osg::Image> mImage;
     bool mTranslucent;
+    bool mRepeat;
 };
 
 class FileData
@@ -388,13 +407,17 @@ class FileData
     FileData(const osgDB::ReaderWriter::Options* options) :
         mOptions(options),
         mLightIndex(1)
-    { }
+    {
+        mModulateTexEnv = new osg::TexEnv;
+        mModulateTexEnv->setDataVariance(osg::Object::STATIC);
+        mModulateTexEnv->setMode(osg::TexEnv::MODULATE);
+    }
 
     TextureData toTextureData(const std::string& texName)
     {
         TextureDataMap::iterator i = mTextureStates.find(texName);
         if (i == mTextureStates.end())
-            mTextureStates[texName].setTexture(texName, mOptions.get());
+            mTextureStates[texName].setTexture(texName, mOptions.get(), mModulateTexEnv.get());
         return mTextureStates[texName];
     }
 
@@ -430,6 +453,8 @@ private:
     /// ... images are usualy cached in the registries object cache
     typedef std::map<std::string, TextureData> TextureDataMap;
     TextureDataMap mTextureStates;
+    /// A common shared TexEnv set to modulate
+    osg::ref_ptr<osg::TexEnv> mModulateTexEnv;
 
     /// Hack to include light nodes from ac3d into the scenegraph
     unsigned mLightIndex;
@@ -1152,10 +1177,14 @@ readObject(std::istream& stream, FileData& fileData, const osg::Matrix& parentTr
                     texname = texname.substr(p+1, std::string::npos);
             }
         
-            textureData  = fileData.toTextureData(texname);
+            textureData = fileData.toTextureData(texname);
         }
         else if (token == "texrep") {
             stream >> textureRepeat[0] >> textureRepeat[1];
+//             if (textureRepeat[0] == 0.0f && textureRepeat[1] == 0.0f)
+//                 textureData.setRepeat(false);
+//             else
+//                 textureData.setRepeat(true);
         }
         else if (token == "texoff") {
             stream >> textureOffset[0] >> textureOffset[1];

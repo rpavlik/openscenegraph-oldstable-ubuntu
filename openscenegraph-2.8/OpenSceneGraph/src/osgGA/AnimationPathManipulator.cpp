@@ -1,6 +1,6 @@
 #include <osgGA/AnimationPathManipulator>
 
-#include <fstream>
+#include <osgDB/fstream>
 
 using namespace osgGA;
 
@@ -29,7 +29,7 @@ AnimationPathManipulator::AnimationPathManipulator( const std::string& filename 
     _isPaused = false;
 
 
-    std::ifstream in(filename.c_str());
+    osgDB::ifstream in(filename.c_str());
 
     if (!in)
     {
@@ -171,9 +171,12 @@ void AnimationPathManipulator::handleFrame( double time )
     
     if (_printOutTimingInfo)
     {
-        double delta = (animTime-_animStartOfTimedPeriod);
-        if (delta>=_animationPath->getPeriod())
+        double animDelta = (animTime-_animStartOfTimedPeriod);
+        if (animDelta>=_animationPath->getPeriod())
         {
+
+            double delta = time-_realStartOfTimedPeriod;
+
             double frameRate = (double)_numOfFramesSinceStartOfTimedPeriod/delta;
             osg::notify(osg::NOTICE) <<"AnimatonPath completed in "<<delta<<" seconds, completing "<<_numOfFramesSinceStartOfTimedPeriod<<" frames,"<<std::endl;
             osg::notify(osg::NOTICE) <<"             average frame rate = "<<frameRate<<std::endl;

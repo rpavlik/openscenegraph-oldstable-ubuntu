@@ -13,6 +13,8 @@
 #include <osgDB/Output>
 #include <osgDB/ParameterOutput>
 
+#include <osgTerrain/TerrainTile>
+
 bool ImageLayer_readLocalData(osg::Object &obj, osgDB::Input &fr);
 bool ImageLayer_writeLocalData(const osg::Object &obj, osgDB::Output &fw);
 
@@ -33,12 +35,24 @@ bool ImageLayer_readLocalData(osg::Object& obj, osgDB::Input &fr)
     
     if (fr.matchSequence("file %w") || fr.matchSequence("file %s"))
     {
-        osg::ref_ptr<osg::Image> image = osgDB::readImageFile(fr[1].getStr());
-        if (image.valid())
+        std::string filename = fr[1].getStr();
+        if (!filename.empty())
         {
-            layer.setImage(image.get());
-        }
+            bool deferExternalLayerLoading = osgTerrain::TerrainTile::getTileLoadedCallback().valid() ? 
+                osgTerrain::TerrainTile::getTileLoadedCallback()->deferExternalLayerLoading() : false;
 
+            layer.setFileName(filename);
+
+            if (!deferExternalLayerLoading)
+            {
+                osg::ref_ptr<osg::Image> image = fr.readImage(filename.c_str());
+                if (image.valid())
+                {
+                    layer.setImage(image.get());
+                }
+            }
+        }
+        
         fr += 2;
         itrAdvanced = true;
     }
@@ -53,7 +67,7 @@ bool ImageLayer_writeLocalData(const osg::Object& obj, osgDB::Output& fw)
     
     if (!layer.getFileName().empty())
     {
-        fw.indent()<<"file "<<layer.getFileName()<<std::endl;
+        fw.indent()<<"file "<< layer.getFileName() << std::endl;
     }
 
     return true;

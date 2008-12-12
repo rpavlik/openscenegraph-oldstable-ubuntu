@@ -23,10 +23,12 @@
 #include <osg/Geode>
 #include <osg/ApplicationUsage>
 #include <osg/Version>
+#include <osg/Timer>
 
 #include <osgDB/Registry>
 #include <osgDB/FileUtils>
 #include <osgDB/FileNameUtils>
+#include <osgDB/fstream>
 #include <osgDB/Archive>
 
 #include <algorithm>
@@ -39,8 +41,10 @@
     using std::tolower;
 #endif
 
-#ifndef OSG_DEBUG_POSTFIX
-#define OSG_DEBUG_POSTFIX "d"
+#ifdef OSG_DEBUG_POSTFIX
+    #define OSG_DEBUG_POSTFIX_WITH_QUOTES ADDQUOTES(OSG_DEBUG_POSTFIX)
+#else
+    #define OSG_DEBUG_POSTFIX_WITH_QUOTES "d"
 #endif
 
 using namespace osg;
@@ -60,8 +64,9 @@ static osg::ApplicationUsageProxy Registry_e2(osg::ApplicationUsage::ENVIRONMENT
 class Registry::AvailableReaderWriterIterator
 {
 public:
-    AvailableReaderWriterIterator(Registry::ReaderWriterList& rwList):
-        _rwList(rwList) {}
+    AvailableReaderWriterIterator(Registry::ReaderWriterList& rwList, OpenThreads::ReentrantMutex& pluginMutex):
+        _rwList(rwList),
+        _pluginMutex(pluginMutex) {}
 
 
     ReaderWriter& operator * () { return *get(); }
@@ -78,10 +83,13 @@ public:
 protected:
 
     Registry::ReaderWriterList&     _rwList;
+    OpenThreads::ReentrantMutex&    _pluginMutex;
+    
     std::set<ReaderWriter*>         _rwUsed;
 
     ReaderWriter* get() 
     {
+        OpenThreads::ScopedLock<OpenThreads::ReentrantMutex> lock(_pluginMutex);
         Registry::ReaderWriterList::iterator itr=_rwList.begin();
         for(;itr!=_rwList.end();++itr)
         {
@@ -171,6 +179,12 @@ Registry::Registry()
         else _buildKdTreesHint = ReaderWriter::Options::BUILD_KDTREES;
     }
 
+    const char* fileCachePath = getenv("OSG_FILE_CACHE");
+    if (fileCachePath)
+    {
+        _fileCache = new FileCache(fileCachePath);    
+    }
+
     _createNodeFromImage = false;
     _openingLibrary = false;
 
@@ -211,6 +225,16 @@ Registry::Registry()
     addFileExtensionAlias("ivz",   "gz");
     addFileExtensionAlias("ozg",   "gz");
     
+    addFileExtensionAlias("mag",   "dicom");
+    addFileExtensionAlias("ph",   "dicom");
+    addFileExtensionAlias("ima",   "dicom");
+    addFileExtensionAlias("dcm",   "dicom");
+    addFileExtensionAlias("dic",   "dicom");
+
+    addFileExtensionAlias("gl",   "glsl");
+    addFileExtensionAlias("vert",   "glsl");
+    addFileExtensionAlias("frag",   "glsl");
+
 #if defined(DARWIN_QUICKTIME)
     addFileExtensionAlias("jpg",  "qt");
     addFileExtensionAlias("jpe",  "qt");
@@ -229,6 +253,7 @@ Registry::Registry()
     addFileExtensionAlias("dv",   "qt");
     addFileExtensionAlias("mp4",  "qt");
     addFileExtensionAlias("m4v",  "qt");
+    addFileExtensionAlias("3gp",  "qt");
     // Add QuickTime live support for OSX
     addFileExtensionAlias("live", "qt");
 #else
@@ -240,6 +265,7 @@ Registry::Registry()
     #if defined(USE_XINE)
         addFileExtensionAlias("mov",  "xine");
         addFileExtensionAlias("mpg",  "xine");
+        addFileExtensionAlias("ogv",  "xine");
         addFileExtensionAlias("mpv",  "xine");
         addFileExtensionAlias("dv",   "xine");
         addFileExtensionAlias("avi",  "xine");
@@ -299,12 +325,12 @@ void Registry::destruct()
 {
     // osg::notify(osg::NOTICE)<<"Registry::destruct()"<<std::endl;
 
-    // switch off the pager and its associated thread before we clean up 
-    // rest of the Registry.
-    _databasePager = 0;
-
     // clean up the SharedStateManager 
     _sharedStateManager = 0;
+    
+
+    // clean up the FileCache
+    _fileCache = 0;
     
 
     // object cache clear needed here to prevent crash in unref() of
@@ -511,6 +537,8 @@ void Registry::addReaderWriter(ReaderWriter* rw)
 
     // notify(INFO) << "osg::Registry::addReaderWriter("<<rw->className()<<")"<< std::endl;
 
+    OpenThreads::ScopedLock<OpenThreads::ReentrantMutex> lock(_pluginMutex);
+
     _rwList.push_back(rw);
 
 }
@@ -521,6 +549,8 @@ void Registry::removeReaderWriter(ReaderWriter* rw)
     if (rw==0L) return;
 
 //    notify(INFO) << "osg::Registry::removeReaderWriter();"<< std::endl;
+
+    OpenThreads::ScopedLock<OpenThreads::ReentrantMutex> lock(_pluginMutex);
 
     ReaderWriterList::iterator rwitr = std::find(_rwList.begin(),_rwList.end(),rw);
     if (rwitr!=_rwList.end())
@@ -545,7 +575,7 @@ bool Registry::readPluginAliasConfigurationFile( const std::string& file )
         return false;
     }
 
-    std::ifstream ifs;
+    osgDB::ifstream ifs;
     ifs.open( fileName.c_str() );
     if (!ifs.good())
     {
@@ -618,12 +648,16 @@ std::string Registry::createLibraryNameForExtension(const std::string& ext)
 #endif
 
 #if defined(__CYGWIN__)
-    return prepend+"cygwin_"+"osgdb_"+lowercase_ext+".dll";
+    #ifdef _DEBUG
+        return prepend+"cygwin_"+"osgdb_"+lowercase_ext+OSG_DEBUG_POSTFIX_WITH_QUOTES+".dll";
+    #else
+        return prepend+"cygwin_"+"osgdb_"+lowercase_ext+".dll";
+    #endif
 #elif defined(__MINGW32__)
     return prepend+"mingw_"+"osgdb_"+lowercase_ext+".dll";
 #elif defined(WIN32)
     #ifdef _DEBUG
-        return prepend+"osgdb_"+lowercase_ext+ OSG_DEBUG_POSTFIX +".dll";
+        return prepend+"osgdb_"+lowercase_ext+ OSG_DEBUG_POSTFIX_WITH_QUOTES +".dll";
     #else
         return prepend+"osgdb_"+lowercase_ext+".dll";
     #endif
@@ -634,8 +668,8 @@ std::string Registry::createLibraryNameForExtension(const std::string& ext)
     return prepend+"osgdb_"+lowercase_ext+".sl";
 #else
     #ifdef _DEBUG
-#pragma message(OSG_DEBUG_POSTFIX)
-         return prepend+"osgdb_"+lowercase_ext+ OSG_DEBUG_POSTFIX + ".so";
+#pragma message(OSG_DEBUG_POSTFIX_WITH_QUOTES)
+         return prepend+"osgdb_"+lowercase_ext+ OSG_DEBUG_POSTFIX_WITH_QUOTES + ".so";
     #else
          return prepend+"osgdb_"+lowercase_ext+".so";
     #endif
@@ -651,7 +685,7 @@ std::string Registry::createLibraryNameForNodeKit(const std::string& name)
     return "lib"+name+".dll";
 #elif defined(WIN32)
     #ifdef _DEBUG
-        return name+OSG_DEBUG_POSTFIX +".dll";
+        return name+OSG_DEBUG_POSTFIX_WITH_QUOTES +".dll";
     #else
         return name+".dll";
     #endif
@@ -662,34 +696,37 @@ std::string Registry::createLibraryNameForNodeKit(const std::string& name)
     return "lib"+name+".sl";
 #else
     #ifdef _DEBUG
-        return "lib"+name+OSG_DEBUG_POSTFIX +".so";
+        return "lib"+name+OSG_DEBUG_POSTFIX_WITH_QUOTES +".so";
     #else
         return "lib"+name+".so";
     #endif
 #endif
 }
 
-bool Registry::loadLibrary(const std::string& fileName)
+Registry::LoadStatus Registry::loadLibrary(const std::string& fileName)
 {
-    DynamicLibrary* dl = getLibrary(fileName);
-    if (dl) return false;
+    OpenThreads::ScopedLock<OpenThreads::ReentrantMutex> lock(_pluginMutex);
+
+    DynamicLibraryList::iterator ditr = getLibraryItr(fileName);
+    if (ditr!=_dlList.end()) return PREVIOUSLY_LOADED;
 
     _openingLibrary=true;
 
-    dl = DynamicLibrary::loadLibrary(fileName);
+    DynamicLibrary* dl = DynamicLibrary::loadLibrary(fileName);
     _openingLibrary=false;
 
     if (dl)
     {
         _dlList.push_back(dl);
-        return true;
+        return LOADED;
     }
-    return false;
+    return NOT_LOADED;
 }
 
 
 bool Registry::closeLibrary(const std::string& fileName)
 {
+    OpenThreads::ScopedLock<OpenThreads::ReentrantMutex> lock(_pluginMutex);
     DynamicLibraryList::iterator ditr = getLibraryItr(fileName);
     if (ditr!=_dlList.end())
     {
@@ -702,7 +739,7 @@ bool Registry::closeLibrary(const std::string& fileName)
 void Registry::closeAllLibraries()
 {
     // osg::notify(osg::NOTICE)<<"Registry::closeAllLibraries()"<<std::endl;
-
+    OpenThreads::ScopedLock<OpenThreads::ReentrantMutex> lock(_pluginMutex);
     _dlList.clear();
 }
 
@@ -718,6 +755,7 @@ Registry::DynamicLibraryList::iterator Registry::getLibraryItr(const std::string
 
 DynamicLibrary* Registry::getLibrary(const std::string& fileName)
 {
+    OpenThreads::ScopedLock<OpenThreads::ReentrantMutex> lock(_pluginMutex);
     DynamicLibraryList::iterator ditr = getLibraryItr(fileName);
     if (ditr!=_dlList.end()) return ditr->get();
     else return NULL;
@@ -728,6 +766,8 @@ ReaderWriter* Registry::getReaderWriterForExtension(const std::string& ext)
     // record the existing reader writer.
     std::set<ReaderWriter*> rwOriginal;
 
+    OpenThreads::ScopedLock<OpenThreads::ReentrantMutex> lock(_pluginMutex);
+
     // first attemt one of the installed loaders
     for(ReaderWriterList::iterator itr=_rwList.begin();
         itr!=_rwList.end();
@@ -736,18 +776,20 @@ ReaderWriter* Registry::getReaderWriterForExtension(const std::string& ext)
         rwOriginal.insert(itr->get());
         if((*itr)->acceptsExtension(ext)) return (*itr).get();
     }
-
+    
     // now look for a plug-in to load the file.
     std::string libraryName = createLibraryNameForExtension(ext);
     notify(INFO) << "Now checking for plug-in "<<libraryName<< std::endl;
-    if (loadLibrary(libraryName))
+    if (loadLibrary(libraryName)==LOADED)
     {
         for(ReaderWriterList::iterator itr=_rwList.begin();
             itr!=_rwList.end();
             ++itr)
         {
             if (rwOriginal.find(itr->get())==rwOriginal.end())
-          if((*itr)->acceptsExtension(ext)) return (*itr).get();
+            {
+                if((*itr)->acceptsExtension(ext)) return (*itr).get();
+            }
         }
     }
 
@@ -803,21 +845,19 @@ osg::Object* Registry::readObjectOfType(const basic_type_wrapper &btw,Input& fr)
             // we have a composite name so now strip off the library name
             // are try to load it, and then retry the readObject to see
             // if we can recognize the objects.
-        
             std::string libraryName = std::string(token,0,posDoubleColon);
 
             // first try the standard nodekit library.
             std::string nodeKitLibraryName = createLibraryNameForNodeKit(libraryName);
-            if (loadLibrary(nodeKitLibraryName)) return readObjectOfType(btw,fr);
+            if (loadLibrary(nodeKitLibraryName)==LOADED) return readObjectOfType(btw,fr);
             
             // otherwise try the osgdb_ plugin library.
             std::string pluginLibraryName = createLibraryNameForExtension(libraryName);
-            if (loadLibrary(pluginLibraryName)) return readObjectOfType(btw,fr);
+            if (loadLibrary(pluginLibraryName)==LOADED) return readObjectOfType(btw,fr);
         }
     }
     else if (fr[1].isOpenBracket())
     {
-    
         DotOsgWrapper* wrapper = itr->second.get();
         const osg::Object* proto = wrapper->getPrototype();
         if (proto==NULL)
@@ -864,30 +904,26 @@ osg::Object* Registry::readObjectOfType(const basic_type_wrapper &btw,Input& fr)
                     std::string::size_type posDoubleColon = token.rfind("::");
                     if (posDoubleColon != std::string::npos)
                     {
-
                         // we have a composite name so now strip off the library name
-                        // are try to load it, and then retry the find to see
+                        // and try to load it, and then retry the find to see
                         // if we can recognize the objects.
-
                         std::string libraryName = std::string(token,0,posDoubleColon);
 
                         // first try the standard nodekit library.
                         std::string nodeKitLibraryName = createLibraryNameForNodeKit(libraryName);
-                        if (loadLibrary(nodeKitLibraryName)) 
+                        if (loadLibrary(nodeKitLibraryName)==LOADED)
                         {
                             mitr = _objectWrapperMap.find(*aitr);
-                        }
-
-                        if (mitr==_objectWrapperMap.end())
-                        {
-                            // otherwise try the osgdb_ plugin library.
-                            std::string pluginLibraryName = createLibraryNameForExtension(libraryName);
-                            if (loadLibrary(pluginLibraryName))
+                            if (mitr==_objectWrapperMap.end())
                             {
-                                mitr = _objectWrapperMap.find(*aitr);
+                                // otherwise try the osgdb_ plugin library.
+                                std::string pluginLibraryName = createLibraryNameForExtension(libraryName);
+                                if (loadLibrary(pluginLibraryName)==LOADED)
+                                {
+                                    mitr = _objectWrapperMap.find(*aitr);
+                                }
                             }
                         }
-
                     }
                 }
 
@@ -935,11 +971,11 @@ osg::Object* Registry::readObject(DotOsgWrapperMap& dowMap,Input& fr)
 
             // first try the standard nodekit library.
             std::string nodeKitLibraryName = createLibraryNameForNodeKit(libraryName);
-            if (loadLibrary(nodeKitLibraryName)) return readObject(dowMap,fr);
+            if (loadLibrary(nodeKitLibraryName)==LOADED) return readObject(dowMap,fr);
             
             // otherwise try the osgdb_ plugin library.
             std::string pluginLibraryName = createLibraryNameForExtension(libraryName);
-            if (loadLibrary(pluginLibraryName)) return readObject(dowMap,fr);
+            if (loadLibrary(pluginLibraryName)==LOADED) return readObject(dowMap,fr);
         }
     }
     else if (fr[1].isOpenBracket())
@@ -995,7 +1031,7 @@ osg::Object* Registry::readObject(DotOsgWrapperMap& dowMap,Input& fr)
 
                         // first try the standard nodekit library.
                         std::string nodeKitLibraryName = createLibraryNameForNodeKit(libraryName);
-                        if (loadLibrary(nodeKitLibraryName)) 
+                        if (loadLibrary(nodeKitLibraryName)==LOADED) 
                         {
                             mitr = _objectWrapperMap.find(*aitr);
                         }
@@ -1004,7 +1040,7 @@ osg::Object* Registry::readObject(DotOsgWrapperMap& dowMap,Input& fr)
                         {
                             // otherwise try the osgdb_ plugin library.
                             std::string pluginLibraryName = createLibraryNameForExtension(libraryName);
-                            if (loadLibrary(pluginLibraryName))
+                            if (loadLibrary(pluginLibraryName)==LOADED)
                             {
                                 mitr = _objectWrapperMap.find(*aitr);
                             }
@@ -1224,11 +1260,11 @@ bool Registry::writeObject(const osg::Object& obj,Output& fw)
     {
         // first try the standard nodekit library.
         std::string nodeKitLibraryName = createLibraryNameForNodeKit(libraryName);
-        if (loadLibrary(nodeKitLibraryName)) return writeObject(obj,fw);
+        if (loadLibrary(nodeKitLibraryName)==LOADED) return writeObject(obj,fw);
 
         // otherwise try the osgdb_ plugin library.
         std::string pluginLibraryName = createLibraryNameForExtension(libraryName);
-        if (loadLibrary(pluginLibraryName)) return writeObject(obj,fw);
+        if (loadLibrary(pluginLibraryName)==LOADED) return writeObject(obj,fw);
 
         // otherwise try simple class name
         if (itr == _classNameWrapperMap.end()) 
@@ -1294,7 +1330,7 @@ bool Registry::writeObject(const osg::Object& obj,Output& fw)
 
                     // first try the standard nodekit library.
                     std::string nodeKitLibraryName = createLibraryNameForNodeKit(libraryName);
-                    if (loadLibrary(nodeKitLibraryName)) 
+                    if (loadLibrary(nodeKitLibraryName)==LOADED) 
                     {
                         mitr = _objectWrapperMap.find(*aitr);
                     }
@@ -1303,7 +1339,7 @@ bool Registry::writeObject(const osg::Object& obj,Output& fw)
                     {
                         // otherwise try the osgdb_ plugin library.
                         std::string pluginLibraryName = createLibraryNameForExtension(libraryName);
-                        if (loadLibrary(pluginLibraryName))
+                        if (loadLibrary(pluginLibraryName)==LOADED)
                         {
                             mitr = _objectWrapperMap.find(*aitr);
                         }
@@ -1461,7 +1497,7 @@ ReaderWriter::ReadResult Registry::read(const ReadFunctor& readFunctor)
     Results results;
 
     // first attempt to load the file from existing ReaderWriter's
-    AvailableReaderWriterIterator itr(_rwList);
+    AvailableReaderWriterIterator itr(_rwList, _pluginMutex);
     for(;itr.valid();++itr)
     {
         ReaderWriter::ReadResult rr = readFunctor.doRead(*itr);
@@ -1511,7 +1547,7 @@ ReaderWriter::ReadResult Registry::read(const ReadFunctor& readFunctor)
 
     // now look for a plug-in to load the file.
     std::string libraryName = createLibraryNameForFile(readFunctor._filename);
-    if (loadLibrary(libraryName))
+    if (loadLibrary(libraryName)!=NOT_LOADED)
     {
         for(;itr.valid();++itr)
         {
@@ -1651,7 +1687,7 @@ ReaderWriter::WriteResult Registry::writeObjectImplementation(const Object& obj,
     Results results;
 
     // first attempt to load the file from existing ReaderWriter's
-    AvailableReaderWriterIterator itr(_rwList);
+    AvailableReaderWriterIterator itr(_rwList, _pluginMutex);
     for(;itr.valid();++itr)
     {
         ReaderWriter::WriteResult rr = itr->writeObject(obj,fileName,options);
@@ -1661,7 +1697,7 @@ ReaderWriter::WriteResult Registry::writeObjectImplementation(const Object& obj,
 
     // now look for a plug-in to save the file.
     std::string libraryName = createLibraryNameForFile(fileName);
-    if (loadLibrary(libraryName))
+    if (loadLibrary(libraryName)==LOADED)
     {
         for(;itr.valid();++itr)
         {
@@ -1704,7 +1740,7 @@ ReaderWriter::WriteResult Registry::writeImageImplementation(const Image& image,
     Results results;
 
     // first attempt to load the file from existing ReaderWriter's
-    AvailableReaderWriterIterator itr(_rwList);
+    AvailableReaderWriterIterator itr(_rwList, _pluginMutex);
     for(;itr.valid();++itr)
     {
         ReaderWriter::WriteResult rr = itr->writeImage(image,fileName,options);
@@ -1716,7 +1752,7 @@ ReaderWriter::WriteResult Registry::writeImageImplementation(const Image& image,
 
     // now look for a plug-in to save the file.
     std::string libraryName = createLibraryNameForFile(fileName);
-    if (loadLibrary(libraryName))
+    if (loadLibrary(libraryName)==LOADED)
     {
         for(;itr.valid();++itr)
         {
@@ -1758,7 +1794,7 @@ ReaderWriter::WriteResult Registry::writeHeightFieldImplementation(const HeightF
     Results results;
 
     // first attempt to load the file from existing ReaderWriter's
-    AvailableReaderWriterIterator itr(_rwList);
+    AvailableReaderWriterIterator itr(_rwList, _pluginMutex);
     for(;itr.valid();++itr)
     {
         ReaderWriter::WriteResult rr = itr->writeHeightField(HeightField,fileName,options);
@@ -1770,7 +1806,7 @@ ReaderWriter::WriteResult Registry::writeHeightFieldImplementation(const HeightF
 
     // now look for a plug-in to save the file.
     std::string libraryName = createLibraryNameForFile(fileName);
-    if (loadLibrary(libraryName))
+    if (loadLibrary(libraryName)==LOADED)
     {
         for(;itr.valid();++itr)
         {
@@ -1801,8 +1837,21 @@ ReaderWriter::WriteResult Registry::writeHeightFieldImplementation(const HeightF
 
 ReaderWriter::ReadResult Registry::readNodeImplementation(const std::string& fileName,const ReaderWriter::Options* options)
 {
+#if 0
+
+    osg::Timer_t startTick = osg::Timer::instance()->tick();
+    ReaderWriter::ReadResult result = readImplementation(ReadNodeFunctor(fileName, options),
+                              options ? (options->getObjectCacheHint()&ReaderWriter::Options::CACHE_NODES)!=0: false);
+    osg::Timer_t endTick = osg::Timer::instance()->tick();
+    osg::notify(osg::NOTICE)<<"time to load "<<fileName<<" "<<osg::Timer::instance()->delta_m(startTick, endTick)<<"ms"<<std::endl;
+    return result;
+
+#else
+
     return readImplementation(ReadNodeFunctor(fileName, options),
                               options ? (options->getObjectCacheHint()&ReaderWriter::Options::CACHE_NODES)!=0: false);
+                              
+#endif
 }
 
 ReaderWriter::WriteResult Registry::writeNodeImplementation(const Node& node,const std::string& fileName,const ReaderWriter::Options* options)
@@ -1812,7 +1861,7 @@ ReaderWriter::WriteResult Registry::writeNodeImplementation(const Node& node,con
     Results results;
 
     // first attempt to write the file from existing ReaderWriter's
-    AvailableReaderWriterIterator itr(_rwList);
+    AvailableReaderWriterIterator itr(_rwList, _pluginMutex);
     for(;itr.valid();++itr)
     {
         ReaderWriter::WriteResult rr = itr->writeNode(node,fileName,options);
@@ -1826,7 +1875,7 @@ ReaderWriter::WriteResult Registry::writeNodeImplementation(const Node& node,con
     std::string libraryName = createLibraryNameForFile(fileName);
 
 
-    if (loadLibrary(libraryName))
+    if (loadLibrary(libraryName)==LOADED)
     {
         for(;itr.valid();++itr)
         {
@@ -1868,7 +1917,7 @@ ReaderWriter::WriteResult Registry::writeShaderImplementation(const Shader& shad
     Results results;
 
     // first attempt to load the file from existing ReaderWriter's
-    AvailableReaderWriterIterator itr(_rwList);
+    AvailableReaderWriterIterator itr(_rwList, _pluginMutex);
     for(;itr.valid();++itr)
     {
         ReaderWriter::WriteResult rr = itr->writeShader(shader,fileName,options);
@@ -1880,7 +1929,7 @@ ReaderWriter::WriteResult Registry::writeShaderImplementation(const Shader& shad
 
     // now look for a plug-in to save the file.
     std::string libraryName = createLibraryNameForFile(fileName);
-    if (loadLibrary(libraryName))
+    if (loadLibrary(libraryName)==LOADED)
     {
         for(;itr.valid();++itr)
         {
@@ -2018,13 +2067,6 @@ void Registry::releaseGLObjects(osg::State* state)
         osg::Object* object = itr->second.first.get();
         object->releaseGLObjects(state);
     }
-}
-
-DatabasePager* Registry::getOrCreateDatabasePager()
-{
-    if (!_databasePager) _databasePager = new DatabasePager;
-    
-    return _databasePager.get();
 }
 
 SharedStateManager* Registry::getOrCreateSharedStateManager()

@@ -17,7 +17,7 @@
  * along with  this program;  if not, write to the  Free Software Foundation,
  * Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: file.cpp 1563 2003-01-24 15:12:54Z robert $
+ * $Id: file.cpp 9162 2008-11-13 22:55:48Z jeremymoles $
  */
 #define LIB3DS_EXPORT
 #include "file.h"
@@ -36,6 +36,8 @@
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
 #endif
+
+#include <osgDB/FileUtils>
 
 
 /*!
@@ -68,7 +70,7 @@ lib3ds_file_load(const char *filename)
   FILE *f;
   Lib3dsFile *file;
 
-  f=fopen(filename, "rb");
+  f=osgDB::fopen(filename, "rb");
   if (!f) {
     return(0);
   }
@@ -106,7 +108,7 @@ lib3ds_file_save(Lib3dsFile *file, const char *filename)
 {
   FILE *f;
 
-  f=fopen(filename, "wb");
+  f=osgDB::fopen(filename, "wb");
   if (!f) {
     return(LIB3DS_FALSE);
   }

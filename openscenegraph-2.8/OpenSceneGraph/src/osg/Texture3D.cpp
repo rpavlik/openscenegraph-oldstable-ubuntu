@@ -31,6 +31,16 @@ Texture3D::Texture3D():
 {
 }
 
+
+Texture3D::Texture3D(Image* image):
+            _textureWidth(0),
+            _textureHeight(0),
+            _textureDepth(0),
+            _numMipmapLevels(0)
+{
+    setImage(image);
+}
+
 Texture3D::Texture3D(const Texture3D& text,const CopyOp& copyop):
             Texture(text,copyop),
             _image(copyop(text._image.get())),
@@ -474,7 +484,6 @@ void Texture3D::allocateMipmap(State& state) const
     if (textureObject && _textureWidth != 0 && _textureHeight != 0 && _textureDepth != 0)
     {
         const Extensions* extensions = getExtensions(contextID,true);
-        const Texture::Extensions* texExtensions = Texture::getExtensions(contextID,true);
     
         // bind texture
         textureObject->bind();

@@ -28,7 +28,7 @@ namespace osg
     class CollectParentPaths : public NodeVisitor
     {
     public:
-        CollectParentPaths(osg::Node* haltTraversalAtNode=0) : 
+        CollectParentPaths(const osg::Node* haltTraversalAtNode=0) : 
             osg::NodeVisitor(osg::NodeVisitor::TRAVERSE_PARENTS),
             _haltTraversalAtNode(haltTraversalAtNode)
         {
@@ -46,7 +46,7 @@ namespace osg
             }
        }
 
-        Node*           _haltTraversalAtNode;
+        const Node*     _haltTraversalAtNode;
         NodePath        _nodePath;
         NodePathList    _nodePaths;
     };
@@ -95,32 +95,17 @@ Node::~Node()
 
 void Node::addParent(osg::Group* node)
 {
-    if (getRefMutex())
-    {
-        OpenThreads::ScopedLock<OpenThreads::Mutex> lock(*getRefMutex());
+    OpenThreads::ScopedPointerLock<OpenThreads::Mutex> lock(getRefMutex());
 
-        _parents.push_back(node);
-    }
-    else
-    {
-        _parents.push_back(node);
-    }
+    _parents.push_back(node);
 }
 
 void Node::removeParent(osg::Group* node)
 {
-    if (getRefMutex())
-    {
-        OpenThreads::ScopedLock<OpenThreads::Mutex> lock(*getRefMutex());
+    OpenThreads::ScopedPointerLock<OpenThreads::Mutex> lock(getRefMutex());
 
-        ParentList::iterator pitr = std::find(_parents.begin(),_parents.end(),node);
-        if (pitr!=_parents.end()) _parents.erase(pitr);
-    }
-    else
-    {
-        ParentList::iterator pitr = std::find(_parents.begin(),_parents.end(),node);
-        if (pitr!=_parents.end()) _parents.erase(pitr);
-    }
+    ParentList::iterator pitr = std::find(_parents.begin(),_parents.end(),node);
+    if (pitr!=_parents.end()) _parents.erase(pitr);
 }
 
 void Node::accept(NodeVisitor& nv)
@@ -191,7 +176,7 @@ NodePathList Node::getParentalNodePaths(osg::Node* haltTraversalAtNode) const
     return cpp._nodePaths;
 }
 
-MatrixList Node::getWorldMatrices(osg::Node* haltTraversalAtNode) const
+MatrixList Node::getWorldMatrices(const osg::Node* haltTraversalAtNode) const
 {
     CollectParentPaths cpp(haltTraversalAtNode);
     const_cast<Node*>(this)->accept(cpp);

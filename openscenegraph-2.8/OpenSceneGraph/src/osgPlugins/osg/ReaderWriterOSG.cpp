@@ -6,6 +6,7 @@
 
 #include <osgDB/FileNameUtils>
 #include <osgDB/FileUtils>
+#include <osgDB/fstream>
 #include <osgDB/Registry>
 #include <osgDB/Input>
 #include <osgDB/Output>
@@ -45,9 +46,9 @@ class OSGReaderWriter : public ReaderWriter
 
             // code for setting up the database path so that internally referenced file are searched for on relative paths. 
             osg::ref_ptr<Options> local_opt = opt ? static_cast<Options*>(opt->clone(osg::CopyOp::SHALLOW_COPY)) : new Options;
-            local_opt->setDatabasePath(osgDB::getFilePath(fileName));
+            local_opt->getDatabasePathList().push_front(osgDB::getFilePath(fileName));
 
-            std::ifstream fin(fileName.c_str());
+            osgDB::ifstream fin(fileName.c_str());
             if (fin)
             {
                 return readObject(fin, local_opt.get());
@@ -106,9 +107,9 @@ class OSGReaderWriter : public ReaderWriter
 
             // code for setting up the database path so that internally referenced file are searched for on relative paths. 
             osg::ref_ptr<Options> local_opt = opt ? static_cast<Options*>(opt->clone(osg::CopyOp::SHALLOW_COPY)) : new Options;
-            local_opt->setDatabasePath(osgDB::getFilePath(fileName));
+            local_opt->getDatabasePathList().push_front(osgDB::getFilePath(fileName));
 
-            std::ifstream fin(fileName.c_str());
+            osgDB::ifstream fin(fileName.c_str());
             if (fin)
             {
                 return readNode(fin, local_opt.get());
@@ -181,7 +182,7 @@ class OSGReaderWriter : public ReaderWriter
             }
         }            
 
-        virtual WriteResult writeObject(const Object& obj,const std::string& fileName, const osgDB::ReaderWriter::Options* options) const
+        virtual WriteResult writeObject(const Object& obj, const std::string& fileName, const osgDB::ReaderWriter::Options* options) const
         {
             std::string ext = osgDB::getLowerCaseFileExtension(fileName);
             if (!acceptsExtension(ext)) return WriteResult::FILE_NOT_HANDLED;
@@ -224,7 +225,7 @@ class OSGReaderWriter : public ReaderWriter
         }
 
 
-        virtual WriteResult writeNode(const Node& node,const std::string& fileName, const osgDB::ReaderWriter::Options* options) const
+        virtual WriteResult writeNode(const Node& node, const std::string& fileName, const osgDB::ReaderWriter::Options* options) const
         {
             std::string ext = getFileExtension(fileName);
             if (!acceptsExtension(ext)) return WriteResult::FILE_NOT_HANDLED;
@@ -246,7 +247,7 @@ class OSGReaderWriter : public ReaderWriter
             return WriteResult("Unable to open file for output");
         }
 
-        virtual WriteResult writeNode(const Node& node,std::ostream& fout, const osgDB::ReaderWriter::Options* options) const
+        virtual WriteResult writeNode(const Node& node, std::ostream& fout, const osgDB::ReaderWriter::Options* options) const
         {
 
 

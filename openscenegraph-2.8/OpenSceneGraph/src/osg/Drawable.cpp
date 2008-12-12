@@ -250,6 +250,19 @@ Drawable::~Drawable()
     dirtyDisplayList();
 }
 
+osg::MatrixList Drawable::getWorldMatrices(const osg::Node* haltTraversalAtNode) const
+{
+    osg::MatrixList matrices;
+    for(ParentList::const_iterator itr = _parents.begin();
+        itr != _parents.end();
+        ++itr)
+    {
+        osg::MatrixList localMatrices = (*itr)->getWorldMatrices(haltTraversalAtNode);
+        matrices.insert(matrices.end(), localMatrices.begin(), localMatrices.end());
+    }
+    return matrices;
+}
+
 void Drawable::computeDataVariance()
 {
     if (getDataVariance() != UNSPECIFIED) return;
@@ -268,32 +281,17 @@ void Drawable::computeDataVariance()
 
 void Drawable::addParent(osg::Node* node)
 {
-    if (getRefMutex())
-    {
-        OpenThreads::ScopedLock<OpenThreads::Mutex> lock(*getRefMutex());
+    OpenThreads::ScopedPointerLock<OpenThreads::Mutex> lock(getRefMutex());
 
-        _parents.push_back(node);
-    }
-    else
-    {
-        _parents.push_back(node);
-    }
+    _parents.push_back(node);
 }
 
 void Drawable::removeParent(osg::Node* node)
 {
-    if (getRefMutex())
-    {
-        OpenThreads::ScopedLock<OpenThreads::Mutex> lock(*getRefMutex());
+    OpenThreads::ScopedPointerLock<OpenThreads::Mutex> lock(getRefMutex());
 
-        ParentList::iterator pitr = std::find(_parents.begin(),_parents.end(),node);
-        if (pitr!=_parents.end()) _parents.erase(pitr);
-    }
-    else
-    {
-        ParentList::iterator pitr = std::find(_parents.begin(),_parents.end(),node);
-        if (pitr!=_parents.end()) _parents.erase(pitr);
-    }
+    ParentList::iterator pitr = std::find(_parents.begin(),_parents.end(),node);
+    if (pitr!=_parents.end()) _parents.erase(pitr);
 }
 
 

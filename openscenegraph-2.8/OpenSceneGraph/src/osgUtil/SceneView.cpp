@@ -571,7 +571,7 @@ void SceneView::computeLeftEyeViewport(const osg::Viewport *viewport)
 
         case(osg::DisplaySettings::VERTICAL_SPLIT):
         {
-            Viewport::value_type separation = _displaySettings->getSplitStereoHorizontalSeparation();
+            Viewport::value_type separation = _displaySettings->getSplitStereoVerticalSeparation();
 
             if (_displaySettings->getSplitStereoVerticalEyeMapping()==osg::DisplaySettings::LEFT_EYE_TOP_VIEWPORT)
             {
@@ -621,7 +621,7 @@ void SceneView::computeRightEyeViewport(const osg::Viewport *viewport)
 
         case(osg::DisplaySettings::VERTICAL_SPLIT):
         {
-            Viewport::value_type separation = _displaySettings->getSplitStereoHorizontalSeparation();
+            Viewport::value_type separation = _displaySettings->getSplitStereoVerticalSeparation();
 
             if (_displaySettings->getSplitStereoVerticalEyeMapping()!=osg::DisplaySettings::LEFT_EYE_TOP_VIEWPORT)
             {
@@ -1067,7 +1067,7 @@ void SceneView::draw()
                 if (!leftColorMask)
                 {
                     leftColorMask = new osg::ColorMask();
-                    _renderStageRight->setColorMask(leftColorMask);
+                    _renderStageLeft->setColorMask(leftColorMask);
                 }
                 
                 // red
@@ -1084,7 +1084,7 @@ void SceneView::draw()
                 
 
                 // ensure that right eye color planes are active.
-                osg::ColorMask* rightColorMask = _renderStageLeft->getColorMask();
+                osg::ColorMask* rightColorMask = _renderStageRight->getColorMask();
                 if (!rightColorMask)
                 {
                     rightColorMask = new osg::ColorMask();
@@ -1098,7 +1098,6 @@ void SceneView::draw()
                 // rightColorMask->setMask(false,false,true,true);
 
                 _localStateSet->setAttribute(rightColorMask);
-                _renderStageRight->setColorMask(rightColorMask);
 
                 // draw right eye.
                 _renderStageRight->draw(_renderInfo,previous);
@@ -1139,8 +1138,6 @@ void SceneView::draw()
                 double separation = _displaySettings->getSplitStereoHorizontalSeparation();
 
                 double  left_half_width = (getViewport()->width()-separation)/2.0;
-                double right_half_begin = (getViewport()->width()+separation)/2.0;
-                double right_half_width = getViewport()->width()-right_half_begin;
 
                 clearArea(static_cast<int>(getViewport()->x()+left_half_width),
                           static_cast<int>(getViewport()->y()),
@@ -1191,8 +1188,6 @@ void SceneView::draw()
                 double separation = _displaySettings->getSplitStereoVerticalSeparation();
 
                 double bottom_half_height = (getViewport()->height()-separation)/2.0;
-                double top_half_begin = (getViewport()->height()+separation)/2.0;
-                double top_half_height = getViewport()->height()-top_half_begin;
 
                 clearArea(static_cast<int>(getViewport()->x()),
                           static_cast<int>(getViewport()->y()+bottom_half_height),
@@ -1275,14 +1270,14 @@ void SceneView::draw()
                     glOrtho(getViewport()->x(), getViewport()->width(), getViewport()->y(), getViewport()->height(), -1.0, 1.0);
                     glMatrixMode(GL_MODELVIEW);
                     glLoadIdentity();    
-                    glDisable(GL_LIGHTING);
-                    glDisable(GL_DEPTH_TEST);
+                    getState()->applyMode(GL_LIGHTING,false);
+                    getState()->applyMode(GL_DEPTH_TEST,false);
                     glStencilMask(~0u);
                     glClear(GL_STENCIL_BUFFER_BIT);
                     glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
                     glStencilFunc(GL_ALWAYS, 1, ~0u);
                     glPolygonStipple(patternVertEven);
-                    glEnable(GL_POLYGON_STIPPLE);
+                    getState()->applyMode(GL_POLYGON_STIPPLE,true);
                     glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
                     
                     glRecti(static_cast<GLint>(getViewport()->x()),
@@ -1291,9 +1286,9 @@ void SceneView::draw()
                             static_cast<GLint>(getViewport()->height()) );
                             
                     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-                    glDisable(GL_POLYGON_STIPPLE);
-                    glEnable(GL_LIGHTING);
-                    glEnable(GL_DEPTH_TEST);
+                    getState()->applyMode(GL_POLYGON_STIPPLE,false);
+                    getState()->applyMode(GL_LIGHTING,true);
+                    getState()->applyMode(GL_DEPTH_TEST,true);
                     
                     _redrawInterlacedStereoStencilMask = false;
                     _interlacedStereoStencilWidth = static_cast<int>(getViewport()->width());
@@ -1352,14 +1347,14 @@ void SceneView::draw()
                     glOrtho(getViewport()->x(), getViewport()->width(), getViewport()->y(), getViewport()->height(), -1.0, 1.0);
                     glMatrixMode(GL_MODELVIEW);
                     glLoadIdentity();
-                    glDisable(GL_LIGHTING);
-                    glDisable(GL_DEPTH_TEST);
+                    getState()->applyMode(GL_LIGHTING,false);
+                    getState()->applyMode(GL_DEPTH_TEST,false);
                     glStencilMask(~0u);
                     glClear(GL_STENCIL_BUFFER_BIT);
                     glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
                     glStencilFunc(GL_ALWAYS, 1, ~0u);
                     glPolygonStipple(patternHorzEven);
-                    glEnable(GL_POLYGON_STIPPLE);
+                    getState()->applyMode(GL_POLYGON_STIPPLE,true);
                     glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 
                     glRecti(static_cast<GLint>(getViewport()->x()),
@@ -1368,9 +1363,9 @@ void SceneView::draw()
                             static_cast<GLint>(getViewport()->height()) );
                             
                     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-                    glDisable(GL_POLYGON_STIPPLE);
-                    glEnable(GL_LIGHTING);
-                    glEnable(GL_DEPTH_TEST);
+                    getState()->applyMode(GL_POLYGON_STIPPLE,false);
+                    getState()->applyMode(GL_LIGHTING,true);
+                    getState()->applyMode(GL_DEPTH_TEST,true);
                     
                     _redrawInterlacedStereoStencilMask = false;
                     _interlacedStereoStencilWidth = static_cast<int>(getViewport()->width());
@@ -1522,11 +1517,8 @@ void SceneView::draw()
 
     if (state->getCheckForGLErrors()!=osg::State::NEVER_CHECK_GL_ERRORS)
     {
-        GLenum errorNo = glGetError();
-        if (errorNo!=GL_NO_ERROR)
+        if (state->checkGLErrors("end of SceneView::draw()"))
         {
-            osg::notify(WARN)<<"Warning: detected OpenGL error '"<<gluErrorString(errorNo)<<"'"<< std::endl;
-
             // go into debug mode of OGL error in a fine grained way to help
             // track down OpenGL errors.
             state->setCheckForGLErrors(osg::State::ONCE_PER_ATTRIBUTE);

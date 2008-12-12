@@ -30,11 +30,7 @@ MACRO(LINK_INTERNAL TRGTNAME)
                 #CMake 2.4.7, at least seem to use PREFIX instead of IMPORT_PREFIX  for computing linkage info to use into projects,
                 # so we full path name to specify linkage, this prevent automatic inferencing of dependencies, so we add explicit depemdencies
                 #to library targets used
-                IF(NOT MSVC_IDE)
-                    TARGET_LINK_LIBRARIES(${TRGTNAME} optimized "${OUTPUT_LIBDIR}/${LINKLIB}.lib" debug "${OUTPUT_LIBDIR}/${LINKLIB}${CMAKE_DEBUG_POSTFIX}.lib")
-                ELSE(NOT MSVC_IDE)
-                    TARGET_LINK_LIBRARIES(${TRGTNAME} optimized "${OUTPUT_LIBDIR}/${LINKLIB}" debug "${OUTPUT_LIBDIR}/${LINKLIB}${CMAKE_DEBUG_POSTFIX}")
-                ENDIF(NOT MSVC_IDE)
+                TARGET_LINK_LIBRARIES(${TRGTNAME} optimized "${OUTPUT_LIBDIR}/${LINKLIB}.lib" debug "${OUTPUT_LIBDIR}/${LINKLIB}${CMAKE_DEBUG_POSTFIX}.lib")
                 ADD_DEPENDENCIES(${TRGTNAME} ${LINKLIB})
             ELSE(MSVC AND OSG_MSVC_VERSIONED_DLL)
                 TARGET_LINK_LIBRARIES(${TRGTNAME} optimized "${LINKLIB}" debug "${LINKLIB}${CMAKE_DEBUG_POSTFIX}")
@@ -182,11 +178,7 @@ MACRO(SETUP_PLUGIN PLUGIN_NAME)
     ENDIF(NOT MSVC)
 
     SET_TARGET_PROPERTIES(${TARGET_TARGETNAME} PROPERTIES PROJECT_LABEL "${TARGET_LABEL}")
-
-    IF(OPENSCENEGRAPH_SONAMES)
-      SET_TARGET_PROPERTIES(${CORELIB_NAME} PROPERTIES VERSION ${OPENSCENEGRAPH_VERSION} SOVERSION ${OPENSCENEGRAPH_SOVERSION})
-    ENDIF(OPENSCENEGRAPH_SONAMES)
-
+ 
     SETUP_LINK_LIBRARIES()
 
 #the installation path are differentiated for win32 that install in bib versus other architecture that install in lib${LIB_POSTFIX}/${OSG_PLUGINS}
@@ -345,18 +337,20 @@ MACRO(HANDLE_MSVC_DLL)
     
         IF(NOT MSVC_IDE) 
             SET_TARGET_PROPERTIES(${LIB_NAME} PROPERTIES PREFIX "../bin/${LIB_PREFIX}${LIB_SOVERSION}-")
-            SET(NEW_LIB_NAME "${OUTPUT_BINDIR}/${LIB_PREFIX}${LIB_SOVERSION}-${LIB_NAME}")
-            ADD_CUSTOM_COMMAND(
-                TARGET ${LIB_NAME}
-                POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy "${NEW_LIB_NAME}.lib"  "${OUTPUT_LIBDIR}/${LIB_NAME}.lib"
-                COMMAND ${CMAKE_COMMAND} -E copy "${NEW_LIB_NAME}.exp"  "${OUTPUT_LIBDIR}/${LIB_NAME}.exp"
-                COMMAND ${CMAKE_COMMAND} -E remove "${NEW_LIB_NAME}.lib"
-                COMMAND ${CMAKE_COMMAND} -E remove "${NEW_LIB_NAME}.exp"
-                )
-        ELSE(NOT MSVC_IDE)
+            IF (${CMAKE_MAJOR_VERSION} EQUAL 2 AND ${CMAKE_MINOR_VERSION} EQUAL 4) 
+                SET(NEW_LIB_NAME "${OUTPUT_BINDIR}/${LIB_PREFIX}${LIB_SOVERSION}-${LIB_NAME}")
+                ADD_CUSTOM_COMMAND(
+                    TARGET ${LIB_NAME}
+                    POST_BUILD
+                    COMMAND ${CMAKE_COMMAND} -E copy "${NEW_LIB_NAME}.lib"  "${OUTPUT_LIBDIR}/${LIB_NAME}.lib"
+                    COMMAND ${CMAKE_COMMAND} -E copy "${NEW_LIB_NAME}.exp"  "${OUTPUT_LIBDIR}/${LIB_NAME}.exp"
+                    COMMAND ${CMAKE_COMMAND} -E remove "${NEW_LIB_NAME}.lib"
+                    COMMAND ${CMAKE_COMMAND} -E remove "${NEW_LIB_NAME}.exp"
+                    )
+            ENDIF (${CMAKE_MAJOR_VERSION} EQUAL 2 AND ${CMAKE_MINOR_VERSION} EQUAL 4) 
+        ELSE(NOT MSVC_IDE) 
             SET_TARGET_PROPERTIES(${LIB_NAME} PROPERTIES PREFIX "../../bin/${LIB_PREFIX}${LIB_SOVERSION}-" IMPORT_PREFIX "../")
-        ENDIF(NOT MSVC_IDE)
+        ENDIF(NOT MSVC_IDE) 
 
 #     SET_TARGET_PROPERTIES(${LIB_NAME} PROPERTIES PREFIX "../../bin/osg${OPENSCENEGRAPH_SOVERSION}-")
 #     SET_TARGET_PROPERTIES(${LIB_NAME} PROPERTIES IMPORT_PREFIX "../")

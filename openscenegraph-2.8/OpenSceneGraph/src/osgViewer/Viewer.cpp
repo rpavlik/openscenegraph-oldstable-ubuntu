@@ -804,26 +804,6 @@ void Viewer::eventTraversal()
         
     if (_done) return;
 
-    for(osgGA::EventQueue::Events::iterator itr = events.begin();
-        itr != events.end();
-        ++itr)
-    {
-        osgGA::GUIEventAdapter* event = itr->get();
-
-        for(EventHandlers::iterator hitr = _eventHandlers.begin();
-            hitr != _eventHandlers.end();
-            ++hitr)
-        {
-            (*hitr)->handleWithCheckAgainstIgnoreHandledEventsMask( *event, *this, 0, 0);
-        }
-
-        if (_cameraManipulator.valid())
-        {
-            _cameraManipulator->handleWithCheckAgainstIgnoreHandledEventsMask( *event, *this);
-        }
-        
-    }
-
     if (_eventVisitor.valid() && getSceneData())
     {
         _eventVisitor->setFrameStamp(getFrameStamp());
@@ -858,6 +838,33 @@ void Viewer::eventTraversal()
         }
     }
 
+
+    for(osgGA::EventQueue::Events::iterator itr = events.begin();
+        itr != events.end();
+        ++itr)
+    {
+        osgGA::GUIEventAdapter* event = itr->get();
+
+        for(EventHandlers::iterator hitr = _eventHandlers.begin();
+            hitr != _eventHandlers.end();
+            ++hitr)
+        {
+            (*hitr)->handleWithCheckAgainstIgnoreHandledEventsMask( *event, *this, 0, 0);
+        }
+        
+    }
+
+    for(osgGA::EventQueue::Events::iterator itr = events.begin();
+        itr != events.end();
+        ++itr)
+    {
+        osgGA::GUIEventAdapter* event = itr->get();
+        if (_cameraManipulator.valid())
+        {
+            _cameraManipulator->handleWithCheckAgainstIgnoreHandledEventsMask( *event, *this);
+        }
+    }
+    
     if (getStats() && getStats()->collectStats("event"))
     {
         double endEventTraversal = osg::Timer::instance()->delta_s(_startTick, osg::Timer::instance()->tick());
@@ -889,13 +896,13 @@ void Viewer::updateTraversal()
     if (_scene->getDatabasePager())
     {    
         // synchronize changes required by the DatabasePager thread to the scene graph
-        _scene->getDatabasePager()->updateSceneGraph(_frameStamp->getReferenceTime());
+        _scene->getDatabasePager()->updateSceneGraph(*_frameStamp);
     }
 
     if (_scene->getImagePager())
     {    
         // synchronize changes required by the DatabasePager thread to the scene graph
-        _scene->getImagePager()->updateSceneGraph(_frameStamp->getReferenceTime());
+        _scene->getImagePager()->updateSceneGraph(*_frameStamp);
     }
 
     if (_updateOperations.valid())
@@ -950,23 +957,6 @@ void Viewer::getViews(Views& views, bool onlyValid)
 {
     views.push_back(this);
 }
-
-void Viewer::getWindows(Windows& windows, bool onlyValid)
-{
-    windows.clear();
-
-    Contexts contexts;
-    getContexts(contexts, onlyValid);
-    
-    for(Contexts::iterator itr = contexts.begin();
-        itr != contexts.end();
-        ++itr)
-    {
-        osgViewer::GraphicsWindow* gw = dynamic_cast<osgViewer::GraphicsWindow*>(*itr);
-        if (gw) windows.push_back(gw);
-    }
-}
-
 
 void Viewer::getAllThreads(Threads& threads, bool onlyActive)
 {
@@ -1033,67 +1023,33 @@ void Viewer::getOperationThreads(OperationThreads& threads, bool onlyActive)
     
 }
 
-struct LessGraphicsContext
-{
-    bool operator () (const osg::GraphicsContext* lhs, const osg::GraphicsContext* rhs) const
-    {
-        int screenLeft = lhs->getTraits()? lhs->getTraits()->screenNum : 0;
-        int screenRight = rhs->getTraits()? rhs->getTraits()->screenNum : 0;
-        if (screenLeft < screenRight) return true;
-        if (screenLeft > screenRight) return false;
-
-        screenLeft = lhs->getTraits()? lhs->getTraits()->x : 0;
-        screenRight = rhs->getTraits()? rhs->getTraits()->x : 0;
-        if (screenLeft < screenRight) return true;
-        if (screenLeft > screenRight) return false;
-
-        screenLeft = lhs->getTraits()? lhs->getTraits()->y : 0;
-        screenRight = rhs->getTraits()? rhs->getTraits()->y : 0;
-        if (screenLeft < screenRight) return true;
-        if (screenLeft > screenRight) return false;
-        
-        return lhs < rhs;
-    } 
-};
-
-
-
 void Viewer::getContexts(Contexts& contexts, bool onlyValid)
 {
     typedef std::set<osg::GraphicsContext*> ContextSet;
     ContextSet contextSet;
+
+    contexts.clear();
 
     if (_camera.valid() && 
         _camera->getGraphicsContext() && 
         (_camera->getGraphicsContext()->valid() || !onlyValid))
     {
         contextSet.insert(_camera->getGraphicsContext());
+        contexts.push_back(_camera->getGraphicsContext());
     }
     
     for(unsigned int i=0; i<getNumSlaves(); ++i)
     {
         Slave& slave = getSlave(i);
-        if (slave._camera.valid() && 
-            slave._camera->getGraphicsContext() && 
-            (slave._camera->getGraphicsContext()->valid() || !onlyValid))
+        osg::GraphicsContext* sgc = slave._camera.valid() ? slave._camera->getGraphicsContext() : 0;
+        if (sgc && (sgc->valid() || !onlyValid))
         {
-            contextSet.insert(slave._camera->getGraphicsContext());
+            if (contextSet.count(sgc)==0)
+            {
+                contextSet.insert(sgc);
+                contexts.push_back(sgc);
+            }
         }
-    }
-
-    contexts.clear();
-    contexts.reserve(contextSet.size());
-
-    for(ContextSet::iterator itr = contextSet.begin();
-        itr != contextSet.end();
-        ++itr)
-    {
-        contexts.push_back(const_cast<osg::GraphicsContext*>(*itr));
-    }
-
-    if (contexts.size()>=2)
-    {
-        std::sort(contexts.begin(), contexts.end(), LessGraphicsContext()); 
     }
 }
 

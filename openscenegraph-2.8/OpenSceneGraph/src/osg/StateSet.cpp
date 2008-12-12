@@ -252,32 +252,17 @@ void StateSet::computeDataVariance()
 void StateSet::addParent(osg::Object* object)
 {
     // osg::notify(osg::INFO)<<"Adding parent"<<std::endl;
-    if (getRefMutex())
-    {
-        OpenThreads::ScopedLock<OpenThreads::Mutex> lock(*getRefMutex());
+    OpenThreads::ScopedPointerLock<OpenThreads::Mutex> lock(getRefMutex());
 
-        _parents.push_back(object);
-    }
-    else
-    {
-        _parents.push_back(object);
-    }
+    _parents.push_back(object);
 }
 
 void StateSet::removeParent(osg::Object* object)
 {
-    if (getRefMutex())
-    {
-        OpenThreads::ScopedLock<OpenThreads::Mutex> lock(*getRefMutex());
+    OpenThreads::ScopedPointerLock<OpenThreads::Mutex> lock(getRefMutex());
 
-        ParentList::iterator pitr = std::find(_parents.begin(),_parents.end(),object);
-        if (pitr!=_parents.end()) _parents.erase(pitr);
-    }
-    else
-    {
-        ParentList::iterator pitr = std::find(_parents.begin(),_parents.end(),object);
-        if (pitr!=_parents.end()) _parents.erase(pitr);
-    }
+    ParentList::iterator pitr = std::find(_parents.begin(),_parents.end(),object);
+    if (pitr!=_parents.end()) _parents.erase(pitr);
 }
 
 int StateSet::compare(const StateSet& rhs,bool compareAttributeContents) const
@@ -790,11 +775,7 @@ void StateSet::merge(const StateSet& rhs)
 
 void StateSet::setMode(StateAttribute::GLMode mode, StateAttribute::GLModeValue value)
 {
-    if (!getTextureGLModeSet().isTextureMode(mode))
-    {
-        setMode(_modeList,mode,value);
-    }
-    else
+    if (getTextureGLModeSet().isTextureMode(mode))
     {
         notify(NOTICE)<<"Warning: texture mode '"<<mode<<"'passed to setMode(mode,value), "<<std::endl;
         notify(NOTICE)<<"         assuming setTextureMode(unit=0,mode,value) instead."<<std::endl;
@@ -802,21 +783,37 @@ void StateSet::setMode(StateAttribute::GLMode mode, StateAttribute::GLModeValue 
 
         setTextureMode(0,mode,value);
     }
+    else if (mode == GL_COLOR_MATERIAL)
+    {
+        notify(NOTICE)<<"Error: Setting mode 'GL_COLOR_MATERIAL' via osg::StateSet::setMode(mode,value) ignored.\n";
+        notify(NOTICE)<<"       The mode 'GL_COLOR_MATERIAL' is set by the osg::Material StateAttribute.\n";
+        notify(NOTICE)<<"       Setting this as a mode fools osg's State tracking."<<std::endl;
+    }
+    else
+    {
+        setMode(_modeList,mode,value);
+    }
 }
 
 void StateSet::removeMode(StateAttribute::GLMode mode)
 {
-    if (!getTextureGLModeSet().isTextureMode(mode))
-    {
-        setModeToInherit(_modeList,mode);
-    }
-    else
+    if (getTextureGLModeSet().isTextureMode(mode))
     {
         notify(NOTICE)<<"Warning: texture mode '"<<mode<<"'passed to setModeToInherit(mode), "<<std::endl;
         notify(NOTICE)<<"         assuming setTextureModeToInherit(unit=0,mode) instead."<<std::endl;
         notify(NOTICE)<<"         please change calling code to use appropriate call."<<std::endl;
 
         removeTextureMode(0,mode);
+    }
+    else if (mode == GL_COLOR_MATERIAL)
+    {
+        notify(NOTICE)<<"Error: Setting mode 'GL_COLOR_MATERIAL' via osg::StateSet::removeMode(mode) ignored.\n";
+        notify(NOTICE)<<"       The mode 'GL_COLOR_MATERIAL' is set by the osg::Material StateAttribute.\n";
+        notify(NOTICE)<<"       Setting this as a mode fools osg's State tracking."<<std::endl;
+    }
+    else
+    {
+        setModeToInherit(_modeList,mode);
     }
 
 }

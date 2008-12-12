@@ -12,7 +12,12 @@
 
 #include <osg/ApplicationUsage>
 #include <osg/Camera>
+#include <osg/CopyOp>
+#include <osg/Drawable>
 #include <osg/Image>
+#include <osg/NodeVisitor>
+#include <osg/Object>
+#include <osg/RenderInfo>
 #include <osgGA/GUIActionAdapter>
 #include <osgGA/GUIEventAdapter>
 #include <osgViewer/ViewerEventHandlers>
@@ -104,6 +109,65 @@ BEGIN_OBJECT_REFLECTOR(osgViewer::HelpHandler)
 	I_SimpleProperty(int, KeyEventTogglesOnScreenHelp, 
 	                 __int__getKeyEventTogglesOnScreenHelp, 
 	                 __void__setKeyEventTogglesOnScreenHelp__int);
+END_REFLECTOR
+
+BEGIN_OBJECT_REFLECTOR(osgViewer::InteractiveImageHandler)
+	I_DeclaringFile("osgViewer/ViewerEventHandlers");
+	I_BaseType(osgGA::GUIEventHandler);
+	I_BaseType(osg::Drawable::CullCallback);
+	I_Constructor1(IN, osg::Image *, image,
+	               Properties::NON_EXPLICIT,
+	               ____InteractiveImageHandler__osg_Image_P1,
+	               "",
+	               "");
+	I_Method0(osg::Object *, cloneType,
+	          Properties::VIRTUAL,
+	          __osg_Object_P1__cloneType,
+	          "Clone the type of an object, with Object* return type. ",
+	          "Must be defined by derived classes. ");
+	I_Method1(osg::Object *, clone, IN, const osg::CopyOp &, copyop,
+	          Properties::VIRTUAL,
+	          __osg_Object_P1__clone__C5_osg_CopyOp_R1,
+	          "Clone an object, with Object* return type. ",
+	          "Must be defined by derived classes. ");
+	I_Method1(bool, isSameKindAs, IN, const osg::Object *, obj,
+	          Properties::VIRTUAL,
+	          __bool__isSameKindAs__C5_osg_Object_P1,
+	          "",
+	          "");
+	I_Method0(const char *, libraryName,
+	          Properties::VIRTUAL,
+	          __C5_char_P1__libraryName,
+	          "return the name of the object's library. ",
+	          "Must be defined by derived classes. The OpenSceneGraph convention is that the namespace of a library is the same as the library name. ");
+	I_Method0(const char *, className,
+	          Properties::VIRTUAL,
+	          __C5_char_P1__className,
+	          "return the name of the object's class type. ",
+	          "Must be defined by derived classes. ");
+	I_Method4(bool, handle, IN, const osgGA::GUIEventAdapter &, ea, IN, osgGA::GUIActionAdapter &, aa, IN, osg::Object *, x, IN, osg::NodeVisitor *, nv,
+	          Properties::VIRTUAL,
+	          __bool__handle__C5_osgGA_GUIEventAdapter_R1__osgGA_GUIActionAdapter_R1__osg_Object_P1__osg_NodeVisitor_P1,
+	          "Handle events, return true if handled, false otherwise. ",
+	          "");
+	I_Method3(bool, cull, IN, osg::NodeVisitor *, nv, IN, osg::Drawable *, drawable, IN, osg::RenderInfo *, renderInfo,
+	          Properties::VIRTUAL,
+	          __bool__cull__osg_NodeVisitor_P1__osg_Drawable_P1__osg_RenderInfo_P1,
+	          "do customized cull code, return true if drawable should be culled. ",
+	          "");
+	I_ProtectedConstructor0(____InteractiveImageHandler,
+	                        "",
+	                        "");
+	I_ProtectedConstructorWithDefaults2(IN, const osgViewer::InteractiveImageHandler &, rhs, , IN, const osg::CopyOp &, copyop, osg::CopyOp::SHALLOW_COPY,
+	                                    ____InteractiveImageHandler__C5_InteractiveImageHandler_R1__C5_osg_CopyOp_R1,
+	                                    "",
+	                                    "");
+	I_ProtectedMethod5(bool, mousePosition, IN, osgViewer::View *, view, IN, osg::NodeVisitor *, nv, IN, const osgGA::GUIEventAdapter &, ea, IN, int &, x, IN, int &, y,
+	                   Properties::NON_VIRTUAL,
+	                   Properties::CONST,
+	                   __bool__mousePosition__osgViewer_View_P1__osg_NodeVisitor_P1__C5_osgGA_GUIEventAdapter_R1__int_R1__int_R1,
+	                   "",
+	                   "");
 END_REFLECTOR
 
 BEGIN_OBJECT_REFLECTOR(osgViewer::LODScaleHandler)
@@ -297,6 +361,8 @@ BEGIN_ENUM_REFLECTOR(osgViewer::StatsHandler::StatsType)
 	I_EnumLabel(osgViewer::StatsHandler::NO_STATS);
 	I_EnumLabel(osgViewer::StatsHandler::FRAME_RATE);
 	I_EnumLabel(osgViewer::StatsHandler::VIEWER_STATS);
+	I_EnumLabel(osgViewer::StatsHandler::CAMERA_SCENE_STATS);
+	I_EnumLabel(osgViewer::StatsHandler::VIEWER_SCENE_STATS);
 	I_EnumLabel(osgViewer::StatsHandler::LAST);
 END_REFLECTOR
 
@@ -362,6 +428,12 @@ BEGIN_OBJECT_REFLECTOR(osgViewer::StatsHandler)
 	                   __void__setUpHUDCamera__osgViewer_ViewerBase_P1,
 	                   "",
 	                   "");
+	I_ProtectedMethod4(osg::Geometry *, createBackgroundRectangle, IN, const osg::Vec3 &, pos, IN, const float, width, IN, const float, height, IN, osg::Vec4 &, color,
+	                   Properties::NON_VIRTUAL,
+	                   Properties::NON_CONST,
+	                   __osg_Geometry_P1__createBackgroundRectangle__C5_osg_Vec3_R1__C5_float__C5_float__osg_Vec4_R1,
+	                   "",
+	                   "");
 	I_ProtectedMethod4(osg::Geometry *, createGeometry, IN, const osg::Vec3 &, pos, IN, float, height, IN, const osg::Vec4 &, colour, IN, unsigned int, numBlocks,
 	                   Properties::NON_VIRTUAL,
 	                   Properties::NON_CONST,
@@ -380,10 +452,10 @@ BEGIN_OBJECT_REFLECTOR(osgViewer::StatsHandler)
 	                   __osg_Geometry_P1__createTick__C5_osg_Vec3_R1__float__C5_osg_Vec4_R1__unsigned_int,
 	                   "",
 	                   "");
-	I_ProtectedMethod7(osg::Node *, createCameraStats, IN, const std::string &, font, IN, osg::Vec3 &, pos, IN, float, startBlocks, IN, bool, aquireGPUStats, IN, float, characterSize, IN, osg::Stats *, viewerStats, IN, osg::Camera *, camera,
+	I_ProtectedMethod7(osg::Node *, createCameraTimeStats, IN, const std::string &, font, IN, osg::Vec3 &, pos, IN, float, startBlocks, IN, bool, acquireGPUStats, IN, float, characterSize, IN, osg::Stats *, viewerStats, IN, osg::Camera *, camera,
 	                   Properties::NON_VIRTUAL,
 	                   Properties::NON_CONST,
-	                   __osg_Node_P1__createCameraStats__C5_std_string_R1__osg_Vec3_R1__float__bool__float__osg_Stats_P1__osg_Camera_P1,
+	                   __osg_Node_P1__createCameraTimeStats__C5_std_string_R1__osg_Vec3_R1__float__bool__float__osg_Stats_P1__osg_Camera_P1,
 	                   "",
 	                   "");
 	I_ProtectedMethod1(void, setUpScene, IN, osgViewer::ViewerBase *, viewer,

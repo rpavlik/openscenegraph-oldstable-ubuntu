@@ -298,10 +298,26 @@ void GeometryTechnique::generateGeometry(Locator* masterLocator, const osg::Vec3
             }
             else
             {
+
+                Locator* locator = colorLayer->getLocator();
+                if (!locator)
+                {            
+                    osgTerrain::SwitchLayer* switchLayer = dynamic_cast<osgTerrain::SwitchLayer*>(colorLayer);
+                    if (switchLayer)
+                    {
+                        if (switchLayer->getActiveLayer()>=0 &&
+                            switchLayer->getActiveLayer()<switchLayer->getNumLayers() &&
+                            switchLayer->getLayer(switchLayer->getActiveLayer()))
+                        {
+                            locator = switchLayer->getLayer(switchLayer->getActiveLayer())->getLocator();
+                        }
+                    }
+                }            
+            
                 TexCoordLocatorPair& tclp = layerToTexCoordMap[colorLayer];
                 tclp.first = new osg::Vec2Array;
                 tclp.first->reserve(numVertices);
-                tclp.second = colorLayer->getLocator() ? colorLayer->getLocator() : masterLocator;
+                tclp.second = locator ? locator : masterLocator;
                 geometry->setTexCoordArray(layerNum, tclp.first.get());
             }
         }
@@ -673,6 +689,18 @@ void GeometryTechnique::applyColorLayers()
         osgTerrain::Layer* colorLayer = _terrainTile->getColorLayer(layerNum);
         if (!colorLayer) continue;
 
+        osgTerrain::SwitchLayer* switchLayer = dynamic_cast<osgTerrain::SwitchLayer*>(colorLayer);
+        if (switchLayer)
+        {
+            if (switchLayer->getActiveLayer()<0 || switchLayer->getActiveLayer()>=switchLayer->getNumLayers())
+            {
+                continue;
+            }
+            
+            colorLayer = switchLayer->getLayer(switchLayer->getActiveLayer());
+            if (!colorLayer) continue;
+        }
+
         osg::Image* image = colorLayer->getImage();
         if (!image) continue;
 
@@ -689,14 +717,16 @@ void GeometryTechnique::applyColorLayers()
                 texture2D->setImage(image);
                 texture2D->setMaxAnisotropy(16.0f);
                 texture2D->setResizeNonPowerOfTwoHint(false);
-                texture2D->setFilter(osg::Texture::MIN_FILTER, osg::Texture::LINEAR_MIPMAP_LINEAR);
-                texture2D->setFilter(osg::Texture::MAG_FILTER, colorLayer->getFilter()==Layer::LINEAR ? osg::Texture::LINEAR :  osg::Texture::NEAREST);
+
+                texture2D->setFilter(osg::Texture::MIN_FILTER, colorLayer->getMinFilter());
+                texture2D->setFilter(osg::Texture::MAG_FILTER, colorLayer->getMagFilter());
+                
                 texture2D->setWrap(osg::Texture::WRAP_S,osg::Texture::CLAMP_TO_EDGE);
                 texture2D->setWrap(osg::Texture::WRAP_T,osg::Texture::CLAMP_TO_EDGE);
 
                 layerToTextureMap[colorLayer] = texture2D;
 
-                // osg::notify(osg::NOTICE)<<"Creating new ImageLayer texture "<<layerNum<<std::endl;
+                // osg::notify(osg::NOTICE)<<"Creating new ImageLayer texture "<<layerNum<<" image->s()="<<image->s()<<"  image->t()="<<image->t()<<std::endl;
 
             }
             else
@@ -718,7 +748,7 @@ void GeometryTechnique::applyColorLayers()
                 texture1D->setImage(image);
                 texture1D->setResizeNonPowerOfTwoHint(false);
                 texture1D->setFilter(osg::Texture::MIN_FILTER, osg::Texture::NEAREST);
-                texture1D->setFilter(osg::Texture::MAG_FILTER, colorLayer->getFilter()==Layer::LINEAR ? osg::Texture::LINEAR :  osg::Texture::NEAREST);
+                texture1D->setFilter(osg::Texture::MAG_FILTER, colorLayer->getMagFilter());
 
                 layerToTextureMap[colorLayer] = texture1D;
             }

@@ -99,6 +99,16 @@ BEGIN_OBJECT_REFLECTOR(osgDB::DatabasePager)
 	          __void__clear,
 	          "Clear all internally cached structures. ",
 	          "");
+	I_MethodWithDefaults2(void, setUpThreads, IN, unsigned int, totalNumThreads, 2, IN, unsigned int, numHttpThreads, 1,
+	                      Properties::NON_VIRTUAL,
+	                      __void__setUpThreads__unsigned_int__unsigned_int,
+	                      "",
+	                      "");
+	I_Method2(unsigned int, addDatabaseThread, IN, osgDB::DatabasePager::DatabaseThread::Mode, mode, IN, const std::string &, name,
+	          Properties::NON_VIRTUAL,
+	          __unsigned_int__addDatabaseThread__DatabaseThread_Mode__C5_std_string_R1,
+	          "",
+	          "");
 	I_Method1(osgDB::DatabasePager::DatabaseThread *, getDatabaseThread, IN, unsigned int, i,
 	          Properties::NON_VIRTUAL,
 	          __DatabaseThread_P1__getDatabaseThread__unsigned_int,
@@ -149,11 +159,11 @@ BEGIN_OBJECT_REFLECTOR(osgDB::DatabasePager)
 	          __void__signalEndFrame,
 	          "Signal the database thread that the update, cull and draw dispatch has completed. ",
 	          "Note, this is called by the application so that the database pager can go to wake back up now the main rendering threads are iddle waiting for the next frame. ");
-	I_Method1(void, registerPagedLODs, IN, osg::Node *, subgraph,
-	          Properties::VIRTUAL,
-	          __void__registerPagedLODs__osg_Node_P1,
-	          "Find all PagedLOD nodes in a subgraph and register them with the DatabasePager so it can keep track of expired nodes. ",
-	          "note, should be only be called from the update thread. ");
+	I_MethodWithDefaults2(void, registerPagedLODs, IN, osg::Node *, subgraph, , IN, int, frameNumber, 0,
+	                      Properties::VIRTUAL,
+	                      __void__registerPagedLODs__osg_Node_P1__int,
+	                      "Find all PagedLOD nodes in a subgraph and register them with the DatabasePager so it can keep track of expired nodes. ",
+	                      "note, should be only be called from the update thread. ");
 	I_Method1(void, setDoPreCompile, IN, bool, flag,
 	          Properties::NON_VIRTUAL,
 	          __void__setDoPreCompile__bool,
@@ -194,6 +204,16 @@ BEGIN_OBJECT_REFLECTOR(osgDB::DatabasePager)
 	          __unsigned_int__getMaximumNumOfObjectsToCompilePerFrame,
 	          "Get the maximum number of OpenGL objects that the page should attempt to compile per frame. ",
 	          "");
+	I_Method1(void, setTargetMaximumNumberOfPageLOD, IN, unsigned int, target,
+	          Properties::NON_VIRTUAL,
+	          __void__setTargetMaximumNumberOfPageLOD__unsigned_int,
+	          "Set the target maximum number of PagedLOD to maintain in memory. ",
+	          "Note, if more than the target number are required for rendering of a frame then these active PagedLOD are excempt from being expiried. But once the number of active drops back below the target the inactive PagedLOD will be trimmed back to the target number. ");
+	I_Method0(unsigned int, getTargetMaximumNumberOfPageLOD,
+	          Properties::NON_VIRTUAL,
+	          __unsigned_int__getTargetMaximumNumberOfPageLOD,
+	          "Get the target maximum number of PagedLOD to maintain in memory. ",
+	          "");
 	I_Method1(void, setExpiryDelay, IN, double, expiryDelay,
 	          Properties::NON_VIRTUAL,
 	          __void__setExpiryDelay__double,
@@ -203,6 +223,36 @@ BEGIN_OBJECT_REFLECTOR(osgDB::DatabasePager)
 	          Properties::NON_VIRTUAL,
 	          __double__getExpiryDelay,
 	          "Get the amount of time that a subgraph will be kept without being visited in the cull traversal before being removed. ",
+	          "");
+	I_Method1(void, setExpiryFrames, IN, int, expiryFrames,
+	          Properties::NON_VIRTUAL,
+	          __void__setExpiryFrames__int,
+	          "Set the number of frames that a subgraph will be kept without being visited in the cull traversal before being removed. ",
+	          "");
+	I_Method0(int, getExpiryFrames,
+	          Properties::NON_VIRTUAL,
+	          __int__getExpiryFrames,
+	          "Get the number of frames that a subgraph will be kept without being visited in the cull traversal before being removed. ",
+	          "");
+	I_Method1(void, setReleaseDelay, IN, double, releaseDelay,
+	          Properties::NON_VIRTUAL,
+	          __void__setReleaseDelay__double,
+	          "Set the amount of time that a subgraph's OpenGL objects will be kept without being visited in the cull traversal before being released. ",
+	          "");
+	I_Method0(double, getReleaseDelay,
+	          Properties::NON_VIRTUAL,
+	          __double__getReleaseDelay,
+	          "Get the amount of time that a subgraph's OpenGL objects will be kept without being visited in the cull traversal before being released. ",
+	          "");
+	I_Method1(void, setReleaseFrames, IN, int, releaseFrames,
+	          Properties::NON_VIRTUAL,
+	          __void__setReleaseFrames__int,
+	          "Set the number of frames that a subgraph's OpenGL objects will be kept without being visited in the cull traversal before being released. ",
+	          "");
+	I_Method0(int, getReleaseFrames,
+	          Properties::NON_VIRTUAL,
+	          __int__getReleaseFrames,
+	          "Get the number of frames that a subgraph's OpenGL objects will be kept without being visited in the cull traversal before being released. ",
 	          "");
 	I_Method1(void, setDeleteRemovedSubgraphsInDatabaseThread, IN, bool, flag,
 	          Properties::NON_VIRTUAL,
@@ -249,9 +299,9 @@ BEGIN_OBJECT_REFLECTOR(osgDB::DatabasePager)
 	          __bool__requiresUpdateSceneGraph,
 	          "Return true if there are pending updates to the scene graph that require a call to updateSceneGraph(double). ",
 	          "");
-	I_Method1(void, updateSceneGraph, IN, double, currentFrameTime,
+	I_Method1(void, updateSceneGraph, IN, const osg::FrameStamp &, frameStamp,
 	          Properties::VIRTUAL,
-	          __void__updateSceneGraph__double,
+	          __void__updateSceneGraph__C5_osg_FrameStamp_R1,
 	          "Merge the changes to the scene graph by calling calling removeExpiredSubgraphs then addLoadedDataToSceneGraph. ",
 	          "Note, must only be called from single thread update phase. ");
 	I_Method2(void, setCompileGLObjectsForContextID, IN, unsigned int, contextID, IN, bool, on,
@@ -293,6 +343,16 @@ BEGIN_OBJECT_REFLECTOR(osgDB::DatabasePager)
 	          Properties::NON_VIRTUAL,
 	          __unsigned_int__getDataToCompileListSize,
 	          "Report how many items are in the _dataToCompileList queue. ",
+	          "");
+	I_Method0(unsigned int, getDataToMergeListSize,
+	          Properties::NON_VIRTUAL,
+	          __unsigned_int__getDataToMergeListSize,
+	          "Report how many items are in the _dataToCompileList queue. ",
+	          "");
+	I_Method0(bool, getRequestsInProgress,
+	          Properties::NON_VIRTUAL,
+	          __bool__getRequestsInProgress,
+	          "Report whether any requests are in the pager. ",
 	          "");
 	I_Method0(double, getMinimumTimeToMergeTile,
 	          Properties::NON_VIRTUAL,
@@ -340,16 +400,28 @@ BEGIN_OBJECT_REFLECTOR(osgDB::DatabasePager)
 	                   __bool__isCompiled__C5_osg_Drawable_P1,
 	                   "",
 	                   "");
-	I_ProtectedMethod1(void, removeExpiredSubgraphs, IN, double, currentFrameTime,
+	I_ProtectedMethod1(void, removeExpiredSubgraphs, IN, const osg::FrameStamp &, frameStamp,
 	                   Properties::VIRTUAL,
 	                   Properties::NON_CONST,
-	                   __void__removeExpiredSubgraphs__double,
+	                   __void__removeExpiredSubgraphs__C5_osg_FrameStamp_R1,
 	                   "Iterate through the active PagedLOD nodes children removing children which havn't been visited since specified expiryTime. ",
 	                   "note, should be only be called from the update thread. ");
-	I_ProtectedMethod1(void, addLoadedDataToSceneGraph, IN, double, currentFrameTime,
+	I_ProtectedMethod1(void, expiry_removeExpiredSubgraphs, IN, const osg::FrameStamp &, frameStamp,
+	                   Properties::VIRTUAL,
+	                   Properties::NON_CONST,
+	                   __void__expiry_removeExpiredSubgraphs__C5_osg_FrameStamp_R1,
+	                   "Old expiry delay based removeExpiredSubgraphs. ",
+	                   "");
+	I_ProtectedMethod1(void, capped_removeExpiredSubgraphs, IN, const osg::FrameStamp &, frameStamp,
+	                   Properties::VIRTUAL,
+	                   Properties::NON_CONST,
+	                   __void__capped_removeExpiredSubgraphs__C5_osg_FrameStamp_R1,
+	                   "New capped based removeExpiredSubgraphs. ",
+	                   "");
+	I_ProtectedMethod1(void, addLoadedDataToSceneGraph, IN, const osg::FrameStamp &, frameStamp,
 	                   Properties::NON_VIRTUAL,
 	                   Properties::NON_CONST,
-	                   __void__addLoadedDataToSceneGraph__double,
+	                   __void__addLoadedDataToSceneGraph__C5_osg_FrameStamp_R1,
 	                   "Add the loaded data to the scene graph. ",
 	                   "");
 	I_SimpleProperty(bool, AcceptNewDatabaseRequests, 
@@ -364,6 +436,9 @@ BEGIN_OBJECT_REFLECTOR(osgDB::DatabasePager)
 	                  0);
 	I_SimpleProperty(unsigned int, DataToCompileListSize, 
 	                 __unsigned_int__getDataToCompileListSize, 
+	                 0);
+	I_SimpleProperty(unsigned int, DataToMergeListSize, 
+	                 __unsigned_int__getDataToMergeListSize, 
 	                 0);
 	I_SimpleProperty(bool, DatabasePagerThreadPause, 
 	                 __bool__getDatabasePagerThreadPause, 
@@ -387,6 +462,9 @@ BEGIN_OBJECT_REFLECTOR(osgDB::DatabasePager)
 	I_SimpleProperty(double, ExpiryDelay, 
 	                 __double__getExpiryDelay, 
 	                 __void__setExpiryDelay__double);
+	I_SimpleProperty(int, ExpiryFrames, 
+	                 __int__getExpiryFrames, 
+	                 __void__setExpiryFrames__int);
 	I_SimpleProperty(unsigned int, FileRequestListSize, 
 	                 __unsigned_int__getFileRequestListSize, 
 	                 0);
@@ -402,12 +480,24 @@ BEGIN_OBJECT_REFLECTOR(osgDB::DatabasePager)
 	I_SimpleProperty(double, MinimumTimeToMergeTile, 
 	                 __double__getMinimumTimeToMergeTile, 
 	                 0);
+	I_SimpleProperty(double, ReleaseDelay, 
+	                 __double__getReleaseDelay, 
+	                 __void__setReleaseDelay__double);
+	I_SimpleProperty(int, ReleaseFrames, 
+	                 __int__getReleaseFrames, 
+	                 __void__setReleaseFrames__int);
+	I_SimpleProperty(bool, RequestsInProgress, 
+	                 __bool__getRequestsInProgress, 
+	                 0);
 	I_SimpleProperty(OpenThreads::Thread::ThreadPriority, SchedulePriority, 
 	                 0, 
 	                 __int__setSchedulePriority__OpenThreads_Thread_ThreadPriority);
 	I_SimpleProperty(double, TargetFrameRate, 
 	                 __double__getTargetFrameRate, 
 	                 __void__setTargetFrameRate__double);
+	I_SimpleProperty(unsigned int, TargetMaximumNumberOfPageLOD, 
+	                 __unsigned_int__getTargetMaximumNumberOfPageLOD, 
+	                 __void__setTargetMaximumNumberOfPageLOD__unsigned_int);
 END_REFLECTOR
 
 BEGIN_ENUM_REFLECTOR(osgDB::DatabasePager::DatabaseThread::Mode)
@@ -439,6 +529,16 @@ BEGIN_OBJECT_REFLECTOR(osgDB::DatabasePager::DatabaseThread)
 	          __bool__getDone,
 	          "",
 	          "");
+	I_Method1(void, setActive, IN, bool, active,
+	          Properties::NON_VIRTUAL,
+	          __void__setActive__bool,
+	          "",
+	          "");
+	I_Method0(bool, getActive,
+	          Properties::NON_VIRTUAL,
+	          __bool__getActive,
+	          "",
+	          "");
 	I_Method0(int, cancel,
 	          Properties::VIRTUAL,
 	          __int__cancel,
@@ -449,11 +549,9 @@ BEGIN_OBJECT_REFLECTOR(osgDB::DatabasePager::DatabaseThread)
 	          __void__run,
 	          "Thread's run method. ",
 	          "Must be implemented by derived classes. This is where the action happens. ");
-	I_Method2(osg::ref_ptr< osg::Node >, dpReadRefNodeFile, IN, const std::string &, fileName, IN, const osgDB::ReaderWriter::Options *, options,
-	          Properties::NON_VIRTUAL,
-	          __osg_ref_ptrT1_osg_Node___dpReadRefNodeFile__C5_std_string_R1__C5_ReaderWriter_Options_P1,
-	          "",
-	          "");
+	I_SimpleProperty(bool, Active, 
+	                 __bool__getActive, 
+	                 __void__setActive__bool);
 	I_SimpleProperty(bool, Done, 
 	                 __bool__getDone, 
 	                 __void__setDone__bool);

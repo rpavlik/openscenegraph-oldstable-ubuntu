@@ -501,6 +501,22 @@ void ViewerBase::startThreading()
     osg::notify(osg::INFO)<<"Set up threading"<<std::endl;
 }
 
+void ViewerBase::getWindows(Windows& windows, bool onlyValid)
+{
+    windows.clear();
+
+    Contexts contexts;
+    getContexts(contexts, onlyValid);
+    
+    for(Contexts::iterator itr = contexts.begin();
+        itr != contexts.end();
+        ++itr)
+    {
+        osgViewer::GraphicsWindow* gw = dynamic_cast<osgViewer::GraphicsWindow*>(*itr);
+        if (gw) windows.push_back(gw);
+    }
+}
+
 void ViewerBase::checkWindowStatus()
 {
     Contexts contexts;
@@ -658,14 +674,14 @@ void ViewerBase::renderingTraversals()
     
     bool doneMakeCurrentInThisThread = false;
 
-    // dispatch the the rendering threads
-    if (_startRenderingBarrier.valid()) _startRenderingBarrier->block();
-
     if (_endDynamicDrawBlock.valid())
     {
         _endDynamicDrawBlock->reset();
     }
     
+    // dispatch the rendering threads
+    if (_startRenderingBarrier.valid()) _startRenderingBarrier->block();
+
     // reset any double buffer graphics objects
     for(Cameras::iterator camItr = cameras.begin();
         camItr != cameras.end();

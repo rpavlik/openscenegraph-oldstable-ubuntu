@@ -46,6 +46,7 @@
 #include <osg/CoordinateSystemNode>
 
 #include <osgDB/FileUtils>
+#include <osgDB/fstream>
 #include <osgDB/ReadFile>
 
 #include <osgText/Text>
@@ -146,7 +147,7 @@ public:
 
                     //osg::Matrixd matrix;
                     ellipsoid->computeLocalToWorldTransformFromLatLongHeight(_latitude,_longitude,_height,matrix);
-                    matrix.preMult(osg::Matrix::rotate(_rotation));
+                    matrix.preMultRotate(_rotation);
                     
                     mt->setMatrix(matrix);
                 }
@@ -243,7 +244,7 @@ int main(int argc, char **argv)
     std::string flightpath_filename;
     while (arguments.read("--flight-path",flightpath_filename))
     {
-        std::ifstream fin(flightpath_filename.c_str());
+        osgDB::ifstream fin(flightpath_filename.c_str());
         if (fin)
         {
             osg::AnimationPath* path = new osg::AnimationPath;

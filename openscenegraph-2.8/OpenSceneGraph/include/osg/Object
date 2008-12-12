@@ -25,6 +25,9 @@ namespace osg {
 // forward declare
 class State;
 
+#define _ADDQUOTES(def) #def
+#define ADDQUOTES(def) _ADDQUOTES(def)
+
 /** META_Object macro define the standard clone, isSameKindAs and className methods.
   * Use when subclassing from Object to make it more convenient to define 
   * the standard pure virtual clone, isSameKindAs and className methods 
@@ -36,6 +39,20 @@ class State;
         virtual const char* libraryName() const { return #library; }\
         virtual const char* className() const { return #name; }
 
+template<typename T>
+T* clone(const T* t, const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY)
+{
+    return dynamic_cast<T*>(t->clone(copyop)); 
+}
+
+
+template<typename T>
+T* clone(const T* t, const std::string& name, const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY)
+{
+    T* newObject = dynamic_cast<T*>(t->clone(copyop)); 
+    newObject->setName(name);
+    return newObject;
+}
 
 /** Base class/standard interface for objects which require IO support, 
     cloning and reference counting.

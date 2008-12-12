@@ -1,5 +1,5 @@
 #---------------------------------------------------
-# OSG CMAKE SUPPORT 
+# OSG CMAKE SUPPORT
 # (C) by Michael Wagner, mtw@shared-reality.com 2005
 # (C) Eric Wing, Luigi Calori and Robert Osfield 2006-2007
 #---------------------------------------------------
@@ -22,10 +22,10 @@ ENDIF(MSVC80)
 
 SET(TARGET_DEFAULT_PREFIX "osgdb_")
 SET(TARGET_DEFAULT_LABEL_PREFIX "Plugins")
-SET(TARGET_COMMON_LIBRARIES 
+SET(TARGET_COMMON_LIBRARIES
     OpenThreads
-    osg 
-    osgDB 
+    osg
+    osgDB
     osgUtil
 )
 
@@ -33,6 +33,7 @@ SET(TARGET_COMMON_LIBRARIES
 #
 #  NodeKit/Psudo loader plugins
 #
+ADD_SUBDIRECTORY(osgAnimation)
 ADD_SUBDIRECTORY(osgFX)
 ADD_SUBDIRECTORY(osgParticle)
 ADD_SUBDIRECTORY(osgSim)
@@ -40,11 +41,13 @@ ADD_SUBDIRECTORY(osgText)
 ADD_SUBDIRECTORY(osgViewer)
 ADD_SUBDIRECTORY(osgShadow)
 ADD_SUBDIRECTORY(osgTerrain)
+ADD_SUBDIRECTORY(osgWidget)
 ADD_SUBDIRECTORY(osga)
 ADD_SUBDIRECTORY(rot)
 ADD_SUBDIRECTORY(scale)
 ADD_SUBDIRECTORY(trans)
 ADD_SUBDIRECTORY(normals)
+ADD_SUBDIRECTORY(bvh)
 
 ############################################################
 #
@@ -75,15 +78,20 @@ ADD_SUBDIRECTORY(pnm)
 ADD_SUBDIRECTORY(dds)
 ADD_SUBDIRECTORY(tga)
 ADD_SUBDIRECTORY(hdr)
+ADD_SUBDIRECTORY(dot)
+ADD_SUBDIRECTORY(bsp)
 
 IF(JPEG_FOUND)
     ADD_SUBDIRECTORY(jpeg)
 ENDIF(JPEG_FOUND)
 IF(JASPER_FOUND)
-    ADD_SUBDIRECTORY(jp2) 
+    ADD_SUBDIRECTORY(jp2)
 ENDIF(JASPER_FOUND)
+IF(OPENEXR_FOUND)
+    ADD_SUBDIRECTORY(exr)
+ENDIF(OPENEXR_FOUND)
 IF(GIFLIB_FOUND)
-    ADD_SUBDIRECTORY(gif) 
+    ADD_SUBDIRECTORY(gif)
 ENDIF(GIFLIB_FOUND)
 IF(PNG_FOUND)
     ADD_SUBDIRECTORY(png)
@@ -99,6 +107,28 @@ ENDIF(GDAL_FOUND)
 IF(CURL_FOUND)
     ADD_SUBDIRECTORY(curl)
 ENDIF(CURL_FOUND)
+
+IF(ZLIB_FOUND)
+    ADD_SUBDIRECTORY(gz)
+ENDIF(ZLIB_FOUND)
+
+IF(XUL_FOUND)
+    IF  (WIN32 OR APPLE OR GTK_FOUND)
+        ADD_SUBDIRECTORY(gecko)
+    ENDIF(WIN32 OR APPLE OR GTK_FOUND)
+ENDIF(XUL_FOUND)
+
+
+
+
+############################################################
+#
+# 3D Image plugins
+#
+IF   (ITK_FOUND OR DCMTK_FOUND)
+    ADD_SUBDIRECTORY(dicom)
+ENDIF(ITK_FOUND OR DCMTK_FOUND)
+
 
 ############################################################
 #
@@ -124,6 +154,7 @@ ADD_SUBDIRECTORY(x)
 ADD_SUBDIRECTORY(dw)
 ADD_SUBDIRECTORY(dxf)
 ADD_SUBDIRECTORY(OpenFlight)
+# ADD_SUBDIRECTORY(flt)
 ADD_SUBDIRECTORY(geo)
 ADD_SUBDIRECTORY(obj)
 
@@ -155,7 +186,7 @@ IF(QUICKTIME_FOUND)
 ENDIF(QUICKTIME_FOUND)
 
 IF(FREETYPE_FOUND)
-    ADD_SUBDIRECTORY(freetype) 
+    ADD_SUBDIRECTORY(freetype)
 ENDIF(FREETYPE_FOUND)
 IF(ZLIB_FOUND)
     ADD_SUBDIRECTORY(zip)
@@ -165,9 +196,10 @@ IF(RSVG_FOUND AND CAIRO_FOUND)
     ADD_SUBDIRECTORY(svg)
 ENDIF(RSVG_FOUND AND CAIRO_FOUND)
 
-IF   (BUILD_OSGWIDGET)
-    ADD_SUBDIRECTORY(osgWidget)
-ENDIF(BUILD_OSGWIDGET)
+
+IF   (LIBVNCSERVER_FOUND)
+    ADD_SUBDIRECTORY(vnc)
+ENDIF(LIBVNCSERVER_FOUND)
 
 
 ##########to get all the variables of Cmake
@@ -178,4 +210,4 @@ ENDIF(BUILD_OSGWIDGET)
 #    )
 #ENDFOREACH(myvar)
 
-    
+

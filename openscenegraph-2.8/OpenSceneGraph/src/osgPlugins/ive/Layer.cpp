@@ -19,6 +19,7 @@
 #include "ImageLayer.h"
 #include "HeightFieldLayer.h"
 #include "CompositeLayer.h"
+#include "SwitchLayer.h"
 
 #include <osgDB/ReadFile>
 
@@ -40,13 +41,24 @@ void Layer::write(DataOutputStream* out)
     if (out->getVersion() >= VERSION_0023)
     {
         out->writeLocator(getLocator());
-        out->writeUInt(getFilter());
+
+        if (out->getVersion() >= VERSION_0034)
+        {
+            out->writeUInt(getMinFilter());
+            out->writeUInt(getMagFilter());
+        }
+        else
+        {
+            out->writeUInt((getMagFilter()==osg::Texture::LINEAR) ? 1 : 0);
+        }
     }
     else
     {
         LayerHelper helper;
         helper.writeLocator(out, getLocator());
     }
+    
+    
 
     out->writeUInt(getMinLevel());
     out->writeUInt(getMaxLevel());
@@ -77,7 +89,16 @@ void Layer::read(DataInputStream* in)
     if (in->getVersion() >= VERSION_0023)
     {
         setLocator(in->readLocator());
-        setFilter(osgTerrain::Layer::Filter(in->readUInt()));
+
+        if (in->getVersion() >= VERSION_0034)
+        {
+            setMinFilter(osg::Texture::FilterMode(in->readUInt()));
+            setMagFilter(osg::Texture::FilterMode(in->readUInt()));
+        }
+        else
+        {
+            setMagFilter(in->readUInt()==0 ? osg::Texture::NEAREST : osg::Texture::LINEAR);
+        }
     }
     else
     {
@@ -107,6 +128,10 @@ void LayerHelper::writeLayer(DataOutputStream* out, osgTerrain::Layer* layer)
         else if (dynamic_cast<osgTerrain::ImageLayer*>(layer))
         {
             ((ive::ImageLayer*)(layer))->write(out);
+        }
+        else if (dynamic_cast<osgTerrain::SwitchLayer*>(layer))
+        {
+            ((ive::SwitchLayer*)(layer))->write(out);
         }
         else if (dynamic_cast<osgTerrain::CompositeLayer*>(layer))
         {
@@ -148,6 +173,12 @@ osgTerrain::Layer* LayerHelper::readLayer(DataInputStream* in)
     {
         osgTerrain::ImageLayer* layer = new osgTerrain::ImageLayer;
         ((ive::ImageLayer*)(layer))->read(in);
+        return layer;
+    }
+    else if (id==IVESWITCHLAYER)
+    {
+        osgTerrain::SwitchLayer* layer = new osgTerrain::SwitchLayer;
+        ((ive::SwitchLayer*)(layer))->read(in);
         return layer;
     }
     else if (id==IVECOMPOSITELAYER)

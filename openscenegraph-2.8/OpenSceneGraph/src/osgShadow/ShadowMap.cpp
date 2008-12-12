@@ -83,9 +83,9 @@ static const char fragmentShaderSource_debugHUD[] =
 ShadowMap::ShadowMap():
     _baseTextureUnit(0),
     _shadowTextureUnit(1),
+    _polyOffset(1.0,1.0),
     _ambientBias(0.5f,0.5f),
-    _textureSize(1024,1024),
-    _polyOffset(1.0,1.0)
+    _textureSize(1024,1024)
 {
 }
 
@@ -93,6 +93,7 @@ ShadowMap::ShadowMap(const ShadowMap& copy, const osg::CopyOp& copyop):
 ShadowTechnique(copy,copyop),
     _baseTextureUnit(copy._baseTextureUnit),
     _shadowTextureUnit(copy._shadowTextureUnit),
+    _polyOffset(copy._polyOffset),
     _ambientBias(copy._ambientBias),
     _textureSize(copy._textureSize)
 {
@@ -400,11 +401,11 @@ void ShadowMap::cull(osgUtil::CullVisitor& cv)
 
         //std::cout<<"----- VxOSG::ShadowMap selectLight spot cutoff "<<selectLight->getSpotCutoff()<<std::endl;
 
-        if(selectLight->getSpotCutoff() < 180.0f)   // spotlight, then we don't need the bounding box
+        float fov = selectLight->getSpotCutoff() * 2;
+        if(fov < 180.0f)   // spotlight, then we don't need the bounding box
         {
             osg::Vec3 position(lightpos.x(), lightpos.y(), lightpos.z());
-            float spotAngle = selectLight->getSpotCutoff();
-            _camera->setProjectionMatrixAsPerspective(spotAngle, 1.0, 0.1, 1000.0);
+            _camera->setProjectionMatrixAsPerspective(fov, 1.0, 0.1, 1000.0);
             _camera->setViewMatrixAsLookAt(position,position+lightDir,osg::Vec3(0.0f,1.0f,0.0f));
         }
         else
@@ -545,8 +546,8 @@ public:
         }
     }
 
-    unsigned                       _stage;
     osg::ref_ptr< osg::Texture2D > _texture;
+    unsigned                       _stage;
 };
 ////////////////////////////////////////////////////////////////////////////////
 osg::ref_ptr<osg::Camera> ShadowMap::makeDebugHUD()

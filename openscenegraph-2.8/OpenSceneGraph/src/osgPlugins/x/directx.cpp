@@ -1,7 +1,7 @@
 // -*-c++-*-
 
 /*
- * $Id: directx.cpp 7747 2007-12-24 15:19:52Z robert $
+ * $Id: directx.cpp 9162 2008-11-13 22:55:48Z jeremymoles $
  *
  * Loader for DirectX .x files.
  * Copyright (c)2002-2006 Ulrich Hertlein <u.hertlein@sandbox.de>
@@ -35,6 +35,7 @@
 #include <math.h>
 
 #include <osg/Notify>
+#include <osgDB/fstream>
 
 using namespace DX;
 using namespace std;
@@ -63,7 +64,7 @@ bool Object::load(const char* filename)
     if (!filename)
         return false;
 
-    ifstream fin(filename);
+    osgDB::ifstream fin(filename);
     if (fin.bad()) {
         osg::notify(osg::WARN) << "Object::load: Unable to open: " << filename << endl;
         return false;

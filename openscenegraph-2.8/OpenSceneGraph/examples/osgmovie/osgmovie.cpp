@@ -39,12 +39,11 @@
 
 #include <iostream>
 
-osg::ImageStream* s_imageStream = 0;
 class MovieEventHandler : public osgGA::GUIEventHandler
 {
 public:
 
-    MovieEventHandler():_trackMouse(false),playToggle_(true) {}
+    MovieEventHandler():_trackMouse(false),_playToggle(true) {}
     
     void setMouseTracking(bool track) { _trackMouse = track; }
     bool getMouseTracking() const { return _trackMouse; }
@@ -105,7 +104,6 @@ protected:
             if (imagestream)
             {
                 _imageStreamList.push_back(imagestream); 
-                s_imageStream = imagestream;
             }
         }
         
@@ -113,7 +111,7 @@ protected:
     };
 
 
-    bool            playToggle_;
+    bool            _playToggle;
     bool            _trackMouse;
     ImageStreamList _imageStreamList;
     
@@ -208,8 +206,8 @@ bool MovieEventHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIAction
                     itr!=_imageStreamList.end();
                     ++itr)
                 {
-                    playToggle_ = !playToggle_;
-                    if ( playToggle_ )
+                    _playToggle = !_playToggle;
+                    if ( _playToggle )
                     {
                         // playing, so pause
                         std::cout<<"Play"<<std::endl;
@@ -303,6 +301,7 @@ osg::Geometry* myCreateTexturedQuadGeometry(const osg::Vec3& pos,float width,flo
                                            0.0f, flip ? 1.0f : 0.0f , 1.0f, flip ? 0.0f : 1.0f);
                                     
         osg::Texture2D* texture = new osg::Texture2D(image);
+        texture->setResizeNonPowerOfTwoHint(false);
         texture->setFilter(osg::Texture::MIN_FILTER,osg::Texture::LINEAR);
         texture->setWrap(osg::Texture::WRAP_S, osg::Texture::CLAMP_TO_EDGE);
         texture->setWrap(osg::Texture::WRAP_T, osg::Texture::CLAMP_TO_EDGE);
@@ -383,7 +382,7 @@ int main(int argc, char** argv)
             "uniform samplerRect movie_texture;\n"
             "void main(void)\n"
             "{\n"
-            "    vec4 texture_color = textureRect(movie_texture, gl_TexCoord[0]); \n"
+            "    vec4 texture_color = textureRect(movie_texture, gl_TexCoord[0].st); \n"
             "    if (all(lessThanEqual(texture_color,cutoff_color))) discard; \n"
             "    gl_FragColor = texture_color;\n"
             "}\n"
@@ -394,7 +393,7 @@ int main(int argc, char** argv)
             "uniform sampler2D movie_texture;\n"
             "void main(void)\n"
             "{\n"
-            "    vec4 texture_color = texture2D(movie_texture, gl_TexCoord[0]); \n"
+            "    vec4 texture_color = texture2D(movie_texture, gl_TexCoord[0].st); \n"
             "    if (all(lessThanEqual(texture_color,cutoff_color))) discard; \n"
             "    gl_FragColor = texture_color;\n"
             "}\n"

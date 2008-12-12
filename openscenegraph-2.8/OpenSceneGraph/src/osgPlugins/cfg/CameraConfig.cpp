@@ -15,16 +15,7 @@
 #include <osg/ref_ptr>
 #include <osg/io_utils>
 
-#if defined(WIN32) && !defined(__CYGWIN__)
-    #include <io.h>
-    #include <windows.h>
-    #include <winbase.h>
-    // set up for windows so acts just like unix access().
-    #define F_OK 4
-#else // unix
-    #include <unistd.h>
-#endif
-
+#include <osgDB/FileUtils>
 
 #ifdef _X11_IMPLEMENTATION
 #  include <X11/Xlib.h>
@@ -573,11 +564,6 @@ void CameraConfig::scaleCameraOffset( osg::Matrix::value_type x, osg::Matrix::va
   memcpy( _offset_matrix, m.ptr(), sizeof( osg::Matrix::value_type[16] ));
 }
 
-bool CameraConfig::fileExists(const std::string& filename)
-{
-    return access( filename.c_str(), F_OK ) == 0;
-}
-
 // Order of precedence:
 //
 std::string CameraConfig::findFile( std::string filename )
@@ -590,23 +576,23 @@ std::string CameraConfig::findFile( std::string filename )
     if( ptr != NULL )
     {
          path = std::string(ptr) + '/' + filename;
-        if( fileExists(path)) 
+        if( osgDB::fileExists(path)) 
             return path;
     }
 
     // Check standard location(s)
     //path.clear();
     path = std::string( "/usr/local/share/Producer/Config/") + filename;
-    if( fileExists(path) ) 
+    if( osgDB::fileExists(path) ) 
         return path;
 
     //path.clear();
     path = std::string( "/usr/share/Producer/Config/") + filename;
-    if( fileExists(path) ) 
+    if( osgDB::fileExists(path) ) 
         return path;
 
     // Check local directory
-    if(fileExists(filename)) 
+    if(osgDB::fileExists(filename)) 
         return filename;
 
     // Fail

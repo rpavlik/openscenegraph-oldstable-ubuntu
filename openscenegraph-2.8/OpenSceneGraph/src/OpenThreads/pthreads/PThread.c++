@@ -421,6 +421,7 @@ Thread::~Thread()
 
 Thread *Thread::CurrentThread()
 {
+    if(!s_isInitialized) Thread::Init();
 
     Thread *thread =
 	static_cast<Thread *>(pthread_getspecific(PThreadPrivateData::s_tls_key));
@@ -590,18 +591,27 @@ int Thread::start() {
 
     PThreadPrivateData *pd = static_cast<PThreadPrivateData *> (_prvData);
 
-    size_t defaultStackSize = 0;
+    size_t defaultStackSize;
     pthread_attr_getstacksize( &thread_attr, &defaultStackSize);
+    if(status != 0) {
+	return status;
+    }
 
     if(defaultStackSize < pd->stackSize) {
 
 	pthread_attr_setstacksize( &thread_attr, pd->stackSize);
+	if(status != 0) {
+	    return status;
+	}
     }
 
     //-------------------------------------------------------------------------
     // Now get what we actually have...
     //
     pthread_attr_getstacksize( &thread_attr, &defaultStackSize);
+    if(status != 0) {
+	return status;
+    }
 
     pd->stackSize = defaultStackSize;
 
