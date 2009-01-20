@@ -272,10 +272,12 @@ osgDB::ReaderWriter::ReadResult ReaderWriterCURL::readFile(ObjectType objectType
 
         //Setting Proxy by OSG Options
         if(!optProxy.empty())
+        {
             if(!optProxyPort.empty())
                 proxyAddress = optProxy + ":" + optProxyPort;
             else
                 proxyAddress = optProxy + ":8080"; //Port not found, using default
+        }
     }
 
     std::string fileName;
@@ -403,7 +405,7 @@ bool ReaderWriterCURL::read(std::istream& fin, std::string& destination) const
                        15 + 32 // autodected zlib or gzip header
                        );
     if (ret != Z_OK)
-        return ret;
+        return false;
 
     /* decompress until deflate stream ends or end of file */
     do {

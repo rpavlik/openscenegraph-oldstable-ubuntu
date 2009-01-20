@@ -49,6 +49,8 @@ class OSGWIDGET_EXPORT Label: public Widget
 
         osgText::Text* getText() { return _text.get(); }
 
+        const osgText::Text* getText() const { return _text.get(); }
+
     protected:
 
         osg::ref_ptr<osgText::Text> _text;

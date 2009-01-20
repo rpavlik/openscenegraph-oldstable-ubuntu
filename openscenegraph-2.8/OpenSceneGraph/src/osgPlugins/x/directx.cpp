@@ -1,7 +1,7 @@
 // -*-c++-*-
 
 /*
- * $Id: directx.cpp 9162 2008-11-13 22:55:48Z jeremymoles $
+ * $Id: directx.cpp 9124 2008-11-07 15:08:08Z robert $
  *
  * Loader for DirectX .x files.
  * Copyright (c)2002-2006 Ulrich Hertlein <u.hertlein@sandbox.de>

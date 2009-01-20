@@ -20,6 +20,7 @@
 #include <osg/RenderInfo>
 #include <osgGA/GUIActionAdapter>
 #include <osgGA/GUIEventAdapter>
+#include <osgViewer/ViewerBase>
 #include <osgViewer/ViewerEventHandlers>
 
 // Must undefine IN and OUT macros defined in Windows headers
@@ -158,7 +159,7 @@ BEGIN_OBJECT_REFLECTOR(osgViewer::InteractiveImageHandler)
 	I_ProtectedConstructor0(____InteractiveImageHandler,
 	                        "",
 	                        "");
-	I_ProtectedConstructorWithDefaults2(IN, const osgViewer::InteractiveImageHandler &, rhs, , IN, const osg::CopyOp &, copyop, osg::CopyOp::SHALLOW_COPY,
+	I_ProtectedConstructorWithDefaults2(IN, const osgViewer::InteractiveImageHandler &, x, , IN, const osg::CopyOp &, x, osg::CopyOp::SHALLOW_COPY,
 	                                    ____InteractiveImageHandler__C5_InteractiveImageHandler_R1__C5_osg_CopyOp_R1,
 	                                    "",
 	                                    "");
@@ -217,9 +218,8 @@ END_REFLECTOR
 BEGIN_OBJECT_REFLECTOR(osgViewer::RecordCameraPathHandler)
 	I_DeclaringFile("osgViewer/ViewerEventHandlers");
 	I_BaseType(osgGA::GUIEventHandler);
-	I_ConstructorWithDefaults1(IN, const std::string &, filename, "saved_animation.path",
-	                           Properties::NON_EXPLICIT,
-	                           ____RecordCameraPathHandler__C5_std_string_R1,
+	I_ConstructorWithDefaults2(IN, const std::string &, filename, "saved_animation.path", IN, float, fps, 25.0f,
+	                           ____RecordCameraPathHandler__C5_std_string_R1__float,
 	                           "",
 	                           "");
 	I_Method1(void, setKeyEventToggleRecord, IN, int, key,
@@ -300,6 +300,11 @@ BEGIN_OBJECT_REFLECTOR(osgViewer::ScreenCaptureHandler)
 	          Properties::VIRTUAL,
 	          __bool__handle__C5_osgGA_GUIEventAdapter_R1__osgGA_GUIActionAdapter_R1,
 	          "Deprecated, Handle events, return true if handled, false otherwise. ",
+	          "");
+	I_Method1(void, captureNextFrame, IN, osgViewer::ViewerBase &, viewer,
+	          Properties::VIRTUAL,
+	          __void__captureNextFrame__osgViewer_ViewerBase_R1,
+	          "Capture the given viewer's views on the next frame. ",
 	          "");
 	I_Method1(void, getUsage, IN, osg::ApplicationUsage &, usage,
 	          Properties::VIRTUAL,

@@ -43,8 +43,13 @@ GeometryTechnique::GeometryTechnique():
 }
 
 GeometryTechnique::GeometryTechnique(const GeometryTechnique& gt,const osg::CopyOp& copyop):
-    TerrainTechnique(gt,copyop)
+    TerrainTechnique(gt,copyop),
+    _currentReadOnlyBuffer(1),
+    _currentWriteBuffer(0)
 {
+    setFilterBias(gt._filterBias);
+    setFilterWidth(gt._filterWidth);
+    setFilterMatrix(gt._filterMatrix);
 }
 
 GeometryTechnique::~GeometryTechnique()
@@ -278,7 +283,7 @@ void GeometryTechnique::generateGeometry(Locator* masterLocator, const osg::Vec3
     geometry->setNormalBinding(osg::Geometry::BIND_PER_VERTEX);
     
 
-    float minHeight = 0.0;
+    //float minHeight = 0.0;
     float scaleHeight = _terrainTile->getTerrain() ? _terrainTile->getTerrain()->getVerticalScale() : 1.0f;
 
     // allocate and assign tex coords
@@ -306,7 +311,7 @@ void GeometryTechnique::generateGeometry(Locator* masterLocator, const osg::Vec3
                     if (switchLayer)
                     {
                         if (switchLayer->getActiveLayer()>=0 &&
-                            switchLayer->getActiveLayer()<switchLayer->getNumLayers() &&
+                            static_cast<unsigned int>(switchLayer->getActiveLayer())<switchLayer->getNumLayers() &&
                             switchLayer->getLayer(switchLayer->getActiveLayer()))
                         {
                             locator = switchLayer->getLayer(switchLayer->getActiveLayer())->getLocator();
@@ -692,7 +697,8 @@ void GeometryTechnique::applyColorLayers()
         osgTerrain::SwitchLayer* switchLayer = dynamic_cast<osgTerrain::SwitchLayer*>(colorLayer);
         if (switchLayer)
         {
-            if (switchLayer->getActiveLayer()<0 || switchLayer->getActiveLayer()>=switchLayer->getNumLayers())
+            if (switchLayer->getActiveLayer()<0 || 
+                static_cast<unsigned int>(switchLayer->getActiveLayer())>=switchLayer->getNumLayers())
             {
                 continue;
             }

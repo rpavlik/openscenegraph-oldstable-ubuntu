@@ -54,6 +54,11 @@ BEGIN_VALUE_REFLECTOR(osg::NodeAcceptOp)
 	               ____NodeAcceptOp__NodeVisitor_R1,
 	               "",
 	               "");
+	I_Constructor1(IN, const osg::NodeAcceptOp &, naop,
+	               Properties::NON_EXPLICIT,
+	               ____NodeAcceptOp__C5_NodeAcceptOp_R1,
+	               "",
+	               "");
 END_REFLECTOR
 
 BEGIN_ENUM_REFLECTOR(osg::NodeVisitor::TraversalMode)
@@ -85,6 +90,16 @@ BEGIN_OBJECT_REFLECTOR(osg::NodeVisitor)
 	                           ____NodeVisitor__VisitorType__TraversalMode,
 	                           "",
 	                           "");
+	I_Method0(const char *, libraryName,
+	          Properties::VIRTUAL,
+	          __C5_char_P1__libraryName,
+	          "return the library name/namespapce of the visitor's. ",
+	          "Should be defined by derived classes. ");
+	I_Method0(const char *, className,
+	          Properties::VIRTUAL,
+	          __C5_char_P1__className,
+	          "return the name of the visitor's class type. ",
+	          "Should be defined by derived classes. ");
 	I_Method0(void, reset,
 	          Properties::VIRTUAL,
 	          __void__reset,

@@ -24,7 +24,7 @@ bool Uniform_readLocalData(Object& obj, Input& fr);
 bool Uniform_writeLocalData(const Object& obj, Output& fw);
 
 // register the read and write functions with the osgDB::Registry.
-RegisterDotOsgWrapperProxy g_UniformProxy
+REGISTER_DOTOSGWRAPPER(Uniform)
 (
     new osg::Uniform,
     "Uniform",
@@ -212,7 +212,7 @@ bool Uniform_readLocalData(Object& obj, Input& fr)
     static ref_ptr<Uniform::Callback> s_callback = new osg::Uniform::Callback;
     while (fr.matchSequence("UpdateCallback {"))
     {
-        int entry = fr[0].getNoNestedBrackets();
+        //int entry = fr[0].getNoNestedBrackets();
         fr += 2;
         Uniform::Callback* callback = dynamic_cast<Uniform::Callback*>(fr.readObjectOfType(*s_callback));
         if (callback) {
@@ -223,7 +223,7 @@ bool Uniform_readLocalData(Object& obj, Input& fr)
 
     while (fr.matchSequence("EventCallback {"))
     {
-        int entry = fr[0].getNoNestedBrackets();
+        //int entry = fr[0].getNoNestedBrackets();
         fr += 2;
         Uniform::Callback* callback = dynamic_cast<Uniform::Callback*>(fr.readObjectOfType(*s_callback));
         if (callback) {

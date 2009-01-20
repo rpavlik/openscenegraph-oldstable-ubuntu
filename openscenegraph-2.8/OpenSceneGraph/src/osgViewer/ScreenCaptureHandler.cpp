@@ -18,6 +18,8 @@
 #include <osgViewer/Viewer>
 #include <osgViewer/ViewerEventHandlers>
 
+#include <string.h>
+
 namespace osgViewer
 {
 
@@ -136,9 +138,11 @@ WindowCaptureCallback::ContextData::ContextData(osg::GraphicsContext* gc, Mode m
       _reportTimingFrequency(100),
       _numTimeValuesRecorded(0),
       _timeForReadPixels(0.0),
-      _timeForFullCopy(0.0),
       _timeForMemCpy(0.0),
-      _captureOperation(0)
+      _timeForCaptureOperation(0.0),
+      _timeForFullCopy(0.0),
+      _timeForFullCopyAndOperation(0.0),
+      _previousFrameTick(0)
 {
     _previousFrameTick = osg::Timer::instance()->tick();
     
@@ -716,6 +720,12 @@ bool ScreenCaptureHandler::handle(const osgGA::GUIEventAdapter& ea, osgGA::GUIAc
     }
 
     return false;
+}
+
+/** Capture the given viewer's views on the next frame. */
+void ScreenCaptureHandler::captureNextFrame(osgViewer::ViewerBase& viewer)
+{
+    addCallbackToViewer(viewer);
 }
 
 /** Get the keyboard and mouse usage of this manipulator.*/

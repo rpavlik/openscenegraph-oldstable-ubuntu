@@ -12,7 +12,7 @@ bool ImageSequence_readLocalData(Object& obj, Input& fr);
 bool ImageSequence_writeLocalData(const Object& obj, Output& fw);
 
 // register the read and write functions with the osgDB::Registry.
-RegisterDotOsgWrapperProxy g_ImageSequenceProxy
+REGISTER_DOTOSGWRAPPER(ImageSequence)
 (
     new osg::ImageSequence,
     "ImageSequence",
@@ -26,9 +26,6 @@ bool ImageSequence_readLocalData(Object& obj, Input& fr)
     bool iteratorAdvanced = false;
 
     ImageSequence& is = static_cast<ImageSequence&>(obj);
-
-    unsigned int numFilesToPreLoad = 1;
-
 
     std::string modeStr;
     if (fr.read("Mode",modeStr))

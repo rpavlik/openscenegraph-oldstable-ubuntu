@@ -12,8 +12,10 @@ SET(LIB_PUBLIC_HEADERS
     ${HEADER_PATH}/ImageUtils
     ${HEADER_PATH}/Version
     ${HEADER_PATH}/Volume
+    ${HEADER_PATH}/Locator
+    ${HEADER_PATH}/Layer
     ${HEADER_PATH}/VolumeTechnique
-    ${HEADER_PATH}/Brick
+    ${HEADER_PATH}/VolumeTile
 )
 
 # FIXME: For OS X, need flag for Framework or dylib
@@ -22,9 +24,11 @@ ADD_LIBRARY(${LIB_NAME}
     ${LIB_PUBLIC_HEADERS}
     ImageUtils.cpp
     Version.cpp
-    Brick.cpp
-    VolumeTechnique.cpp
     Volume.cpp
+    VolumeTechnique.cpp
+    Layer.cpp
+    Locator.cpp
+    VolumeTile.cpp
 )
 
 

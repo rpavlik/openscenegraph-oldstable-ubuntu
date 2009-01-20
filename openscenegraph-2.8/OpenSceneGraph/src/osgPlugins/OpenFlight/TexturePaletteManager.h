@@ -45,6 +45,9 @@ public:
     void write( DataOutputStream& dos ) const;
 
 protected:
+
+    TexturePaletteManager& operator = (const TexturePaletteManager&) { return *this; }
+
     int _currIndex;
 
     typedef std::map< const osg::Texture2D*, int > TextureIndexMap;
@@ -53,6 +56,7 @@ protected:
     const FltExportVisitor& _nv;
 
     const ExportOptions& _fltOpt;
+
 };
 
 

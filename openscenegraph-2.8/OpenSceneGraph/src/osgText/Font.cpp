@@ -23,6 +23,8 @@
 #include <osgDB/FileNameUtils>
 #include <osg/GLU>
 
+#include <string.h>
+
 #include <OpenThreads/ReentrantMutex>
 
 using namespace osgText;
@@ -664,9 +666,9 @@ void Font::GlyphTexture::apply(osg::State& state) const
         }
         
         if (s_renderer && 
-            (strstr((const char*)s_renderer,"Radeon")!=0) || 
+            ((strstr((const char*)s_renderer,"Radeon")!=0) || 
             (strstr((const char*)s_renderer,"RADEON")!=0) ||
-            (strstr((const char*)s_renderer,"ALL-IN-WONDER")!=0))
+            (strstr((const char*)s_renderer,"ALL-IN-WONDER")!=0)))
         {
             // we're running on an ATI, so need to work around its
             // subloading bugs by loading all at once.

@@ -109,7 +109,7 @@ struct ExampleTimelineUsage : public osgGA::GUIEventHandler
         _scratchNose->setCallback(_scratchNose->getNumFrames()-1, new NoseEnd);
     }
 
-    bool handle(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter& aa)
+    bool handle(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter&)
     {
         if (ea.getEventType() == osgGA::GUIEventAdapter::KEYUP)
         {
@@ -177,7 +177,8 @@ int main (int argc, char* argv[])
     }
 
     osg::ref_ptr<osgAnimation::TimelineAnimationManager> tl = new osgAnimation::TimelineAnimationManager(*animationManager);
-    root->setUpdateCallback(tl);
+    root->setUpdateCallback(tl.get());
+    
     ExampleTimelineUsage* callback = new ExampleTimelineUsage(tl.get());
     root->setEventCallback(callback);
     root->getUpdateCallback()->addNestedCallback(callback);

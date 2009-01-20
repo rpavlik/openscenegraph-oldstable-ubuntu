@@ -17,7 +17,7 @@
  * along with  this program;  if not, write to the  Free Software Foundation,
  * Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: file.cpp 9162 2008-11-13 22:55:48Z jeremymoles $
+ * $Id: file.cpp 9124 2008-11-07 15:08:08Z robert $
  */
 #define LIB3DS_EXPORT
 #include "file.h"

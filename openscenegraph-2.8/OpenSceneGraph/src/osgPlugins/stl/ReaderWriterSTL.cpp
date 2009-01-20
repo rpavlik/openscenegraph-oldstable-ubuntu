@@ -1,7 +1,7 @@
 // -*-c++-*-
 
 /*
- * $Id: ReaderWriterSTL.cpp 9295 2008-11-29 12:03:04Z robert $
+ * $Id: ReaderWriterSTL.cpp 9343 2008-12-12 18:47:30Z robert $
  *
  * STL importer for OpenSceneGraph.
  * Copyright (c)2004 Ulrich Hertlein <u.hertlein@sandbox.de>
@@ -39,6 +39,8 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+
+#include <string.h>
 
 /**
  * STL importer for OpenSceneGraph.

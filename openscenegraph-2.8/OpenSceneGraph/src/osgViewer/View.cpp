@@ -34,7 +34,8 @@ public:
     CollectedCoordinateSystemNodesVisitor():
         NodeVisitor(osg::NodeVisitor::TRAVERSE_ACTIVE_CHILDREN) {}
         
-        
+    META_NodeVisitor("osgViewer","CollectedCoordinateSystemNodesVisitor")
+
     virtual void apply(osg::Node& node)
     {
         traverse(node);
@@ -209,7 +210,7 @@ void View::take(osg::View& rhs)
         
         rhs_osgViewer->_coordinateSystemNodePath.clear();
         
-        rhs_osgViewer->_displaySettings;
+        rhs_osgViewer->_displaySettings = 0;
     }
 #endif
     computeActiveCoordinateSystemNodePath();
@@ -242,13 +243,13 @@ void View::setStartTick(osg::Timer_t tick)
     _startTick = tick;
 }
 
-void View::setSceneData(osg::ref_ptr<osg::Node> node)
+void View::setSceneData(osg::Node* node)
 {
     if (node==_scene->getSceneData()) return;
 
-    osg::ref_ptr<Scene> scene = Scene::getScene(node.get());
+    osg::ref_ptr<Scene> scene = Scene::getScene(node);
 
-    if (scene.valid())
+    if (scene)
     {
         osg::notify(osg::INFO)<<"View::setSceneData() Sharing scene "<<scene.get()<<std::endl;
         _scene = scene;
@@ -266,7 +267,7 @@ void View::setSceneData(osg::ref_ptr<osg::Node> node)
             osg::notify(osg::INFO)<<"View::setSceneData() Reusing exisitng scene"<<_scene.get()<<std::endl;
         }
 
-        _scene->setSceneData(node.get());
+        _scene->setSceneData(node);
     }
 
     if (getSceneData())
@@ -275,6 +276,16 @@ void View::setSceneData(osg::ref_ptr<osg::Node> node)
         // the scene graph from being run in parallel.
         osgUtil::Optimizer::StaticObjectDetectionVisitor sodv;
         getSceneData()->accept(sodv);
+        
+        // make sure that existing scene graph objects are allocated with thread safe ref/unref
+        if (getViewerBase() && 
+            getViewerBase()->getThreadingModel()!=ViewerBase::SingleThreaded) 
+        {
+            getSceneData()->setThreadSafeRefUnref(true);
+        }
+        
+        // update the scene graph so that it has enough GL object buffer memory for the graphics contexts that will be using it.
+        getSceneData()->resizeGLObjectBuffers(osg::DisplaySettings::instance()->getMaxNumberOfGraphicsContexts());
     }
     
     computeActiveCoordinateSystemNodePath();
@@ -1113,8 +1124,6 @@ static osg::Geometry* createParoramicSphericalDisplayDistortionMesh(const osg::V
     osg::Vec3d center(0.0,0.0,0.0);
     osg::Vec3d eye(0.0,0.0,0.0);
     
-    bool centerProjection = false;
-
     double distance = sqrt(sphere_radius*sphere_radius - collar_radius*collar_radius);
     bool flip = false;
     bool texcoord_flip = false;
@@ -1153,9 +1162,7 @@ static osg::Geometry* createParoramicSphericalDisplayDistortionMesh(const osg::V
 
     osg::Vec3 screenCenter = origin + widthVector*0.5f + heightVector*0.5f;
     float screenRadius = heightVector.length() * 0.5f;
-
-    double rotation = 0.0;
-
+    
     geometry->getOrCreateStateSet()->setMode(GL_CULL_FACE, osg::StateAttribute::OFF | osg::StateAttribute::PROTECTED);
 
     for(int i=0;i<noSteps;++i)
@@ -1811,7 +1818,7 @@ const osg::Camera* View::getCameraContainingPosition(float x, float y, float& lo
     return 0;
 }
 
-bool View::computeIntersections(float x,float y, osgUtil::LineSegmentIntersector::Intersections& intersections,osg::Node::NodeMask traversalMask)
+bool View::computeIntersections(float x,float y, osgUtil::LineSegmentIntersector::Intersections& intersections, osg::Node::NodeMask traversalMask)
 {
     if (!_camera.valid()) return false;
 
@@ -1895,19 +1902,25 @@ bool View::computeIntersections(float x,float y, osgUtil::LineSegmentIntersector
         intersections.clear();
         return false;
     }
-
-    return false;
 }
 
-bool View::computeIntersections(float x,float y, osg::NodePath& nodePath, osgUtil::LineSegmentIntersector::Intersections& intersections,osg::Node::NodeMask traversalMask)
+bool View::computeIntersections(float x,float y, const osg::NodePath& nodePath, osgUtil::LineSegmentIntersector::Intersections& intersections,osg::Node::NodeMask traversalMask)
 {
-    if (!_camera.valid()) return false;
+    if (!_camera.valid() || nodePath.empty()) return false;
     
     float local_x, local_y = 0.0;    
     const osg::Camera* camera = getCameraContainingPosition(x, y, local_x, local_y);
     if (!camera) camera = _camera.get();
     
-    osg::Matrix matrix = osg::computeWorldToLocal(nodePath) *  camera->getViewMatrix() * camera->getProjectionMatrix();
+    osg::Matrixd matrix;
+    if (nodePath.size()>1)
+    {
+        osg::NodePath prunedNodePath(nodePath.begin(),nodePath.end()-1);
+        matrix = osg::computeLocalToWorld(prunedNodePath);
+    }
+    
+    matrix.postMult(camera->getViewMatrix());
+    matrix.postMult(camera->getProjectionMatrix());
 
     double zNear = -1.0;
     double zFar = 1.0;
@@ -1918,7 +1931,7 @@ bool View::computeIntersections(float x,float y, osg::NodePath& nodePath, osgUti
         zFar = 1.0;
     }
 
-    osg::Matrix inverse;
+    osg::Matrixd inverse;
     inverse.invert(matrix);
 
     osg::Vec3d startVertex = osg::Vec3d(local_x,local_y,zNear) * inverse;

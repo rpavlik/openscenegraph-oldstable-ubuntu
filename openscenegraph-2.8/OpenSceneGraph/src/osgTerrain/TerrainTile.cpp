@@ -13,6 +13,7 @@
 
 #include <osgTerrain/TerrainTile>
 #include <osgTerrain/Terrain>
+#include <osgTerrain/GeometryTechnique>
 
 #include <osg/ClusterCullingCallback>
 
@@ -39,10 +40,10 @@ osg::ref_ptr<TerrainTile::TileLoadedCallback>& TerrainTile::getTileLoadedCallbac
 
 TerrainTile::TerrainTile():
     _terrain(0),
+    _dirty(false),
     _hasBeenTraversal(false),
     _requiresNormals(true),
-    _treatBoundariesToValidDataAsDefaultValue(false),
-    _dirty(false)
+    _treatBoundariesToValidDataAsDefaultValue(false)
 {
     setThreadSafeRefUnref(true);
 }
@@ -50,12 +51,12 @@ TerrainTile::TerrainTile():
 TerrainTile::TerrainTile(const TerrainTile& terrain,const osg::CopyOp& copyop):
     Group(terrain,copyop),
     _terrain(0),
+    _dirty(false),
     _hasBeenTraversal(false),
     _elevationLayer(terrain._elevationLayer),
     _colorLayers(terrain._colorLayers),
     _requiresNormals(terrain._requiresNormals),
-    _treatBoundariesToValidDataAsDefaultValue(terrain._treatBoundariesToValidDataAsDefaultValue),
-    _dirty(false)
+    _treatBoundariesToValidDataAsDefaultValue(terrain._treatBoundariesToValidDataAsDefaultValue)
 {
     if (terrain.getTerrainTechnique()) 
     {
@@ -113,7 +114,9 @@ void TerrainTile::traverse(osg::NodeVisitor& nv)
                 }
             }
         }
-            
+        
+        init();
+                    
         _hasBeenTraversal = true;
     }
 
@@ -138,6 +141,19 @@ void TerrainTile::traverse(osg::NodeVisitor& nv)
 
 void TerrainTile::init()
 {
+    if (!_terrainTechnique)
+    {        
+        if (_terrain && _terrain->getTerrainTechniquePrototype())
+        {            
+            osg::ref_ptr<osg::Object> object = _terrain->getTerrainTechniquePrototype()->clone(osg::CopyOp::DEEP_COPY_ALL);
+            setTerrainTechnique(dynamic_cast<TerrainTechnique*>(object.get()));
+        }
+        else
+        {
+            setTerrainTechnique(new GeometryTechnique);
+        }
+    }
+
     if (_terrainTechnique.valid() && getDirty())
     {
         _terrainTechnique->init();

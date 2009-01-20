@@ -257,6 +257,11 @@ BEGIN_OBJECT_REFLECTOR(osg::VertexProgram::Extensions)
 	          __void__glProgramLocalParameter4fv__GLenum__GLuint__C5_GLfloat_P1,
 	          "",
 	          "");
+
+
+
+
+
 	I_SimpleProperty(bool, VertexProgramSupported, 
 	                 0, 
 	                 __void__setVertexProgramSupported__bool);

@@ -14,7 +14,7 @@ bool StateAttribute_writeLocalData(const Object& obj, Output& fw);
 
 // register the read and write functions with the osgDB::Registry.
 osg::StateAttribute* g_stateAttribute = 0; 
-RegisterDotOsgWrapperProxy g_StateAttributeProxy
+REGISTER_DOTOSGWRAPPER(StateAttribute)
 (
     g_stateAttribute, // no instance, osg::StateAttribute is an abstract class.
     "StateAttribute",
@@ -32,7 +32,7 @@ bool StateAttribute_readLocalData(Object& obj, Input& fr)
     static ref_ptr<StateAttribute::Callback> s_callback = new osg::StateAttribute::Callback;
     while (fr.matchSequence("UpdateCallback {"))
     {
-        int entry = fr[0].getNoNestedBrackets();
+        //int entry = fr[0].getNoNestedBrackets();
         fr += 2;
         StateAttribute::Callback* callback = dynamic_cast<StateAttribute::Callback*>(fr.readObjectOfType(*s_callback));
         if (callback) {
@@ -43,7 +43,7 @@ bool StateAttribute_readLocalData(Object& obj, Input& fr)
 
     while (fr.matchSequence("EventCallback {"))
     {
-        int entry = fr[0].getNoNestedBrackets();
+        //int entry = fr[0].getNoNestedBrackets();
         fr += 2;
         StateAttribute::Callback* callback = dynamic_cast<StateAttribute::Callback*>(fr.readObjectOfType(*s_callback));
         if (callback) {

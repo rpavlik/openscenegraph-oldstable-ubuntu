@@ -42,7 +42,7 @@ osg::Geode* createAxis()
     osg::Geometry*  geometry = new osg::Geometry();
     osg::Vec3Array* vertices = new osg::Vec3Array();
     osg::Vec4Array* colors   = new osg::Vec4Array();
-	
+    
     vertices->push_back(osg::Vec3(0.0f, 0.0f, 0.0f));
     vertices->push_back(osg::Vec3(1.0f, 0.0f, 0.0f));
     vertices->push_back(osg::Vec3(0.0f, 0.0f, 0.0f));
@@ -56,7 +56,7 @@ osg::Geode* createAxis()
     colors->push_back(osg::Vec4(0.0f, 1.0f, 0.0f, 1.0f));
     colors->push_back(osg::Vec4(0.0f, 0.0f, 1.0f, 1.0f));
     colors->push_back(osg::Vec4(0.0f, 0.0f, 1.0f, 1.0f));
-	
+    
     geometry->setVertexArray(vertices);
     geometry->setColorArray(colors);
     geometry->setColorBinding(osg::Geometry::BIND_PER_VERTEX);    
@@ -98,7 +98,7 @@ int main(int argc, char** argv)
 
     AnimtkViewerGUI* gui    = new AnimtkViewerGUI(&viewer, WIDTH, HEIGHT, 0x1234);
     osg::Camera*     camera = gui->createParentOrthoCamera();
-	
+    
     node->setNodeMask(0x0001);
 
     group->addChild(node);

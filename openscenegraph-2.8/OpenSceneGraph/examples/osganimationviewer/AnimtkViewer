@@ -77,7 +77,7 @@ public:
             return true;
         }
         return false;
-    }	
+    }    
 
     bool next() 
     {

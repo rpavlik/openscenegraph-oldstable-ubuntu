@@ -268,6 +268,7 @@ BEGIN_OBJECT_REFLECTOR(osg::StencilTwoSided::Extensions)
 	          __void__glActiveStencilFace__GLenum,
 	          "",
 	          "");
+
 	I_SimpleProperty(bool, StencilTwoSidedSupported, 
 	                 0, 
 	                 __void__setStencilTwoSidedSupported__bool);

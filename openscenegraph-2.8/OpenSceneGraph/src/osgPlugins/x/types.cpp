@@ -1,7 +1,7 @@
 // -*-c++-*-
 
 /*
- * $Id: types.cpp 9283 2008-11-28 11:35:11Z robert $
+ * $Id: types.cpp 9242 2008-11-25 13:45:27Z robert $
  *
  * Loader for DirectX .x files.
  * Copyright (c)2002-2006 Ulrich Hertlein <u.hertlein@sandbox.de>
