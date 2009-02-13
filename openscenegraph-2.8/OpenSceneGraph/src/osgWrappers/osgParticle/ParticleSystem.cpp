@@ -10,7 +10,6 @@
 #include <osgIntrospection/StaticMethodInfo>
 #include <osgIntrospection/Attributes>
 
-#include <OpenThreads/ReadWriteMutex>
 #include <osg/BoundingBox>
 #include <osg/CopyOp>
 #include <osg/Object>
@@ -39,6 +38,12 @@ BEGIN_ENUM_REFLECTOR(osgParticle::ParticleSystem::ParticleScaleReferenceFrame)
 	I_EnumLabel(osgParticle::ParticleSystem::WORLD_COORDINATES);
 END_REFLECTOR
 
+TYPE_NAME_ALIAS(OpenThreads::Mutex, osgParticle::ParticleSystem::ReadWriterMutex)
+
+TYPE_NAME_ALIAS(OpenThreads::ScopedLock< OpenThreads::Mutex >, osgParticle::ParticleSystem::ScopedReadLock)
+
+TYPE_NAME_ALIAS(OpenThreads::ScopedLock< OpenThreads::Mutex >, osgParticle::ParticleSystem::ScopedWriteLock)
+
 BEGIN_OBJECT_REFLECTOR(osgParticle::ParticleSystem)
 	I_DeclaringFile("osgParticle/ParticleSystem");
 	I_BaseType(osg::Drawable);
@@ -54,7 +59,7 @@ BEGIN_OBJECT_REFLECTOR(osgParticle::ParticleSystem)
 	          __osg_Object_P1__cloneType,
 	          "Clone the type of an object, with Object* return type. ",
 	          "Must be defined by derived classes. ");
-	I_Method1(osg::Object *, clone, IN, const osg::CopyOp &, copyop,
+	I_Method1(osg::Object *, clone, IN, const osg::CopyOp &, x,
 	          Properties::VIRTUAL,
 	          __osg_Object_P1__clone__C5_osg_CopyOp_R1,
 	          "Clone an object, with Object* return type. ",
@@ -249,9 +254,9 @@ BEGIN_OBJECT_REFLECTOR(osgParticle::ParticleSystem)
 	          __osg_BoundingBox__computeBound,
 	          "Compute the bounding box around Drawables's geometry. ",
 	          "");
-	I_Method0(OpenThreads::ReadWriteMutex *, getReadWriteMutex,
+	I_Method0(osgParticle::ParticleSystem::ReadWriterMutex *, getReadWriteMutex,
 	          Properties::NON_VIRTUAL,
-	          __OpenThreads_ReadWriteMutex_P1__getReadWriteMutex,
+	          __ReadWriterMutex_P1__getReadWriteMutex,
 	          "",
 	          "");
 	I_ProtectedMethod2(void, update_bounds, IN, const osg::Vec3 &, p, IN, float, r,
@@ -299,8 +304,8 @@ BEGIN_OBJECT_REFLECTOR(osgParticle::ParticleSystem)
 	I_SimpleProperty(osgParticle::ParticleSystem::ParticleScaleReferenceFrame, ParticleScaleReferenceFrame, 
 	                 __ParticleScaleReferenceFrame__getParticleScaleReferenceFrame, 
 	                 __void__setParticleScaleReferenceFrame__ParticleScaleReferenceFrame);
-	I_SimpleProperty(OpenThreads::ReadWriteMutex *, ReadWriteMutex, 
-	                 __OpenThreads_ReadWriteMutex_P1__getReadWriteMutex, 
+	I_SimpleProperty(osgParticle::ParticleSystem::ReadWriterMutex *, ReadWriteMutex, 
+	                 __ReadWriterMutex_P1__getReadWriteMutex, 
 	                 0);
 END_REFLECTOR
 

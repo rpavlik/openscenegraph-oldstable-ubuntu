@@ -30,6 +30,11 @@ BEGIN_OBJECT_REFLECTOR(osgVolume::Locator)
 	I_Constructor0(____Locator,
 	               "",
 	               "");
+	I_Constructor1(IN, const osg::Matrixd &, transform,
+	               Properties::NON_EXPLICIT,
+	               ____Locator__C5_osg_Matrixd_R1,
+	               "",
+	               "");
 	I_ConstructorWithDefaults2(IN, const osgVolume::Locator &, locator, , IN, const osg::CopyOp &, copyop, osg::CopyOp::SHALLOW_COPY,
 	                           ____Locator__C5_Locator_R1__C5_osg_CopyOp_R1,
 	                           "Copy constructor using CopyOp to manage deep vs shallow copy. ",
@@ -39,7 +44,7 @@ BEGIN_OBJECT_REFLECTOR(osgVolume::Locator)
 	          __osg_Object_P1__cloneType,
 	          "Clone the type of an object, with Object* return type. ",
 	          "Must be defined by derived classes. ");
-	I_Method1(osg::Object *, clone, IN, const osg::CopyOp &, copyop,
+	I_Method1(osg::Object *, clone, IN, const osg::CopyOp &, x,
 	          Properties::VIRTUAL,
 	          __osg_Object_P1__clone__C5_osg_CopyOp_R1,
 	          "Clone an object, with Object* return type. ",

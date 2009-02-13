@@ -16,6 +16,8 @@
 *  THE SOFTWARE.
 */
 
+#include <iostream>
+
 #include <osgUtil/Optimizer>
 #include <osgDB/ReadFile>
 
@@ -44,19 +46,19 @@
 
 // class to handle events with a pick
 class PickHandler : public osgGA::GUIEventHandler {
-public: 
+public:
 
     PickHandler():
         _mx(0.0f),
         _my(0.0f) {}
-        
+
     ~PickHandler() {}
-    
+
     bool handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIActionAdapter& aa)
     {
         osgViewer::View* view = dynamic_cast<osgViewer::View*>(&aa);
         if (!view) return false;
-        
+
         switch(ea.getEventType())
         {
             case(osgGA::GUIEventAdapter::PUSH):
@@ -78,7 +80,7 @@ public:
         }
         return false;
     }
-    
+
     void pick(osgViewer::View* view, float x, float y)
     {
         osg::Node* node = 0;
@@ -91,7 +93,7 @@ public:
             osg::NodePath& nodePath = intersection.nodePath;
             node = (nodePath.size()>=1)?nodePath[nodePath.size()-1]:0;
             parent = (nodePath.size()>=2)?dynamic_cast<osg::Group*>(nodePath[nodePath.size()-2]):0;
-        }        
+        }
 
         // now we try to decorate the hit node by the osgFX::Scribe to show that its been "picked"
         if (parent && node)
@@ -119,7 +121,7 @@ public:
         }
 
     }
-    
+
     float _mx, _my;
 
 };
@@ -130,26 +132,28 @@ int main( int argc, char **argv )
 
     // use an ArgumentParser object to manage the program arguments.
     osg::ArgumentParser arguments(&argc,argv);
-    
+
     // read the scene from the list of file specified commandline args.
     osg::ref_ptr<osg::Node> scene = osgDB::readNodeFiles(arguments);
 
-    if (!scene) return 1;
+    if (!scene)
+    {
+        std::cout << argv[0] << ": requires filename argument." << std::endl;
+        return 1;
+    }
 
     // construct the viewer.
     osgViewer::CompositeViewer viewer(arguments);
-    
-    
 
-    
     if (arguments.read("-1"))
     {
         {
             osgViewer::View* view = new osgViewer::View;
+            view->setName("Single view");
             view->setSceneData(osgDB::readNodeFile("fountain.osg"));
-            
+
             view->addEventHandler( new osgViewer::StatsHandler );
-            
+
             view->setUpViewAcrossAllScreens();
             view->setCameraManipulator(new osgGA::TrackballManipulator);
             viewer.addView(view);
@@ -162,6 +166,7 @@ int main( int argc, char **argv )
         // view one
         {
             osgViewer::View* view = new osgViewer::View;
+            view->setName("View one");
             viewer.addView(view);
 
             view->setUpViewOnSingleScreen(0);
@@ -174,30 +179,31 @@ int main( int argc, char **argv )
 
             view->addEventHandler( statesetManipulator.get() );
         }
-        
+
         // view two
         {
             osgViewer::View* view = new osgViewer::View;
+            view->setName("View two");
             viewer.addView(view);
 
             view->setUpViewOnSingleScreen(1);
             view->setSceneData(scene.get());
             view->setCameraManipulator(new osgGA::TrackballManipulator);
-            
+
             view->addEventHandler( new osgViewer::StatsHandler );
 
-            
+
             // add the handler for doing the picking
             view->addEventHandler(new PickHandler());
         }
     }
-    
+
 
     if (arguments.read("-3") || viewer.getNumViews()==0)
-    {    
+    {
 
         osg::GraphicsContext::WindowingSystemInterface* wsi = osg::GraphicsContext::getWindowingSystemInterface();
-        if (!wsi) 
+        if (!wsi)
         {
             osg::notify(osg::NOTICE)<<"Error, no WindowSystemInterface available, cannot create windows."<<std::endl;
             return 1;
@@ -233,9 +239,11 @@ int main( int argc, char **argv )
         // view one
         {
             osgViewer::View* view = new osgViewer::View;
+            view->setName("View one");
             viewer.addView(view);
 
             view->setSceneData(scene.get());
+            view->getCamera()->setName("Cam one");
             view->getCamera()->setViewport(new osg::Viewport(0,0, traits->width/2, traits->height/2));
             view->getCamera()->setGraphicsContext(gc.get());
             view->setCameraManipulator(new osgGA::TrackballManipulator);
@@ -245,7 +253,7 @@ int main( int argc, char **argv )
             statesetManipulator->setStateSet(view->getCamera()->getOrCreateStateSet());
 
             view->addEventHandler( statesetManipulator.get() );
-            
+
             view->addEventHandler( new osgViewer::StatsHandler );
             view->addEventHandler( new osgViewer::HelpHandler );
             view->addEventHandler( new osgViewer::WindowSizeHandler );
@@ -256,25 +264,29 @@ int main( int argc, char **argv )
         // view two
         {
             osgViewer::View* view = new osgViewer::View;
+            view->setName("View two");
             viewer.addView(view);
 
             view->setSceneData(scene.get());
+            view->getCamera()->setName("Cam two");
             view->getCamera()->setViewport(new osg::Viewport(traits->width/2,0, traits->width/2, traits->height/2));
             view->getCamera()->setGraphicsContext(gc.get());
             view->setCameraManipulator(new osgGA::TrackballManipulator);
-            
+
             // add the handler for doing the picking
             view->addEventHandler(new PickHandler());
-            
+
         }
 
         // view three
         {
             osgViewer::View* view = new osgViewer::View;
+            view->setName("View three");
             viewer.addView(view);
 
             view->setSceneData(osgDB::readNodeFile("cessnafire.osg"));
 
+            view->getCamera()->setName("Cam three");
             view->getCamera()->setProjectionMatrixAsPerspective(30.0, double(traits->width) / double(traits->height/2), 1.0, 1000.0);
             view->getCamera()->setViewport(new osg::Viewport(0, traits->height/2, traits->width, traits->height/2));
             view->getCamera()->setGraphicsContext(gc.get());
@@ -283,11 +295,12 @@ int main( int argc, char **argv )
 
     }
 
-    
+
     while (arguments.read("-s")) { viewer.setThreadingModel(osgViewer::CompositeViewer::SingleThreaded); }
     while (arguments.read("-g")) { viewer.setThreadingModel(osgViewer::CompositeViewer::CullDrawThreadPerContext); }
     while (arguments.read("-c")) { viewer.setThreadingModel(osgViewer::CompositeViewer::CullThreadPerCameraDrawThreadPerContext); }
- 
+
      // run the viewer's main frame loop
      return viewer.run();
 }
+

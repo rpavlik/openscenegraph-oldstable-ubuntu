@@ -559,8 +559,8 @@ ref_ptr<Texture> VBSPReader::readTextureFile(std::string textureName)
 {
     std::string   texFile;
     std::string   texPath;
-    Image *       texImage;
-    Texture *     texture;
+    osg::ref_ptr<Image>       texImage;
+    osg::ref_ptr<Texture>     texture;
 
     // Find the texture's image file
     texFile = std::string(textureName) + ".vtf";
@@ -585,7 +585,7 @@ ref_ptr<Texture> VBSPReader::readTextureFile(std::string textureName)
     // If we found the file, read it, otherwise bail
     if (!texPath.empty())
     {
-        texImage = readImageFile(texPath);
+        texImage = readRefImageFile(texPath);
 
         // If we got the image, create the texture attribute
         if (texImage != NULL)
@@ -593,18 +593,15 @@ ref_ptr<Texture> VBSPReader::readTextureFile(std::string textureName)
             // Create the texture
             if (texImage->t() == 1)
             {
-                texture = new Texture1D();
-                ((Texture1D *)texture)->setImage(texImage);
+                texture = new Texture1D(texImage.get());
             }
             else if (texImage->r() == 1)
             {
-                texture = new Texture2D();
-                ((Texture2D *)texture)->setImage(texImage);
+                texture = new Texture2D(texImage.get());
             }
             else
             {
-                texture = new Texture3D();
-                ((Texture3D *)texture)->setImage(texImage);
+                texture = new Texture3D(texImage.get());
             }
 
             // Set texture attributes
@@ -688,9 +685,9 @@ ref_ptr<StateSet> VBSPReader::createBlendShader(Texture * tex1, Texture * tex2)
         "   vec4 tex1Color;\n"
         "   vec4 tex2Color;\n"
         "\n"
-        "   tex1Color = texture2D(tex1, gl_TexCoord[0].st) * fBlendParam;\n"
-        "   tex2Color = texture2D(tex2, gl_TexCoord[0].st) *\n"
+        "   tex1Color = texture2D(tex1, gl_TexCoord[0].st) *\n"
         "      (1.0 - fBlendParam);\n"
+        "   tex2Color = texture2D(tex2, gl_TexCoord[0].st) * fBlendParam;\n"
         "\n"
         "   gl_FragColor = gl_Color * (tex1Color + tex2Color);\n"
         "}\n"

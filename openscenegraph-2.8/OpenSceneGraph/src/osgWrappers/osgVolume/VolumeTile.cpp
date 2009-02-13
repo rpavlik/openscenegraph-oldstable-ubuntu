@@ -12,10 +12,10 @@
 
 #include <osg/BoundingSphere>
 #include <osg/CopyOp>
-#include <osg/Image>
-#include <osg/Matrix>
 #include <osg/NodeVisitor>
 #include <osg/Object>
+#include <osgVolume/Layer>
+#include <osgVolume/Locator>
 #include <osgVolume/Volume>
 #include <osgVolume/VolumeTechnique>
 #include <osgVolume/VolumeTile>
@@ -88,7 +88,7 @@ BEGIN_OBJECT_REFLECTOR(osgVolume::VolumeTile)
 	          __void__accept__osg_NodeVisitor_R1,
 	          "Visitor Pattern : calls the apply method of a NodeVisitor with this node's type. ",
 	          "");
-	I_Method1(void, traverse, IN, osg::NodeVisitor &, nv,
+	I_Method1(void, traverse, IN, osg::NodeVisitor &, x,
 	          Properties::VIRTUAL,
 	          __void__traverse__osg_NodeVisitor_R1,
 	          "Traverse downwards : calls children's accept method with NodeVisitor. ",
@@ -123,50 +123,50 @@ BEGIN_OBJECT_REFLECTOR(osgVolume::VolumeTile)
 	          __C5_TileID_R1__getTileID,
 	          "Get the TileID (layer, x,y,z) of the VolumeTile. ",
 	          "");
-	I_Method1(void, setLocator, IN, osg::RefMatrix *, locator,
+	I_Method1(void, setLocator, IN, osgVolume::Locator *, locator,
 	          Properties::NON_VIRTUAL,
-	          __void__setLocator__osg_RefMatrix_P1,
+	          __void__setLocator__Locator_P1,
 	          "",
 	          "");
-	I_Method0(osg::RefMatrix *, getLocator,
+	I_Method0(osgVolume::Locator *, getLocator,
 	          Properties::NON_VIRTUAL,
-	          __osg_RefMatrix_P1__getLocator,
+	          __Locator_P1__getLocator,
 	          "",
 	          "");
-	I_Method0(const osg::RefMatrix *, getLocator,
+	I_Method0(const osgVolume::Locator *, getLocator,
 	          Properties::NON_VIRTUAL,
-	          __C5_osg_RefMatrix_P1__getLocator,
+	          __C5_Locator_P1__getLocator,
 	          "",
 	          "");
-	I_Method2(void, setImage, IN, unsigned int, i, IN, osg::Image *, image,
+	I_Method1(void, setLayer, IN, osgVolume::Layer *, layer,
 	          Properties::NON_VIRTUAL,
-	          __void__setImage__unsigned_int__osg_Image_P1,
+	          __void__setLayer__Layer_P1,
 	          "",
 	          "");
-	I_Method1(osg::Image *, getImage, IN, unsigned int, i,
+	I_Method0(osgVolume::Layer *, getLayer,
 	          Properties::NON_VIRTUAL,
-	          __osg_Image_P1__getImage__unsigned_int,
+	          __Layer_P1__getLayer,
 	          "",
 	          "");
-	I_Method1(const osg::Image *, getImage, IN, unsigned int, i,
+	I_Method0(const osgVolume::Layer *, getLayer,
 	          Properties::NON_VIRTUAL,
-	          __C5_osg_Image_P1__getImage__unsigned_int,
+	          __C5_Layer_P1__getLayer,
 	          "",
 	          "");
 	I_Method1(void, setVolumeTechnique, IN, osgVolume::VolumeTechnique *, VolumeTechnique,
 	          Properties::NON_VIRTUAL,
 	          __void__setVolumeTechnique__VolumeTechnique_P1,
-	          "Set the VolumeTechnique. ",
+	          "Set the VolumeTechnique that will be used to render this tile. ",
 	          "");
 	I_Method0(osgVolume::VolumeTechnique *, getVolumeTechnique,
 	          Properties::NON_VIRTUAL,
 	          __VolumeTechnique_P1__getVolumeTechnique,
-	          "Get the VolumeTechnique. ",
+	          "Get the VolumeTechnique that will be used to render this tile. ",
 	          "");
 	I_Method0(const osgVolume::VolumeTechnique *, getVolumeTechnique,
 	          Properties::NON_VIRTUAL,
 	          __C5_VolumeTechnique_P1__getVolumeTechnique,
-	          "Get the const VolumeTechnique. ",
+	          "Get the const VolumeTechnique that will be used to render this tile. ",
 	          "");
 	I_Method1(void, setDirty, IN, bool, dirty,
 	          Properties::NON_VIRTUAL,
@@ -186,13 +186,12 @@ BEGIN_OBJECT_REFLECTOR(osgVolume::VolumeTile)
 	I_SimpleProperty(bool, Dirty, 
 	                 __bool__getDirty, 
 	                 __void__setDirty__bool);
-	I_IndexedProperty(osg::Image *, Image, 
-	                  __osg_Image_P1__getImage__unsigned_int, 
-	                  __void__setImage__unsigned_int__osg_Image_P1, 
-	                  0);
-	I_SimpleProperty(osg::RefMatrix *, Locator, 
-	                 __osg_RefMatrix_P1__getLocator, 
-	                 __void__setLocator__osg_RefMatrix_P1);
+	I_SimpleProperty(osgVolume::Layer *, Layer, 
+	                 __Layer_P1__getLayer, 
+	                 __void__setLayer__Layer_P1);
+	I_SimpleProperty(osgVolume::Locator *, Locator, 
+	                 __Locator_P1__getLocator, 
+	                 __void__setLocator__Locator_P1);
 	I_SimpleProperty(const osgVolume::TileID &, TileID, 
 	                 __C5_TileID_R1__getTileID, 
 	                 __void__setTileID__C5_TileID_R1);

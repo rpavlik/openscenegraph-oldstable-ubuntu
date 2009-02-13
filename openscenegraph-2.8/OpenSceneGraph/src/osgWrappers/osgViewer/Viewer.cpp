@@ -17,6 +17,7 @@
 #include <osg/FrameStamp>
 #include <osg/Node>
 #include <osg/Object>
+#include <osg/Stats>
 #include <osg/Timer>
 #include <osgViewer/GraphicsWindow>
 #include <osgViewer/View>
@@ -52,7 +53,7 @@ BEGIN_OBJECT_REFLECTOR(osgViewer::Viewer)
 	          __osg_Object_P1__cloneType,
 	          "Clone the type of an object, with Object* return type. ",
 	          "Must be defined by derived classes. ");
-	I_Method1(osg::Object *, clone, IN, const osg::CopyOp &, copyop,
+	I_Method1(osg::Object *, clone, IN, const osg::CopyOp &, x,
 	          Properties::VIRTUAL,
 	          __osg_Object_P1__clone__C5_osg_CopyOp_R1,
 	          "Clone an object, with Object* return type. ",
@@ -76,6 +77,21 @@ BEGIN_OBJECT_REFLECTOR(osgViewer::Viewer)
 	          Properties::VIRTUAL,
 	          __void__take__View_R1,
 	          "Take all the settings, Camera and Slaves from the passed in view(er), leaving it empty. ",
+	          "");
+	I_Method1(void, setViewerStats, IN, osg::Stats *, stats,
+	          Properties::VIRTUAL,
+	          __void__setViewerStats__osg_Stats_P1,
+	          "Set the Stats object used for collect various frame related timing and scene graph stats. ",
+	          "");
+	I_Method0(osg::Stats *, getViewerStats,
+	          Properties::VIRTUAL,
+	          __osg_Stats_P1__getViewerStats,
+	          "Get the Viewers Stats object. ",
+	          "");
+	I_Method0(const osg::Stats *, getViewerStats,
+	          Properties::VIRTUAL,
+	          __C5_osg_Stats_P1__getViewerStats,
+	          "Get the Viewers Stats object. ",
 	          "");
 	I_Method1(bool, readConfiguration, IN, const std::string &, filename,
 	          Properties::VIRTUAL,
@@ -219,5 +235,8 @@ BEGIN_OBJECT_REFLECTOR(osgViewer::Viewer)
 	I_SimpleProperty(osg::FrameStamp *, ViewerFrameStamp, 
 	                 __osg_FrameStamp_P1__getViewerFrameStamp, 
 	                 0);
+	I_SimpleProperty(osg::Stats *, ViewerStats, 
+	                 __osg_Stats_P1__getViewerStats, 
+	                 __void__setViewerStats__osg_Stats_P1);
 END_REFLECTOR
 

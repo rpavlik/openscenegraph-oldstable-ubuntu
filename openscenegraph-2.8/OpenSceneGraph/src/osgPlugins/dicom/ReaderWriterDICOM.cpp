@@ -8,6 +8,7 @@
 #include <osg/Geode>
 #include <osg/GL>
 #include <osg/io_utils>
+#include <osg/ImageUtils>
 
 #include <osgDB/FileNameUtils>
 #include <osgDB/FileUtils>
@@ -15,7 +16,7 @@
 
 #include <osgVolume/Volume>
 #include <osgVolume/VolumeTile>
-#include <osgVolume/ImageUtils>
+#include <osgVolume/RayTracedTechnique>
 
 #ifdef  USE_DCMTK
     #define HAVE_CONFIG_H
@@ -117,33 +118,87 @@ class ReaderWriterDICOM : public osgDB::ReaderWriter
             ReadResult result = readImage(file, options);
             if (!result.validImage()) return result;
             
-            osg::ref_ptr<osgVolume::Volume> volume = new osgVolume::Volume;
-
             osg::ref_ptr<osgVolume::VolumeTile> tile = new osgVolume::VolumeTile;
-            tile->setVolume(volume.get());
-            tile->setImage(0, result.getImage());
+            tile->setVolumeTechnique(new osgVolume::RayTracedTechnique());
+            
+            osg::ref_ptr<osgVolume::ImageLayer> layer= new osgVolume::ImageLayer(result.getImage());
+            layer->rescaleToZeroToOneRange();
+            
+            osgVolume::SwitchProperty* sp = new osgVolume::SwitchProperty;
+            sp->setActiveProperty(0);
+            
+            float alphaFunc = 0.1f;
+
+            osgVolume::AlphaFuncProperty* ap = new osgVolume::AlphaFuncProperty(alphaFunc);
+            osgVolume::SampleDensityProperty* sd = new osgVolume::SampleDensityProperty(0.005);
+            osgVolume::TransparencyProperty* tp = new osgVolume::TransparencyProperty(1.0);
+
+            {
+                // Standard
+                osgVolume::CompositeProperty* cp = new osgVolume::CompositeProperty;
+                cp->addProperty(ap);
+                cp->addProperty(sd);
+                cp->addProperty(tp);
+
+                sp->addProperty(cp);
+            }
+
+            {
+                // Light
+                osgVolume::CompositeProperty* cp = new osgVolume::CompositeProperty;
+                cp->addProperty(ap);
+                cp->addProperty(sd);
+                cp->addProperty(tp);
+                cp->addProperty(new osgVolume::LightingProperty);
+
+                sp->addProperty(cp);
+            }
+
+            {
+                // Isosurface
+                osgVolume::CompositeProperty* cp = new osgVolume::CompositeProperty;
+                cp->addProperty(sd);
+                cp->addProperty(tp);
+                cp->addProperty(new osgVolume::IsoSurfaceProperty(alphaFunc));
+
+                sp->addProperty(cp);
+            }
+
+            {
+                // MaximumIntensityProjection
+                osgVolume::CompositeProperty* cp = new osgVolume::CompositeProperty;
+                cp->addProperty(ap);
+                cp->addProperty(sd);
+                cp->addProperty(tp);
+                cp->addProperty(new osgVolume::MaximumIntensityProjectionProperty);
+
+                sp->addProperty(cp);
+            }
+
+            layer->addProperty(sp);
+
+            tile->setLayer(layer.get());
 
             // get matrix providing size of texels (in mm)
             osg::RefMatrix* matrix = dynamic_cast<osg::RefMatrix*>(result.getImage()->getUserData());
         
             if (matrix)
             {
-            
-            
-                // scale up to provide scale of complete tile
-                osg::Vec3d scale(osg::Vec3(result.getImage()->s(),result.getImage()->t(), result.getImage()->r()));
-                matrix->postMultScale(scale);
+                osgVolume::Locator* locator = new osgVolume::Locator(*matrix);
 
-                tile->setLocator(matrix);
+                tile->setLocator(locator);
+                layer->setLocator(locator);
                 
-                result.getImage()->setUserData(0);
+                // result.getImage()->setUserData(0);
                 
-                notice()<<"Locator "<<*matrix<<std::endl;
+                osg::notify(osg::NOTICE)<<"Locator "<<*matrix<<std::endl;
+            }
+            else
+            {
+                osg::notify(osg::NOTICE)<<"No Locator found on osg::Image"<<std::endl;
             }
             
-            volume->addChild(tile.get());
-                        
-            return volume.release();
+            return tile.release();
         }
 
 
@@ -227,6 +282,8 @@ class ReaderWriterDICOM : public osgDB::ReaderWriter
             }
             
             image->setUserData(matrix);
+            
+            matrix->preMult(osg::Matrix::scale(double(image->s()), double(image->t()), double(image->r())));
 
             return image;
         }
@@ -361,7 +418,7 @@ class ReaderWriterDICOM : public osgDB::ReaderWriter
             osg::ref_ptr<osg::RefMatrix> matrix = new osg::RefMatrix;
             osg::ref_ptr<osg::Image> image;
             unsigned int imageNum = 0;
-            EP_Representation pixelRep;
+            EP_Representation pixelRep = EPR_Uint8;
             int numPlanes = 0;
             GLenum pixelFormat = 0;
             GLenum dataType = 0;
@@ -391,7 +448,7 @@ class ReaderWriterDICOM : public osgDB::ReaderWriter
                 double pixelSize_x = 1.0;
                 double sliceThickness = 1.0;
                 double imagePositionPatient[3] = {0, 0, 0};
-	        double imageOrientationPatient[6] = {1.0, 0.0, 0.0, 0.0, 1.0, 0.0 };
+                double imageOrientationPatient[6] = {1.0, 0.0, 0.0, 0.0, 1.0, 0.0 };
                 Uint16 numOfSlices = 1;
                 
                 double value = 0.0;
@@ -450,7 +507,7 @@ class ReaderWriterDICOM : public osgDB::ReaderWriter
                 // patient position
                 for(int i=0; i<3; ++i)
                 {
-		    if (fileformat.getDataset()->findAndGetFloat64(DCM_ImagePositionPatient, imagePositionPatient[i],i).good())
+                    if (fileformat.getDataset()->findAndGetFloat64(DCM_ImagePositionPatient, imagePositionPatient[i],i).good())
                     {
                         notice()<<"Read DCM_ImagePositionPatient["<<i<<"], "<<imagePositionPatient[i]<<std::endl;
                     }
@@ -466,7 +523,7 @@ class ReaderWriterDICOM : public osgDB::ReaderWriter
                 for(int i=0; i<6; ++i)
                 {
                     double value = 0.0;
-		    if (fileformat.getDataset()->findAndGetFloat64(DCM_ImageOrientationPatient, value,i).good())
+                    if (fileformat.getDataset()->findAndGetFloat64(DCM_ImageOrientationPatient, value,i).good())
                     {
                         imageOrientationPatient[i] = value;
                         notice()<<"Read imageOrientationPatient["<<i<<"], "<<imageOrientationPatient[i]<<std::endl;
@@ -609,6 +666,8 @@ class ReaderWriterDICOM : public osgDB::ReaderWriter
                             (*matrix)(1,2) = fileInfo.matrix(1,2) * averageThickness;
                             (*matrix)(2,2) = fileInfo.matrix(2,2) * averageThickness;
                             
+
+                            
                             image = new osg::Image;
                             image->setUserData(matrix.get());
                             image->setFileName(fileName.c_str());
@@ -616,7 +675,9 @@ class ReaderWriterDICOM : public osgDB::ReaderWriter
                                                  pixelFormat, dataType);
                                                  
                                                  
-                            notice()<<"Image dimensions = "<<image->s()<<", "<<image->t()<<", "<<image->r()<<" pixelFormat=0x"<<std::hex<<pixelFormat<<" dataType=0x"<<std::hex<<dataType<<std::endl;
+                            matrix->preMult(osg::Matrix::scale(double(image->s()), double(image->t()), double(image->r())));
+
+                            notice()<<"Image dimensions = "<<image->s()<<", "<<image->t()<<", "<<image->r()<<" pixelFormat=0x"<<std::hex<<pixelFormat<<" dataType=0x"<<std::hex<<dataType<<std::dec<<std::endl;
                         }
                         else if (pixelData->getPlanes()>numPlanes ||
                                  pixelData->getRepresentation()>pixelRep)
@@ -637,15 +698,15 @@ class ReaderWriterDICOM : public osgDB::ReaderWriter
                             image->allocateImage(dcmImage->getWidth(), dcmImage->getHeight(), totalNumSlices, 
                                                  pixelFormat, dataType);
                                                  
-                            osgVolume::copyImage(previous_image.get(), 0,0,0, previous_image->s(), previous_image->t(), imageNum,
-                                                 image.get(), 0, 0, 0,                                                 
-                                                 false);
+                            osg::copyImage(previous_image.get(), 0,0,0, previous_image->s(), previous_image->t(), imageNum,
+                                           image.get(), 0, 0, 0,                                                 
+                                           false);
                             
                         }
                         
-                        osgVolume::copyImage(imageAdapter.get(), 0,0,0, imageAdapter->s(), imageAdapter->t(), imageAdapter->r(), 
-                                             image.get(), 0, 0, imageNum,
-                                             false);
+                        osg::copyImage(imageAdapter.get(), 0,0,0, imageAdapter->s(), imageAdapter->t(), imageAdapter->r(), 
+                                       image.get(), 0, 0, imageNum,
+                                       false);
                                              
                         imageNum += dcmImage->getFrameCount();
                     }

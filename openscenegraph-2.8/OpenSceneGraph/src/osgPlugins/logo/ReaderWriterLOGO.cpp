@@ -72,7 +72,7 @@ class Logos: public osg::Drawable
             sset->setRenderBinDetails( StateSet::TRANSPARENT_BIN + 1 , "RenderBin" );
 #endif
             setStateSet( sset );
-            viewport = new osg::Viewport;
+            _viewport = new osg::Viewport;
             setCullCallback( new logosCullCallback );
             _contextID = 0;
         }
@@ -94,12 +94,12 @@ class Logos: public osg::Drawable
             float vy = 0.0;
             float vw = 1.0;
             float vh = 1.0;
-            if (viewport)
+            if (_viewport.valid())
             {
-                vx = viewport->x();
-                vy = viewport->y();
-                vw = viewport->width();
-                vh = viewport->height();
+                vx = _viewport->x();
+                vy = _viewport->y();
+                vw = _viewport->width();
+                vh = _viewport->height();
             }
 
             glMatrixMode( GL_PROJECTION );
@@ -113,10 +113,12 @@ class Logos: public osg::Drawable
 
             glColor4f( 1, 1, 1, 1 );
 
-            std::vector <osg::Image *>::const_iterator p;
+            Images::const_iterator p;
             float th = 0.0;
-            for( p = logos[Center].begin(); p != logos[Center].end(); p++ )
+            for( p = _logos[Center].begin(); p != _logos[Center].end(); p++ )
+            {
                 th += (*p)->t();
+            }
 
             float place[][4] = {
                 { vw*0.5, ((vh*0.5) + th*0.5), -0.5, -1.0 },
@@ -130,15 +132,15 @@ class Logos: public osg::Drawable
 
             for( int i = Center; i < last_position; i++ )
             {
-                if( logos[i].size() != 0 )
+                if( _logos[i].size() != 0 )
                 {
                     float x = place[i][0];
                     float y = place[i][1];
                     float xi = place[i][2];
                     float yi = place[i][3];
-                    for( p = logos[i].begin(); p != logos[i].end(); p++ )
+                    for( p = _logos[i].begin(); p != _logos[i].end(); p++ )
                     {
-                        osg::Image *img = *p;
+                        osg::Image *img = (*p).get();
                         x = place[i][0] + xi * img->s();
                         if( i == Center || i == UpperLeft || i == UpperRight || i == UpperCenter)
                             y += yi * img->t();
@@ -158,21 +160,21 @@ class Logos: public osg::Drawable
 
         void addLogo( RelativePosition pos, std::string name )
         {
-            osg::Image *image = osgDB::readImageFile( name.c_str() );
-            if( image != NULL )
-                logos[pos].push_back( image ); 
+            osg::ref_ptr<osg::Image> image = osgDB::readRefImageFile( name.c_str() );
+            if( image.valid())
+                _logos[pos].push_back( image ); 
             else
                 osg::notify(osg::WARN)<< "Logos::addLogo image file not found : " << name << ".\n";
         }
 
-        osg::Viewport *getViewport() { return viewport; }
+        osg::Viewport *getViewport() { return _viewport.get(); }
         void setContextID( unsigned int id ) { _contextID = id; }
 
         bool hasLogos()
         {
             int n = 0;
             for( int i = Center; i < last_position; i++ )
-                n += logos[i].size();
+                n += _logos[i].size();
             return (n != 0);
         }
 
@@ -186,8 +188,10 @@ class Logos: public osg::Drawable
 
         virtual ~Logos() {}
     private :
-        std::vector <osg::Image *> logos[last_position];
-        osg::Viewport *viewport;
+        typedef std::vector < osg::ref_ptr<osg::Image> >  Images;
+
+        Images _logos[last_position];
+        osg::ref_ptr<osg::Viewport> _viewport;
         unsigned int _contextID;
 };
 

@@ -28,8 +28,6 @@
 #undef OUT
 #endif
 
-TYPE_NAME_ALIAS(std::vector< unsigned int >, osg::Image::MipmapDataType)
-
 BEGIN_ENUM_REFLECTOR(osg::Image::WriteHint)
 	I_DeclaringFile("osg/Image");
 	I_EnumLabel(osg::Image::NO_PREFERENCE);
@@ -50,6 +48,8 @@ BEGIN_ENUM_REFLECTOR(osg::Image::Origin)
 	I_EnumLabel(osg::Image::TOP_LEFT);
 END_REFLECTOR
 
+TYPE_NAME_ALIAS(std::vector< unsigned int >, osg::Image::MipmapDataType)
+
 BEGIN_OBJECT_REFLECTOR(osg::Image)
 	I_DeclaringFile("osg/Image");
 	I_BaseType(osg::Object);
@@ -65,7 +65,7 @@ BEGIN_OBJECT_REFLECTOR(osg::Image)
 	          __Object_P1__cloneType,
 	          "Clone the type of an object, with Object* return type. ",
 	          "Must be defined by derived classes. ");
-	I_Method1(osg::Object *, clone, IN, const osg::CopyOp &, copyop,
+	I_Method1(osg::Object *, clone, IN, const osg::CopyOp &, x,
 	          Properties::VIRTUAL,
 	          __Object_P1__clone__C5_CopyOp_R1,
 	          "Clone an object, with Object* return type. ",
@@ -150,9 +150,9 @@ BEGIN_OBJECT_REFLECTOR(osg::Image)
 	          __void__scaleImage__int__int__int__GLenum,
 	          "Scale image to specified size and with specified data type. ",
 	          "");
-	I_Method4(void, copySubImage, IN, int, s_offset, IN, int, t_offset, IN, int, r_offset, IN, osg::Image *, source,
+	I_Method4(void, copySubImage, IN, int, s_offset, IN, int, t_offset, IN, int, r_offset, IN, const osg::Image *, source,
 	          Properties::NON_VIRTUAL,
-	          __void__copySubImage__int__int__int__osg_Image_P1,
+	          __void__copySubImage__int__int__int__C5_osg_Image_P1,
 	          "Copy a source Image into a subpart of this Image at specified position. ",
 	          "Typically used to copy to an already allocated image, such as creating a 3D image from a stack 2D images. If this Image is empty then image data is created to accomodate the source image in its offset position. If source is NULL then no operation happens, this Image is left unchanged. ");
 	I_Method1(void, setOrigin, IN, osg::Image::Origin, origin,

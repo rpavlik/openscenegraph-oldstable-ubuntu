@@ -28,13 +28,13 @@ TYPE_NAME_ALIAS(std::map< unsigned int COMMA  osg::ref_ptr< osgAnimation::Action
 
 BEGIN_OBJECT_REFLECTOR(osgAnimation::Action)
 	I_DeclaringFile("osgAnimation/Timeline");
-	I_VirtualBaseType(osg::Object);
+	I_BaseType(osg::Object);
 	I_Method0(osg::Object *, cloneType,
 	          Properties::VIRTUAL,
 	          __osg_Object_P1__cloneType,
 	          "Clone the type of an object, with Object* return type. ",
 	          "Must be defined by derived classes. ");
-	I_Method1(osg::Object *, clone, IN, const osg::CopyOp &, copyop,
+	I_Method1(osg::Object *, clone, IN, const osg::CopyOp &, x,
 	          Properties::VIRTUAL,
 	          __osg_Object_P1__clone__C5_osg_CopyOp_R1,
 	          "Clone an object, with Object* return type. ",
@@ -138,7 +138,7 @@ END_REFLECTOR
 
 BEGIN_OBJECT_REFLECTOR(osgAnimation::Action::Callback)
 	I_DeclaringFile("osgAnimation/Timeline");
-	I_VirtualBaseType(osg::Object);
+	I_BaseType(osg::Object);
 	I_Constructor0(____Callback,
 	               "",
 	               "");
@@ -151,7 +151,7 @@ BEGIN_OBJECT_REFLECTOR(osgAnimation::Action::Callback)
 	          __osg_Object_P1__cloneType,
 	          "Clone the type of an object, with Object* return type. ",
 	          "Must be defined by derived classes. ");
-	I_Method1(osg::Object *, clone, IN, const osg::CopyOp &, copyop,
+	I_Method1(osg::Object *, clone, IN, const osg::CopyOp &, x,
 	          Properties::VIRTUAL,
 	          __osg_Object_P1__clone__C5_osg_CopyOp_R1,
 	          "Clone an object, with Object* return type. ",
@@ -322,13 +322,13 @@ END_REFLECTOR
 
 BEGIN_OBJECT_REFLECTOR(osgAnimation::Timeline)
 	I_DeclaringFile("osgAnimation/Timeline");
-	I_VirtualBaseType(osg::Object);
+	I_BaseType(osg::Object);
 	I_Method0(osg::Object *, cloneType,
 	          Properties::VIRTUAL,
 	          __osg_Object_P1__cloneType,
 	          "Clone the type of an object, with Object* return type. ",
 	          "Must be defined by derived classes. ");
-	I_Method1(osg::Object *, clone, IN, const osg::CopyOp &, copyop,
+	I_Method1(osg::Object *, clone, IN, const osg::CopyOp &, x,
 	          Properties::VIRTUAL,
 	          __osg_Object_P1__clone__C5_osg_CopyOp_R1,
 	          "Clone an object, with Object* return type. ",

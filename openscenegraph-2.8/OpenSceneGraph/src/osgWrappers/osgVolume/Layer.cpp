@@ -13,12 +13,13 @@
 #include <osg/BoundingSphere>
 #include <osg/CopyOp>
 #include <osg/Image>
+#include <osg/NodeVisitor>
 #include <osg/Object>
 #include <osg/Texture>
-#include <osg/TransferFunction>
 #include <osg/Vec4>
 #include <osgVolume/Layer>
 #include <osgVolume/Locator>
+#include <osgVolume/Property>
 
 // Must undefine IN and OUT macros defined in Windows headers
 #ifdef IN
@@ -43,7 +44,7 @@ BEGIN_OBJECT_REFLECTOR(osgVolume::CompositeLayer)
 	          __osg_Object_P1__cloneType,
 	          "Clone the type of an object, with Object* return type. ",
 	          "Must be defined by derived classes. ");
-	I_Method1(osg::Object *, clone, IN, const osg::CopyOp &, copyop,
+	I_Method1(osg::Object *, clone, IN, const osg::CopyOp &, x,
 	          Properties::VIRTUAL,
 	          __osg_Object_P1__clone__C5_osg_CopyOp_R1,
 	          "Clone an object, with Object* return type. ",
@@ -108,6 +109,16 @@ BEGIN_OBJECT_REFLECTOR(osgVolume::CompositeLayer)
 	          __unsigned_int__getNumLayers,
 	          "",
 	          "");
+	I_Method0(bool, requiresUpdateTraversal,
+	          Properties::VIRTUAL,
+	          __bool__requiresUpdateTraversal,
+	          "Specify whether ImageLayer requires update traversal. ",
+	          "");
+	I_Method1(void, update, IN, osg::NodeVisitor &, x,
+	          Properties::VIRTUAL,
+	          __void__update__osg_NodeVisitor_R1,
+	          "Call update on the Layer. ",
+	          "");
 	I_IndexedProperty(const std::string &, FileName, 
 	                  __C5_std_string_R1__getFileName__unsigned_int, 
 	                  __void__setFileName__unsigned_int__C5_std_string_R1, 
@@ -138,7 +149,7 @@ BEGIN_OBJECT_REFLECTOR(osgVolume::ImageLayer)
 	          __osg_Object_P1__cloneType,
 	          "Clone the type of an object, with Object* return type. ",
 	          "Must be defined by derived classes. ");
-	I_Method1(osg::Object *, clone, IN, const osg::CopyOp &, copyop,
+	I_Method1(osg::Object *, clone, IN, const osg::CopyOp &, x,
 	          Properties::VIRTUAL,
 	          __osg_Object_P1__clone__C5_osg_CopyOp_R1,
 	          "Clone an object, with Object* return type. ",
@@ -183,12 +194,42 @@ BEGIN_OBJECT_REFLECTOR(osgVolume::ImageLayer)
 	          __C5_osg_Image_P1__getImage,
 	          "Return const image associated with layer. ",
 	          "");
+	I_Method2(bool, computeMinMax, IN, osg::Vec4 &, min, IN, osg::Vec4 &, max,
+	          Properties::NON_VIRTUAL,
+	          __bool__computeMinMax__osg_Vec4_R1__osg_Vec4_R1,
+	          "Compute the min and max pixel colors. ",
+	          "");
+	I_Method2(void, offsetAndScaleImage, IN, const osg::Vec4 &, offset, IN, const osg::Vec4 &, scale,
+	          Properties::NON_VIRTUAL,
+	          __void__offsetAndScaleImage__C5_osg_Vec4_R1__C5_osg_Vec4_R1,
+	          "Apply color transformation to pixels using c' = offset + c * scale . ",
+	          "");
+	I_Method0(void, rescaleToZeroToOneRange,
+	          Properties::NON_VIRTUAL,
+	          __void__rescaleToZeroToOneRange,
+	          "Compute the min max range of the image, and then remap this to a 0 to 1 range. ",
+	          "");
+	I_Method0(void, translateMinToZero,
+	          Properties::NON_VIRTUAL,
+	          __void__translateMinToZero,
+	          "Compute the min color component of the image and then translate and pixels by this offset to make the new min component 0. ",
+	          "");
+	I_Method0(bool, requiresUpdateTraversal,
+	          Properties::VIRTUAL,
+	          __bool__requiresUpdateTraversal,
+	          "Specify whether ImageLayer requires update traversal. ",
+	          "");
+	I_Method1(void, update, IN, osg::NodeVisitor &, x,
+	          Properties::VIRTUAL,
+	          __void__update__osg_NodeVisitor_R1,
+	          "Call update on the Layer. ",
+	          "");
 	I_Method0(void, dirty,
 	          Properties::VIRTUAL,
 	          __void__dirty,
 	          "increment the modified count. ",
 	          "\" ");
-	I_Method1(void, setModifiedCount, IN, unsigned int, value,
+	I_Method1(void, setModifiedCount, IN, unsigned int, int,
 	          Properties::VIRTUAL,
 	          __void__setModifiedCount__unsigned_int,
 	          "Set the modified count value. ",
@@ -224,7 +265,7 @@ BEGIN_OBJECT_REFLECTOR(osgVolume::Layer)
 	          __osg_Object_P1__cloneType,
 	          "Clone the type of an object, with Object* return type. ",
 	          "Must be defined by derived classes. ");
-	I_Method1(osg::Object *, clone, IN, const osg::CopyOp &, copyop,
+	I_Method1(osg::Object *, clone, IN, const osg::CopyOp &, x,
 	          Properties::VIRTUAL,
 	          __osg_Object_P1__clone__C5_osg_CopyOp_R1,
 	          "Clone an object, with Object* return type. ",
@@ -309,20 +350,35 @@ BEGIN_OBJECT_REFLECTOR(osgVolume::Layer)
 	          __C5_osg_Image_P1__getImage,
 	          "Return const image associated with layer if supported. ",
 	          "");
-	I_Method1(void, setTransferFunction, IN, osg::TransferFunction *, tf,
+	I_Method1(void, setProperty, IN, osgVolume::Property *, property,
 	          Properties::NON_VIRTUAL,
-	          __void__setTransferFunction__osg_TransferFunction_P1,
-	          "Set the optional transfer function that maps the imagery pixels to new colours. ",
-	          "Transfer function may be implemented on the GPU or via pre-processing step. ");
-	I_Method0(osg::TransferFunction *, getTransferFunction,
-	          Properties::NON_VIRTUAL,
-	          __osg_TransferFunction_P1__getTransferFunction,
-	          "Get the transfer function. ",
+	          __void__setProperty__Property_P1,
+	          "Set the Property (or Properties via the CompositeProperty) that informs the VolumeTechnique how this layer should be rendered. ",
 	          "");
-	I_Method0(const osg::TransferFunction *, getTransferFunction,
+	I_Method0(osgVolume::Property *, getProperty,
 	          Properties::NON_VIRTUAL,
-	          __C5_osg_TransferFunction_P1__getTransferFunction,
-	          "Get the const transfer function. ",
+	          __Property_P1__getProperty,
+	          "Get the Property that informs the VolumeTechnique how this layer should be rendered. ",
+	          "");
+	I_Method0(const osgVolume::Property *, getProperty,
+	          Properties::NON_VIRTUAL,
+	          __C5_Property_P1__getProperty,
+	          "Get the const Property that informs the VolumeTechnique how this layer should be rendered. ",
+	          "");
+	I_Method1(void, addProperty, IN, osgVolume::Property *, property,
+	          Properties::NON_VIRTUAL,
+	          __void__addProperty__Property_P1,
+	          "Add a property, automatically creating a CompositePorperty if one isn't already assigned. ",
+	          "");
+	I_Method0(bool, requiresUpdateTraversal,
+	          Properties::VIRTUAL,
+	          __bool__requiresUpdateTraversal,
+	          "Specify whether ImageLayer requires update traversal. ",
+	          "");
+	I_Method1(void, update, IN, osg::NodeVisitor &, x,
+	          Properties::VIRTUAL,
+	          __void__update__osg_NodeVisitor_R1,
+	          "Call update on the Layer. ",
 	          "");
 	I_Method0(void, dirty,
 	          Properties::VIRTUAL,
@@ -365,8 +421,8 @@ BEGIN_OBJECT_REFLECTOR(osgVolume::Layer)
 	I_SimpleProperty(unsigned, ModifiedCount, 
 	                 0, 
 	                 __void__setModifiedCount__unsigned);
-	I_SimpleProperty(osg::TransferFunction *, TransferFunction, 
-	                 __osg_TransferFunction_P1__getTransferFunction, 
-	                 __void__setTransferFunction__osg_TransferFunction_P1);
+	I_SimpleProperty(osgVolume::Property *, Property, 
+	                 __Property_P1__getProperty, 
+	                 __void__setProperty__Property_P1);
 END_REFLECTOR
 

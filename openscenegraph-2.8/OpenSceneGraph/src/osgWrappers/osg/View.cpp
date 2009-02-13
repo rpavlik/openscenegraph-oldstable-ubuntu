@@ -17,6 +17,7 @@
 #include <osg/Matrix>
 #include <osg/Matrixd>
 #include <osg/Object>
+#include <osg/Stats>
 #include <osg/View>
 
 // Must undefine IN and OUT macros defined in Windows headers
@@ -49,7 +50,7 @@ BEGIN_OBJECT_REFLECTOR(osg::View)
 	          __osg_Object_P1__cloneType,
 	          "Clone the type of an object, with Object* return type. ",
 	          "Must be defined by derived classes. ");
-	I_Method1(osg::Object *, clone, IN, const osg::CopyOp &, copyop,
+	I_Method1(osg::Object *, clone, IN, const osg::CopyOp &, x,
 	          Properties::VIRTUAL,
 	          __osg_Object_P1__clone__C5_osg_CopyOp_R1,
 	          "Clone an object, with Object* return type. ",
@@ -73,6 +74,21 @@ BEGIN_OBJECT_REFLECTOR(osg::View)
 	          Properties::VIRTUAL,
 	          __void__take__View_R1,
 	          "Take all the settings, Camera and Slaves from the passed in view, leaving it empty. ",
+	          "");
+	I_Method1(void, setStats, IN, osg::Stats *, stats,
+	          Properties::NON_VIRTUAL,
+	          __void__setStats__osg_Stats_P1,
+	          "Set the Stats object used for collect various frame related timing and scene graph stats. ",
+	          "");
+	I_Method0(osg::Stats *, getStats,
+	          Properties::NON_VIRTUAL,
+	          __osg_Stats_P1__getStats,
+	          "Get the Viewers Stats object. ",
+	          "");
+	I_Method0(const osg::Stats *, getStats,
+	          Properties::NON_VIRTUAL,
+	          __C5_osg_Stats_P1__getStats,
+	          "Get the Viewers Stats object. ",
 	          "");
 	I_Method1(void, setLightingMode, IN, osg::View::LightingMode, lightingMode,
 	          Properties::NON_VIRTUAL,
@@ -204,6 +220,9 @@ BEGIN_OBJECT_REFLECTOR(osg::View)
 	                0, 
 	                0, 
 	                __bool__removeSlave__unsigned_int);
+	I_SimpleProperty(osg::Stats *, Stats, 
+	                 __osg_Stats_P1__getStats, 
+	                 __void__setStats__osg_Stats_P1);
 END_REFLECTOR
 
 BEGIN_VALUE_REFLECTOR(osg::View::Slave)

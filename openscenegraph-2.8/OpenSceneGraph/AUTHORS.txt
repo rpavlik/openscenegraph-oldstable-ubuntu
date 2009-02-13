@@ -1,6 +1,6 @@
-OpenSceneGraph Library 2.7.7
+OpenSceneGraph Library 2.8.0
 
-359 Contributors:
+365 Contributors:
 
 Firstname Surname
 -----------------
@@ -10,9 +10,9 @@ Marco Jez
 Paul Martz
 Mike Weiblen
 Eric Wing
-Brede Johansen
 Stephan Huber
 Mathias Fröhlich
+Brede Johansen
 Geoff Michel
 Farshid Lashkari
 Bob Kuehne
@@ -26,47 +26,49 @@ Luigi Calori
 Trajce Nikolov
 Mike Wittman
 Wojciech Lewandowski
+Paul Melis
 Colin McDonald
+Andy Skinner
+Roger James
 Pavel Moloshtan
 Tom Jolley
-Roger James
 Jeremy Moles
-Andy Skinner
+Jason Beverage
 Norman Vine
+Mattias Helsing
+Cedric Pinson
 Art Tevs
 Alberto Farre
 André Garneau
 Ruben Lopez
+Roland Smeenk
 Randall Hopper
 Michael Platings
-Jason Beverage
 Adrian Egli
-Paul Melis
 Olaf Flebbe
+Jason Daly
+J.P. Delport
 Gideon May
 Don Tidrow
+Sherman Wilcox
 Romano José Magacho da Silva
 Per Fahlberg
 Michael Gronager
 Mathieu Marache
 Joakim Simonsson
-J.P. Delport
 David Spilling
 Daniel Sjölie
 Chris Hanson
-Sherman Wilcox
+Alberto Luaces
 Philip Lowman
-Jason Daly
 Melchior Franz
 Chris Denham
-Cedric Pinson
 Serge Lages
-Roland Smeenk
 Joran Jessurun
 Frederic Marmond
 David Fries
+Bryan Thrall
 Boris Bralo
-Alberto Luaces
 Yefei He
 Tim Moore
 Terry Welsh
@@ -79,16 +81,16 @@ Mario Valle
 Gordon Tomlinson
 Gino van den Bergen
 Carlo Camporesi
-Bryan Thrall
 Ben Discoe
 Andreas Ekstrand
+Sukender 
 Sasa Bistrovic
 Neil Groves
-Mattias Helsing
 Martin Naylor
 Martin Aumueller
 Markus Trenkwalder
 Loic Dachary
+Lionel Lagarde
 Joseph Steel
 John Shue
 Jan Peciva
@@ -99,6 +101,7 @@ Vivek Rajan
 Thibault Genessay
 Sean Spicer
 Ravi Mathur
+Peter Hrenka
 Nikolaus Hanekamp
 Neil Salter
 Mihai Radu
@@ -108,12 +111,16 @@ Laurens Voerman
 David Guthrie
 Corbin Holtz
 Brad Christiansen
+Blasius Czink
 Toshiyuki Takahei
 Thom DeCarlo
+Tatsuhiro Nishioka
 Simon Julier
 Sebastien Grignard
 Romano Magacho
 Richard Schmidt
+Riccardo Corsi
+Ralf Habacker
 Paul de Repentigny
 Liang Aibin
 Leandro Motta Barros
@@ -123,18 +130,15 @@ Daniel Larimer
 Csaba Halasz
 Colin Dunlop
 Bruce Clay
-Blasius Czink
 Alberto Barbati
 Vladimir Shabanov
 Uwe Woessner
 Tony Horrobin
-Tatsuhiro Nishioka
 Sohey Yamamoto
-Riccardo Corsi
-Ralf Habacker
+Rudolf Wiedemann
 Rafa Gaitan
 Phil Atkin
-Peter Hrenka
+Miguel Escriva
 Mattias Linde
 Maria Ten
 Ken Sewell
@@ -142,9 +146,11 @@ Julian Ortiz
 Jeremy Bell
 Jaromir Vitek
 James French
+Gary Quinn
 Garrett Potts
 Gabor Dorka
 Fabio Mierlo
+Fabien Lavignotte
 Doug McCorkle
 Donn Mielcarek
 Donald Cipperly
@@ -163,24 +169,23 @@ Tugkan Calapoglu
 Tim Daoust
 Terrex 
 Sylvain Marie
-Sukender 
 Steve Lunsford
 Stephane Simon
 Stephan Eilemann
 Stanislav Blinov
+Sergey Leontyev
 Sebastian Messerschmidt
-Rudolf Wiedemann
 Ralf Kern
+Pierre Haritchabalet
 Perry Miller
 Nathan Monteleone
-Miguel Escriva
+Morné Pistorius
 Michael Henheffer
 Michael Guerrero
 Maya Leonard
 Max Bandazian
 Mathew May
 Martijn Kragtwijk
-Lionel Lagarde
 Kevin Moiule
 Keith Steffen
 Katharina Plugge
@@ -196,8 +201,10 @@ Guillaume Chouvenc
 Gerrick Bivins
 George Tarantilis
 Ferdi Smit
+Ewe Woessner
 Erik den Dekker
 Edgar Ellis
+Don Leich
 David Ergo
 Daniel Trstenjak
 Christophe Loustaunau
@@ -229,13 +236,13 @@ Simon Hammett
 Sid Byce
 Shuxing Xiao
 Shane Arnott
-Sergey Leontyev
 Sebastien Kuntz
 Ruth Lang
 Ronny Krueger
 Robert Swain
 Rob Bloemkool
 Rick Pingry
+Rick Appleton
 Ricard Schmidt
 Rene Molenaar
 Reinhard Sainitzer
@@ -249,6 +256,7 @@ Philipp Mächler
 Paul Palumbo
 Paul Obermeier
 Paul Fredrikson
+Patrick Hartling
 Parag Chaudhur
 Panagiotis Papadakos
 Panagiotis Koutsourakis
@@ -258,7 +266,6 @@ Nicolas Brodu
 Neil Hughes
 Nathan Cournia
 Morten Haukness
-Morné Pistorius
 Mirko Viviani
 Mikkel GjÃ¸l
 Mike Garrity
@@ -291,6 +298,7 @@ Kristopher Bixler
 Karsten Weiss
 Karl Heijdenberg
 Jutta Sauer
+Julian Scheid
 Josh Portway
 John Tan
 John Grant
@@ -310,7 +318,6 @@ Guillaume Millet
 Graeme Harkness
 Gian Lorenzetto
 George Papagiannakis
-Gary Quinn
 Galen Faidley
 Frederic Bouvier
 Frank Warmerdam
@@ -318,7 +325,6 @@ Frank Lindeman
 Frank Lichtenheld
 Ferdinand Cornelissen
 Fabien Dachicourt
-Ewe Woessner
 Emmanuel Roche
 Edmond Gheury
 Ed Ralston

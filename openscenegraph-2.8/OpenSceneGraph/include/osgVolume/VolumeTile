@@ -1,4 +1,4 @@
-/* -*-c++-*- OpenSceneGraph - Copyright (C) 1998-2008 Robert Osfield 
+/* -*-c++-*- OpenSceneGraph - Copyright (C) 1998-2009 Robert Osfield 
  *
  * This library is open source and may be redistributed and/or modified under  
  * the terms of the OpenSceneGraph Public License (OSGPL) version 0.0 or 
@@ -19,27 +19,20 @@
 
 #include <osgDB/ReaderWriter>
 
+#include <osgVolume/Layer>
 #include <osgVolume/VolumeTechnique>
 
 namespace osgVolume {
 
 class Volume;
 
-class TileID
+class OSGVOLUME_EXPORT TileID
 {
     public:
     
-        TileID():
-            level(-1),
-            x(-1),
-            y(-1),
-            z(-1) {}
+        TileID();
 
-        TileID(int in_level, int in_x, int in_y, int in_z):
-            level(in_level),
-            x(in_x),
-            y(in_y),
-            z(in_z) {}
+        TileID(int in_level, int in_x, int in_y, int in_z);
             
         bool operator == (const TileID& rhs) const        
         {
@@ -109,22 +102,24 @@ class OSGVOLUME_EXPORT VolumeTile : public osg::Group
         const TileID& getTileID() const { return _tileID; }
         
         
-        void setLocator(osg::RefMatrix* locator) { _locator = locator; }
-        osg::RefMatrix* getLocator() { return _locator.get(); }
-        const osg::RefMatrix* getLocator() const { return _locator.get(); }
+        void setLocator(Locator* locator) { _locator = locator; }
+        Locator* getLocator() { return _locator.get(); }
+        const Locator* getLocator() const { return _locator.get(); }
 
 
-        void setImage(unsigned int i, osg::Image* image);
-        osg::Image* getImage(unsigned int i) { return i<_images.size() ? _images[i].get() : 0; }
-        const osg::Image* getImage(unsigned int i) const  { return i<_images.size() ? _images[i].get() : 0; }
+        void setLayer(Layer* layer);
+        Layer* getLayer() { return _layer.get(); }
+        const Layer* getLayer() const { return _layer.get(); }
 
-        /** Set the VolumeTechnique*/
+
+
+        /** Set the VolumeTechnique that will be used to render this tile. */
         void setVolumeTechnique(VolumeTechnique* VolumeTechnique);
 
-        /** Get the VolumeTechnique*/
+        /** Get the VolumeTechnique that will be used to render this tile. */
         VolumeTechnique* getVolumeTechnique() { return _volumeTechnique.get(); }
         
-        /** Get the const VolumeTechnique*/
+        /** Get the const VolumeTechnique that will be used to render this tile. */
         const VolumeTechnique* getVolumeTechnique() const { return _volumeTechnique.get(); }
 
 
@@ -152,10 +147,9 @@ class OSGVOLUME_EXPORT VolumeTile : public osg::Group
 
         osg::ref_ptr<VolumeTechnique>       _volumeTechnique;
 
-        osg::ref_ptr<osg::RefMatrix>        _locator;        
+        osg::ref_ptr<Locator>               _locator;        
 
-        typedef std::vector< osg::ref_ptr<osg::Image> > Images;
-        Images                              _images;
+        osg::ref_ptr<Layer>                 _layer;
 };
 
 }

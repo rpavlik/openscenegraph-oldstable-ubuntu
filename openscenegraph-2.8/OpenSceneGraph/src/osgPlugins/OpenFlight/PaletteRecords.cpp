@@ -290,7 +290,7 @@ protected:
 
     osg::StateSet* readTexture(const std::string& filename, const Document& document) const
     {
-        osg::Image* image = osgDB::readImageFile(filename,document.getOptions());
+        osg::ref_ptr<osg::Image> image = osgDB::readRefImageFile(filename,document.getOptions());
         if (!image) return NULL;
 
         // Create stateset to hold texture and attributes.
@@ -300,7 +300,7 @@ protected:
         texture->setWrap(osg::Texture2D::WRAP_S,osg::Texture2D::REPEAT);
         texture->setWrap(osg::Texture2D::WRAP_T,osg::Texture2D::REPEAT);
         texture->setResizeNonPowerOfTwoHint(true);
-        texture->setImage(image);
+        texture->setImage(image.get());
         stateset->setTextureAttributeAndModes(0, texture, osg::StateAttribute::ON);
 
         // Read attribute file
@@ -666,7 +666,12 @@ protected:
         appearance->fadeOutDuration = in.readFloat32();
         appearance->LODRangeRatio = in.readFloat32();
         appearance->LODScale = in.readFloat32();
-        appearance->texturePatternIndex = in.readInt16(-1);
+          
+        if(document.version() > VERSION_15_8)
+            appearance->texturePatternIndex = in.readInt16(-1);
+        else
+           appearance->texturePatternIndex = -1;
+ 
         // The final short is reserved; don't bother reading it.
  
         // Add to pool

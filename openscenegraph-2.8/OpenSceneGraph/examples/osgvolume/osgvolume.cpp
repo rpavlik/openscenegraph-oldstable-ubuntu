@@ -60,7 +60,11 @@
 #include <algorithm>
 #include <iostream>
 
-#include <osgVolume/ImageUtils>
+#include <osg/ImageUtils>
+#include <osgVolume/Volume>
+#include <osgVolume/VolumeTile>
+#include <osgVolume/RayTracedTechnique>
+#include <osgVolume/FixedFunctionTechnique>
 
 typedef std::vector< osg::ref_ptr<osg::Image> > ImageList;
 
@@ -71,18 +75,6 @@ enum ShadingModel
     Isosurface,
     MaximumIntensityProjection
 };
-
-//  example ReadOperator
-// struct ReadOperator
-// {
-//     inline void luminance(float l) const { rgba(l,l,l,1.0f); }
-//     inline void alpha(float a) const { rgba(1.0f,1.0f,1.0f,a); }
-//     inline void luminance_alpha(float l,float a) const { rgba(l,l,l,a); }
-//     inline void rgb(float r,float g,float b) const { rgba(r,g,b,1.0f); }
-//     inline void rgba(float r,float g,float b,float a) const { std::cout<<"pixel("<<r<<", "<<g<<", "<<b<<", "<<a<<")"<<std::endl; }
-// };
-
-
 
 struct PassThroughTransformFunction
 {
@@ -465,940 +457,6 @@ osg::Image* createTexture3D(ImageList& imageList, ProcessRow& processRow,
 }
 
 
-osg::Image* createNormalMapTexture(osg::Image* image_3d)
-{
-    osg::notify(osg::NOTICE)<<"Computing NormalMapTexture"<<std::endl;
-
-    GLenum dataType = image_3d->getDataType();
-
-    unsigned int sourcePixelIncrement = 1;
-    unsigned int alphaOffset = 0; 
-    switch(image_3d->getPixelFormat())
-    {
-    case(GL_ALPHA):
-    case(GL_LUMINANCE):
-        sourcePixelIncrement = 1;
-        alphaOffset = 0;
-        break;
-    case(GL_LUMINANCE_ALPHA):
-        sourcePixelIncrement = 2;
-        alphaOffset = 1;
-        break;
-    case(GL_RGB):
-        sourcePixelIncrement = 3;
-        alphaOffset = 0;
-        break;
-    case(GL_RGBA):
-        sourcePixelIncrement = 4;
-        alphaOffset = 3;
-        break;
-    default:
-        osg::notify(osg::NOTICE)<<"Source pixel format not support for normal map generation."<<std::endl;
-        return 0;
-    }
-
-
-    osg::ref_ptr<osg::Image> normalmap_3d = new osg::Image;
-    normalmap_3d->allocateImage(image_3d->s(),image_3d->t(),image_3d->r(),
-                            GL_RGBA,GL_UNSIGNED_BYTE);
-
-    if (osg::getCpuByteOrder()==osg::LittleEndian) alphaOffset = sourcePixelIncrement-alphaOffset-1;
-
-    for(int r=1;r<image_3d->r()-1;++r)
-    {
-        for(int t=1;t<image_3d->t()-1;++t)
-        {
-
-            if (dataType==GL_UNSIGNED_BYTE)
-            {        
-                unsigned char* ptr = image_3d->data(1,t,r)+alphaOffset;
-                unsigned char* left = image_3d->data(0,t,r)+alphaOffset;
-                unsigned char* right = image_3d->data(2,t,r)+alphaOffset;
-                unsigned char* above = image_3d->data(1,t+1,r)+alphaOffset;
-                unsigned char* below = image_3d->data(1,t-1,r)+alphaOffset;
-                unsigned char* in = image_3d->data(1,t,r+1)+alphaOffset;
-                unsigned char* out = image_3d->data(1,t,r-1)+alphaOffset;
-
-                unsigned char* destination = (unsigned char*) normalmap_3d->data(1,t,r);
-
-                for(int s=1;s<image_3d->s()-1;++s)
-                {
-
-                    osg::Vec3 grad((float)(*left)-(float)(*right),
-                                   (float)(*below)-(float)(*above),
-                                   (float)(*out) -(float)(*in));
-
-                    grad.normalize();
-
-                    if (grad.x()==0.0f && grad.y()==0.0f && grad.z()==0.0f)
-                    {
-                        grad.set(128.0f,128.0f,128.0f);
-                    }
-                    else
-                    {
-                        grad.x() = osg::clampBetween((grad.x()+1.0f)*128.0f,0.0f,255.0f);
-                        grad.y() = osg::clampBetween((grad.y()+1.0f)*128.0f,0.0f,255.0f);
-                        grad.z() = osg::clampBetween((grad.z()+1.0f)*128.0f,0.0f,255.0f);
-                    }
-
-                    *(destination++) = (unsigned char)(grad.x()); // scale and bias X.
-                    *(destination++) = (unsigned char)(grad.y()); // scale and bias Y.
-                    *(destination++) = (unsigned char)(grad.z()); // scale and bias Z.
-
-                    *destination++ = *ptr;
-
-                    ptr += sourcePixelIncrement;
-                    left += sourcePixelIncrement;
-                    right += sourcePixelIncrement;
-                    above += sourcePixelIncrement;
-                    below += sourcePixelIncrement;
-                    in += sourcePixelIncrement;
-                    out += sourcePixelIncrement;
-                }
-            }
-            else if (dataType==GL_SHORT)
-            {
-                short* ptr = (short*)(image_3d->data(1,t,r)+alphaOffset);
-                short* left = (short*)(image_3d->data(0,t,r)+alphaOffset);
-                short* right = (short*)(image_3d->data(2,t,r)+alphaOffset);
-                short* above = (short*)(image_3d->data(1,t+1,r)+alphaOffset);
-                short* below = (short*)(image_3d->data(1,t-1,r)+alphaOffset);
-                short* in = (short*)(image_3d->data(1,t,r+1)+alphaOffset);
-                short* out = (short*)(image_3d->data(1,t,r-1)+alphaOffset);
-
-                unsigned char* destination = (unsigned char*) normalmap_3d->data(1,t,r);
-
-                for(int s=1;s<image_3d->s()-1;++s)
-                {
-
-                    osg::Vec3 grad((float)(*left)-(float)(*right),
-                                   (float)(*below)-(float)(*above),
-                                   (float)(*out) -(float)(*in));
-
-                    grad.normalize();
-
-                    //osg::notify(osg::NOTICE)<<"normal "<<grad<<std::endl;
-
-                    if (grad.x()==0.0f && grad.y()==0.0f && grad.z()==0.0f)
-                    {
-                        grad.set(128.0f,128.0f,128.0f);
-                    }
-                    else
-                    {
-                        grad.x() = osg::clampBetween((grad.x()+1.0f)*128.0f,0.0f,255.0f);
-                        grad.y() = osg::clampBetween((grad.y()+1.0f)*128.0f,0.0f,255.0f);
-                        grad.z() = osg::clampBetween((grad.z()+1.0f)*128.0f,0.0f,255.0f);
-                    }
-                    
-
-                    *(destination++) = (unsigned char)(grad.x()); // scale and bias X.
-                    *(destination++) = (unsigned char)(grad.y()); // scale and bias Y.
-                    *(destination++) = (unsigned char)(grad.z()); // scale and bias Z.
-
-                    *destination++ = *ptr/128;
-
-                    ptr += sourcePixelIncrement;
-                    left += sourcePixelIncrement;
-                    right += sourcePixelIncrement;
-                    above += sourcePixelIncrement;
-                    below += sourcePixelIncrement;
-                    in += sourcePixelIncrement;
-                    out += sourcePixelIncrement;
-                }
-            }
-            else if (dataType==GL_UNSIGNED_SHORT)
-            {
-                unsigned short* ptr = (unsigned short*)(image_3d->data(1,t,r)+alphaOffset);
-                unsigned short* left = (unsigned short*)(image_3d->data(0,t,r)+alphaOffset);
-                unsigned short* right = (unsigned short*)(image_3d->data(2,t,r)+alphaOffset);
-                unsigned short* above = (unsigned short*)(image_3d->data(1,t+1,r)+alphaOffset);
-                unsigned short* below = (unsigned short*)(image_3d->data(1,t-1,r)+alphaOffset);
-                unsigned short* in = (unsigned short*)(image_3d->data(1,t,r+1)+alphaOffset);
-                unsigned short* out = (unsigned short*)(image_3d->data(1,t,r-1)+alphaOffset);
-
-                unsigned char* destination = (unsigned char*) normalmap_3d->data(1,t,r);
-
-                for(int s=1;s<image_3d->s()-1;++s)
-                {
-
-                    osg::Vec3 grad((float)(*left)-(float)(*right),
-                                   (float)(*below)-(float)(*above),
-                                   (float)(*out) -(float)(*in));
-
-                    grad.normalize();
-
-                    if (grad.x()==0.0f && grad.y()==0.0f && grad.z()==0.0f)
-                    {
-                        grad.set(128.0f,128.0f,128.0f);
-                    }
-                    else
-                    {
-                        grad.x() = osg::clampBetween((grad.x()+1.0f)*128.0f,0.0f,255.0f);
-                        grad.y() = osg::clampBetween((grad.y()+1.0f)*128.0f,0.0f,255.0f);
-                        grad.z() = osg::clampBetween((grad.z()+1.0f)*128.0f,0.0f,255.0f);
-                    }
-
-                    *(destination++) = (unsigned char)(grad.x()); // scale and bias X.
-                    *(destination++) = (unsigned char)(grad.y()); // scale and bias Y.
-                    *(destination++) = (unsigned char)(grad.z()); // scale and bias Z.
-
-                    *destination++ = *ptr/256;
-
-                    ptr += sourcePixelIncrement;
-                    left += sourcePixelIncrement;
-                    right += sourcePixelIncrement;
-                    above += sourcePixelIncrement;
-                    below += sourcePixelIncrement;
-                    in += sourcePixelIncrement;
-                    out += sourcePixelIncrement;
-                }
-            }
-        }
-    }
-    
-    
-    osg::notify(osg::NOTICE)<<"Created NormalMapTexture"<<std::endl;
-    
-    return normalmap_3d.release();
-}
-
-
-
-osg::Node* createCube(float size,float alpha, unsigned int numSlices, float sliceEnd=1.0f)
-{
-
-    // set up the Geometry.
-    osg::Geometry* geom = new osg::Geometry;
-
-    float halfSize = size*0.5f;
-    float y = halfSize;
-    float dy =-size/(float)(numSlices-1)*sliceEnd;
-
-    //y = -halfSize;
-    //dy *= 0.5;
-
-    osg::Vec3Array* coords = new osg::Vec3Array(4*numSlices);
-    geom->setVertexArray(coords);
-    for(unsigned int i=0;i<numSlices;++i, y+=dy)
-    {
-        (*coords)[i*4+0].set(-halfSize,y,halfSize);
-        (*coords)[i*4+1].set(-halfSize,y,-halfSize);
-        (*coords)[i*4+2].set(halfSize,y,-halfSize);
-        (*coords)[i*4+3].set(halfSize,y,halfSize);
-    }
-    
-    osg::Vec3Array* normals = new osg::Vec3Array(1);
-    (*normals)[0].set(0.0f,-1.0f,0.0f);
-    geom->setNormalArray(normals);
-    geom->setNormalBinding(osg::Geometry::BIND_OVERALL);
-
-    osg::Vec4Array* colors = new osg::Vec4Array(1);
-    (*colors)[0].set(1.0f,1.0f,1.0f,alpha);
-    geom->setColorArray(colors);
-    geom->setColorBinding(osg::Geometry::BIND_OVERALL);
-
-    geom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::QUADS,0,coords->size()));
-
-    osg::Billboard* billboard = new osg::Billboard;
-    billboard->setMode(osg::Billboard::POINT_ROT_WORLD);
-    billboard->addDrawable(geom);
-    billboard->setPosition(0,osg::Vec3(0.0f,0.0f,0.0f));
-    
-    return billboard;
-}
-
-class FollowMouseCallback : public osgGA::GUIEventHandler, public osg::StateSet::Callback
-{
-    public:
-    
-        FollowMouseCallback(bool shader = false):
-            _shader(shader)
-        {
-            _updateTransparency = false;
-            _updateAlphaCutOff = false;
-            _updateSampleDensity = false;
-        }
-
-        FollowMouseCallback(const FollowMouseCallback&,const osg::CopyOp&) {}
-
-        META_Object(osg,FollowMouseCallback);
-
-        virtual void operator() (osg::StateSet* stateset, osg::NodeVisitor* nv)
-        {
-            if (nv->getVisitorType()==osg::NodeVisitor::EVENT_VISITOR)
-            {
-                osgGA::EventVisitor* ev = dynamic_cast<osgGA::EventVisitor*>(nv);
-                if (ev)
-                {
-                    osgGA::GUIActionAdapter* aa = ev->getActionAdapter();
-                    osgGA::EventQueue::Events& events = ev->getEvents();
-                    for(osgGA::EventQueue::Events::iterator itr=events.begin();
-                        itr!=events.end();
-                        ++itr)
-                    {
-                        handle(*(*itr), *aa, stateset, ev);
-                    }
-                }
-            }
-        }
-        
-        virtual bool handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIActionAdapter&, osg::Object* object, osg::NodeVisitor*)
-        {
-            osg::StateSet* stateset = dynamic_cast<osg::StateSet*>(object);
-            if (!stateset) return false;
-            
-            switch(ea.getEventType())
-            {
-                case(osgGA::GUIEventAdapter::MOVE):
-                case(osgGA::GUIEventAdapter::DRAG):
-                {
-                    float v = (ea.getY()-ea.getYmin())/(ea.getYmax()-ea.getYmin());
-                    if (_shader)
-                    {
-                        osg::Uniform* uniform = 0;
-                        if (_updateTransparency && (uniform = stateset->getUniform("transparency"))) uniform->set(v);
-                        if (_updateAlphaCutOff && (uniform = stateset->getUniform("alphaCutOff"))) uniform->set(v);
-                        if (_updateSampleDensity && (uniform = stateset->getUniform("sampleDensity"))) 
-                        {
-                            float value = powf(v,5);
-                            osg::notify(osg::INFO)<<"sampleDensity = "<<value<<std::endl;
-                            uniform->set(value);
-                        }
-                    }
-                    else
-                    {                    
-                        if (_updateAlphaCutOff)
-                        {
-                            osg::AlphaFunc* alphaFunc = dynamic_cast<osg::AlphaFunc*>(stateset->getAttribute(osg::StateAttribute::ALPHAFUNC));
-                            if (alphaFunc) 
-                            {
-                                alphaFunc->setReferenceValue(v);
-                            }
-                        }
-                        
-                        if (_updateTransparency)
-                        {
-                            osg::Material* material = dynamic_cast<osg::Material*>(stateset->getAttribute(osg::StateAttribute::MATERIAL));
-                            if (material)
-                            {
-                                material->setAlpha(osg::Material::FRONT_AND_BACK,v);
-                            }
-                        }
-                    }
-
-                    break;
-                }
-                case(osgGA::GUIEventAdapter::KEYDOWN):
-                {
-                    if (ea.getKey()=='t') _updateTransparency = true;
-                    if (ea.getKey()=='a') _updateAlphaCutOff = true;
-                    if (ea.getKey()=='d') _updateSampleDensity = true;
-                    break;
-                }
-                case(osgGA::GUIEventAdapter::KEYUP):
-                {
-                    if (ea.getKey()=='t') _updateTransparency = false;
-                    if (ea.getKey()=='a') _updateAlphaCutOff = false;
-                    if (ea.getKey()=='d') _updateSampleDensity = false;
-                    break;
-                }
-                default:
-                    break;
-            }
-            return false;
-        }
-        
-        bool _shader;
-        bool _updateTransparency;
-        bool _updateAlphaCutOff;
-        bool _updateSampleDensity;
-
-};
-
-osg::Node* createShaderModel(ShadingModel shadingModel,
-                       osg::ref_ptr<osg::Image>& image_3d, 
-                       osg::Image* normalmap_3d,
-                       osg::TransferFunction1D* tf,
-                       osg::Texture::InternalFormatMode internalFormatMode,
-                       float xSize, float ySize, float zSize,
-                       float /*xMultiplier*/, float /*yMultiplier*/, float /*zMultiplier*/,
-                       unsigned int /*numSlices*/=500, float /*sliceEnd*/=1.0f, float alphaFuncValue=0.02f)
-{
-    osg::Texture::FilterMode minFilter = osg::Texture::LINEAR;
-    osg::Texture::FilterMode magFilter = osg::Texture::LINEAR;
-
-    osg::Group* root = new osg::Group;
-    
-    osg::Geode* geode = new osg::Geode;
-    root->addChild(geode);
-    
-    osg::StateSet* stateset = geode->getOrCreateStateSet();
-    
-    stateset->setEventCallback(new FollowMouseCallback(true));
-    
-    stateset->setMode(GL_ALPHA_TEST,osg::StateAttribute::ON);
-
-    
-    osg::Program* program = new osg::Program;
-    stateset->setAttribute(program);
-
-    // get shaders from source
-    
-    osg::Shader* vertexShader = osgDB::readShaderFile(osg::Shader::VERTEX, "volume.vert");
-    if (vertexShader)
-    {
-        program->addShader(vertexShader);
-    }
-    else
-    {
-        #include "volume_vert.cpp"
-        program->addShader(new osg::Shader(osg::Shader::VERTEX, volume_vert));
-    }
-
-    if (!(normalmap_3d && tf))
-    {
-        // set up the 3d texture itself,
-        // note, well set the filtering up so that mip mapping is disabled,
-        // gluBuild3DMipsmaps doesn't do a very good job of handled the
-        // imbalanced dimensions of the 256x256x4 texture.
-        osg::Texture3D* texture3D = new osg::Texture3D;
-        texture3D->setResizeNonPowerOfTwoHint(false);
-        texture3D->setFilter(osg::Texture3D::MIN_FILTER,minFilter);
-        texture3D->setFilter(osg::Texture3D::MAG_FILTER, magFilter);
-        texture3D->setWrap(osg::Texture3D::WRAP_R,osg::Texture3D::CLAMP_TO_EDGE);
-        texture3D->setWrap(osg::Texture3D::WRAP_S,osg::Texture3D::CLAMP_TO_EDGE);
-        texture3D->setWrap(osg::Texture3D::WRAP_T,osg::Texture3D::CLAMP_TO_EDGE);
-        if (image_3d->getPixelFormat()==GL_ALPHA || 
-            image_3d->getPixelFormat()==GL_LUMINANCE)
-        {
-            texture3D->setInternalFormatMode(osg::Texture3D::USE_USER_DEFINED_FORMAT);
-            texture3D->setInternalFormat(GL_INTENSITY);
-        }
-        else
-        {
-            texture3D->setInternalFormatMode(internalFormatMode);
-        }
-        texture3D->setImage(image_3d.get());
-
-        stateset->setTextureAttributeAndModes(0,texture3D,osg::StateAttribute::ON);
-
-        osg::Uniform* baseTextureSampler = new osg::Uniform("baseTexture",0);
-        stateset->addUniform(baseTextureSampler);
-    }
-    
-
-    if (shadingModel==MaximumIntensityProjection)
-    {
-        if (tf)
-        {
-            osg::Texture1D* texture1D = new osg::Texture1D;
-            texture1D->setImage(tf->getImage());    
-            stateset->setTextureAttributeAndModes(1,texture1D,osg::StateAttribute::ON);
-
-            osg::Shader* fragmentShader = osgDB::readShaderFile(osg::Shader::FRAGMENT, "volume_tf_mip.frag");
-            if (fragmentShader)
-            {
-                program->addShader(fragmentShader);
-            }
-            else
-            {
-                #include "volume_tf_mip_frag.cpp"
-                program->addShader(new osg::Shader(osg::Shader::FRAGMENT, volume_tf_mip_frag));
-            }
-
-            osg::Uniform* tfTextureSampler = new osg::Uniform("tfTexture",1);
-            stateset->addUniform(tfTextureSampler);
-
-        }
-        else
-        {    
-            osg::Shader* fragmentShader = osgDB::readShaderFile(osg::Shader::FRAGMENT, "volume_mip.frag");
-            if (fragmentShader)
-            {
-                program->addShader(fragmentShader);
-            }
-            else
-            {
-                #include "volume_mip_frag.cpp"
-                program->addShader(new osg::Shader(osg::Shader::FRAGMENT, volume_mip_frag));
-            }
-        }
-    }
-    else if (shadingModel==Isosurface)
-    {
-
-        if (tf)
-        {
-            osg::Texture1D* texture1D = new osg::Texture1D;
-            texture1D->setImage(tf->getImage());    
-            texture1D->setResizeNonPowerOfTwoHint(false);
-            texture1D->setFilter(osg::Texture::MIN_FILTER, osg::Texture::LINEAR);
-            texture1D->setFilter(osg::Texture::MAG_FILTER, osg::Texture::LINEAR);
-            texture1D->setWrap(osg::Texture::WRAP_R,osg::Texture::CLAMP_TO_EDGE);
-            stateset->setTextureAttributeAndModes(1,texture1D,osg::StateAttribute::ON);
-
-            osg::Uniform* tfTextureSampler = new osg::Uniform("tfTexture",1);
-            stateset->addUniform(tfTextureSampler);
-
-            osg::Shader* fragmentShader = osgDB::readShaderFile(osg::Shader::FRAGMENT, "volume_tf_iso.frag");
-            if (fragmentShader)
-            {
-                program->addShader(fragmentShader);
-            }
-            else
-            {
-                #include "volume_tf_iso_frag.cpp"
-                program->addShader(new osg::Shader(osg::Shader::FRAGMENT, volume_tf_iso_frag));
-            }
-        }
-        else
-        {    
-            osg::Shader* fragmentShader = osgDB::readShaderFile(osg::Shader::FRAGMENT, "volume_iso.frag");
-            if (fragmentShader)
-            {
-                program->addShader(fragmentShader);
-            }
-            else
-            {
-                #include "volume_iso_frag.cpp"
-                program->addShader(new osg::Shader(osg::Shader::FRAGMENT, volume_iso_frag));
-            }
-        }
-    }
-    else if (normalmap_3d)
-    {
-        osg::notify(osg::NOTICE)<<"Setting up normalmapping shader"<<std::endl;
-
-        osg::Uniform* normalMapSampler = new osg::Uniform("normalMap",1);
-        stateset->addUniform(normalMapSampler);
-
-        osg::Texture3D* normalMap = new osg::Texture3D;
-        normalMap->setImage(normalmap_3d);    
-        normalMap->setResizeNonPowerOfTwoHint(false);
-        normalMap->setInternalFormatMode(internalFormatMode);
-        normalMap->setFilter(osg::Texture3D::MIN_FILTER, osg::Texture::LINEAR);
-        normalMap->setFilter(osg::Texture3D::MAG_FILTER, osg::Texture::LINEAR);
-        normalMap->setWrap(osg::Texture3D::WRAP_R,osg::Texture3D::CLAMP_TO_EDGE);
-        normalMap->setWrap(osg::Texture3D::WRAP_S,osg::Texture3D::CLAMP_TO_EDGE);
-        normalMap->setWrap(osg::Texture3D::WRAP_T,osg::Texture3D::CLAMP_TO_EDGE);
-
-        stateset->setTextureAttributeAndModes(1,normalMap,osg::StateAttribute::ON);
-
-        if (tf)
-        {
-            osg::Texture1D* texture1D = new osg::Texture1D;
-            texture1D->setImage(tf->getImage());    
-            texture1D->setResizeNonPowerOfTwoHint(false);
-            texture1D->setFilter(osg::Texture::MIN_FILTER, osg::Texture::LINEAR);
-            texture1D->setFilter(osg::Texture::MAG_FILTER, osg::Texture::LINEAR);
-            texture1D->setWrap(osg::Texture::WRAP_R,osg::Texture::CLAMP_TO_EDGE);
-            stateset->setTextureAttributeAndModes(0,texture1D,osg::StateAttribute::ON);
-
-            osg::Shader* fragmentShader = osgDB::readShaderFile(osg::Shader::FRAGMENT, "volume-tf-n.frag");
-            if (fragmentShader)
-            {
-                program->addShader(fragmentShader);
-            }
-            else
-            {
-                #include "volume_tf_n_frag.cpp"
-                program->addShader(new osg::Shader(osg::Shader::FRAGMENT, volume_tf_n_frag));
-            }
-
-            osg::Uniform* tfTextureSampler = new osg::Uniform("tfTexture",0);
-            stateset->addUniform(tfTextureSampler);
-        }
-        else
-        {
-            osg::Shader* fragmentShader = osgDB::readShaderFile(osg::Shader::FRAGMENT, "volume-n.frag");
-            if (fragmentShader)
-            {
-                program->addShader(fragmentShader);
-            }
-            else
-            {
-                #include "volume_n_frag.cpp"
-                program->addShader(new osg::Shader(osg::Shader::FRAGMENT, volume_n_frag));
-            }
-        }
-    } 
-    else if (tf)
-    {
-        osg::Texture1D* texture1D = new osg::Texture1D;
-        texture1D->setImage(tf->getImage());    
-        texture1D->setResizeNonPowerOfTwoHint(false);
-        texture1D->setFilter(osg::Texture::MIN_FILTER, osg::Texture::LINEAR);
-        texture1D->setFilter(osg::Texture::MAG_FILTER, osg::Texture::LINEAR);
-        texture1D->setWrap(osg::Texture::WRAP_R,osg::Texture::CLAMP_TO_EDGE);
-        stateset->setTextureAttributeAndModes(1,texture1D,osg::StateAttribute::ON);
-
-        osg::Uniform* tfTextureSampler = new osg::Uniform("tfTexture",1);
-        stateset->addUniform(tfTextureSampler);
-
-        osg::Shader* fragmentShader = osgDB::readShaderFile(osg::Shader::FRAGMENT, "volume-tf.frag");
-        if (fragmentShader)
-        {
-            program->addShader(fragmentShader);
-        }
-        else
-        {
-            #include "volume_tf_frag.cpp"
-            program->addShader(new osg::Shader(osg::Shader::FRAGMENT, volume_tf_frag));
-        }
-
-    }
-    else
-    {    
-
-        osg::Shader* fragmentShader = osgDB::readShaderFile(osg::Shader::FRAGMENT, "volume.frag");
-        if (fragmentShader)
-        {
-            program->addShader(fragmentShader);
-        }
-        else
-        {
-            #include "volume_frag.cpp"
-            program->addShader(new osg::Shader(osg::Shader::FRAGMENT, volume_frag));
-        }
-    }
-
-    osg::Uniform* sampleDensity = new osg::Uniform("sampleDensity", 0.005f);
-    stateset->addUniform(sampleDensity);
-
-    osg::Uniform* transpancy = new osg::Uniform("transparency",0.5f);
-    stateset->addUniform(transpancy);
-
-    osg::Uniform* alphaCutOff = new osg::Uniform("alphaCutOff",alphaFuncValue);
-    stateset->addUniform(alphaCutOff);
-
-    stateset->setMode(GL_CULL_FACE, osg::StateAttribute::ON);
-
-    osg::TexGen* texgen = new osg::TexGen;
-    texgen->setMode(osg::TexGen::OBJECT_LINEAR);
-    texgen->setPlane(osg::TexGen::S, osg::Plane(1.0f/xSize,0.0f,0.0f,0.0f));
-    texgen->setPlane(osg::TexGen::T, osg::Plane(0.0f,1.0f/ySize,0.0f,0.0f));
-    texgen->setPlane(osg::TexGen::R, osg::Plane(0.0f,0.0f,1.0f/zSize,0.0f));
-    texgen->setPlane(osg::TexGen::Q, osg::Plane(0.0f,0.0f,0.0f,1.0f));
-    
-    stateset->setTextureAttributeAndModes(0, texgen, osg::StateAttribute::ON);
-
-    {
-        osg::Geometry* geom = new osg::Geometry;
-
-        osg::Vec3Array* coords = new osg::Vec3Array(8);
-        (*coords)[0].set(0,0,0);
-        (*coords)[1].set(xSize,0,0);
-        (*coords)[2].set(xSize,ySize,0);
-        (*coords)[3].set(0,ySize,0);
-        (*coords)[4].set(0,0,zSize);
-        (*coords)[5].set(xSize,0,zSize);
-        (*coords)[6].set(ySize,ySize,zSize);
-        (*coords)[7].set(0,ySize,zSize);
-        geom->setVertexArray(coords);
-
-        osg::Vec4Array* colours = new osg::Vec4Array(1);
-        (*colours)[0].set(1.0f,1.0f,1.0,1.0f);
-        geom->setColorArray(colours);
-        geom->setColorBinding(osg::Geometry::BIND_OVERALL);
-
-        osg::DrawElementsUShort* drawElements = new osg::DrawElementsUShort(GL_QUADS);
-        // bottom
-        drawElements->push_back(0);
-        drawElements->push_back(1);
-        drawElements->push_back(2);
-        drawElements->push_back(3);
-        
-        // bottom
-        drawElements->push_back(3);
-        drawElements->push_back(2);
-        drawElements->push_back(6);
-        drawElements->push_back(7);
-
-        // left
-        drawElements->push_back(0);
-        drawElements->push_back(3);
-        drawElements->push_back(7);
-        drawElements->push_back(4);
-
-        // right
-        drawElements->push_back(5);
-        drawElements->push_back(6);
-        drawElements->push_back(2);
-        drawElements->push_back(1);
-
-        // front
-        drawElements->push_back(1);
-        drawElements->push_back(0);
-        drawElements->push_back(4);
-        drawElements->push_back(5);
-
-        // top
-        drawElements->push_back(7);
-        drawElements->push_back(6);
-        drawElements->push_back(5);
-        drawElements->push_back(4);
-
-        geom->addPrimitiveSet(drawElements);
-
-        geode->addDrawable(geom);
-
-    } 
-    return root;
-}
-
-osg::Node* createModel(ShadingModel shadeModel,
-                       osg::ref_ptr<osg::Image>& image_3d, 
-                       osg::ref_ptr<osg::Image>& normalmap_3d,
-                       osg::Texture::InternalFormatMode internalFormatMode,
-                       float xSize, float ySize, float zSize,
-                       float xMultiplier, float yMultiplier, float zMultiplier,
-                       unsigned int numSlices=500, float sliceEnd=1.0f, float alphaFuncValue=0.02f, bool maximumIntensityProjection = false)
-{
-    bool two_pass = normalmap_3d.valid() && (image_3d->getPixelFormat()==GL_RGB || image_3d->getPixelFormat()==GL_RGBA);
-
-    osg::BoundingBox bb(-xSize*0.5f,-ySize*0.5f,-zSize*0.5f,xSize*0.5f,ySize*0.5f,zSize*0.5f);
-
-
-    osg::Texture::FilterMode minFilter = osg::Texture::NEAREST;
-    osg::Texture::FilterMode magFilter = osg::Texture::NEAREST;
-
-    float maxAxis = xSize;
-    if (ySize > maxAxis) maxAxis = ySize;
-    if (zSize > maxAxis) maxAxis = zSize;
-
-    osg::Group* group = new osg::Group;
-    
-    osg::TexGenNode* texgenNode_0 = new osg::TexGenNode;
-    texgenNode_0->setTextureUnit(0);
-    texgenNode_0->getTexGen()->setMode(osg::TexGen::EYE_LINEAR);
-    texgenNode_0->getTexGen()->setPlane(osg::TexGen::S, osg::Plane(xMultiplier/xSize,0.0f,0.0f,0.5f));
-    texgenNode_0->getTexGen()->setPlane(osg::TexGen::T, osg::Plane(0.0f,yMultiplier/ySize,0.0f,0.5f));
-    texgenNode_0->getTexGen()->setPlane(osg::TexGen::R, osg::Plane(0.0f,0.0f,zMultiplier/zSize,0.5f));
-    
-    if (two_pass)
-    {
-        osg::TexGenNode* texgenNode_1 = new osg::TexGenNode;
-        texgenNode_1->setTextureUnit(1);
-        texgenNode_1->getTexGen()->setMode(osg::TexGen::EYE_LINEAR);
-        texgenNode_1->getTexGen()->setPlane(osg::TexGen::S, texgenNode_0->getTexGen()->getPlane(osg::TexGen::S));
-        texgenNode_1->getTexGen()->setPlane(osg::TexGen::T, texgenNode_0->getTexGen()->getPlane(osg::TexGen::T));
-        texgenNode_1->getTexGen()->setPlane(osg::TexGen::R, texgenNode_0->getTexGen()->getPlane(osg::TexGen::R));
-
-        texgenNode_1->addChild(texgenNode_0);
-
-        group->addChild(texgenNode_1);
-    }
-    else
-    {  
-        group->addChild(texgenNode_0);
-    }
-
-    float cubeSize = sqrtf(xSize*xSize+ySize*ySize+zSize*zSize);
-
-    osg::ClipNode* clipnode = new osg::ClipNode;
-    clipnode->addChild(createCube(cubeSize,1.0f, numSlices,sliceEnd));
-    clipnode->createClipBox(bb);
-
-    {
-        // set up the Geometry to enclose the clip volume to prevent near/far clipping from affecting billboard
-        osg::Geometry* geom = new osg::Geometry;
-
-        osg::Vec3Array* coords = new osg::Vec3Array();
-        coords->push_back(bb.corner(0));
-        coords->push_back(bb.corner(1));
-        coords->push_back(bb.corner(2));
-        coords->push_back(bb.corner(3));
-        coords->push_back(bb.corner(4));
-        coords->push_back(bb.corner(5));
-        coords->push_back(bb.corner(6));
-        coords->push_back(bb.corner(7));
-
-        geom->setVertexArray(coords);
-
-        osg::Vec4Array* colors = new osg::Vec4Array(1);
-        (*colors)[0].set(1.0f,1.0f,1.0f,1.0f);
-        geom->setColorArray(colors);
-        geom->setColorBinding(osg::Geometry::BIND_OVERALL);
-
-        geom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::POINTS,0,coords->size()));
-
-        osg::Geode* geode = new osg::Geode;
-        geode->addDrawable(geom);
-        
-        clipnode->addChild(geode);
-        
-    }
-
-    texgenNode_0->addChild(clipnode);
-
-    osg::StateSet* stateset = texgenNode_0->getOrCreateStateSet();
-
-    stateset->setEventCallback(new FollowMouseCallback(false));
- 
-    stateset->setMode(GL_LIGHTING,osg::StateAttribute::ON);
-    stateset->setMode(GL_BLEND,osg::StateAttribute::ON);
-    stateset->setAttributeAndModes(new osg::AlphaFunc(osg::AlphaFunc::GREATER,alphaFuncValue), osg::StateAttribute::ON);
-    
-    osg::Material* material = new osg::Material;
-    material->setDiffuse(osg::Material::FRONT_AND_BACK,osg::Vec4(1.0f,1.0f,1.0f,1.0f));
-    stateset->setAttributeAndModes(material);
-    
-    if (shadeModel==MaximumIntensityProjection)
-    {
-        stateset->setAttribute(new osg::BlendFunc(osg::BlendFunc::ONE, osg::BlendFunc::ONE));
-        stateset->setAttribute(new osg::BlendEquation(osg::BlendEquation::RGBA_MAX));
-    }
-    
-    osg::Vec3 lightDirection(1.0f,-1.0f,1.0f);
-    lightDirection.normalize();
-
-    if (normalmap_3d.valid())
-    {
-        if (two_pass)
-        {
-
-            // set up normal texture
-            osg::Texture3D* bump_texture3D = new osg::Texture3D;
-            bump_texture3D->setFilter(osg::Texture3D::MIN_FILTER,minFilter);
-            bump_texture3D->setFilter(osg::Texture3D::MAG_FILTER, magFilter);
-            bump_texture3D->setWrap(osg::Texture3D::WRAP_R,osg::Texture3D::CLAMP_TO_EDGE);
-            bump_texture3D->setWrap(osg::Texture3D::WRAP_S,osg::Texture3D::CLAMP_TO_EDGE);
-            bump_texture3D->setWrap(osg::Texture3D::WRAP_T,osg::Texture3D::CLAMP_TO_EDGE);
-            bump_texture3D->setImage(normalmap_3d.get());
-
-            bump_texture3D->setInternalFormatMode(internalFormatMode);
-
-            stateset->setTextureAttributeAndModes(0,bump_texture3D,osg::StateAttribute::ON);
-
-            osg::TexEnvCombine* tec = new osg::TexEnvCombine;
-            tec->setConstantColorAsLightDirection(lightDirection);
-
-            tec->setCombine_RGB(osg::TexEnvCombine::DOT3_RGB);
-            tec->setSource0_RGB(osg::TexEnvCombine::CONSTANT);
-            tec->setOperand0_RGB(osg::TexEnvCombine::SRC_COLOR);
-            tec->setSource1_RGB(osg::TexEnvCombine::TEXTURE);
-
-            tec->setOperand1_RGB(osg::TexEnvCombine::SRC_COLOR);
-
-            tec->setCombine_Alpha(osg::TexEnvCombine::REPLACE);
-            tec->setSource0_Alpha(osg::TexEnvCombine::PRIMARY_COLOR);
-            tec->setOperand0_Alpha(osg::TexEnvCombine::SRC_ALPHA);
-            tec->setSource1_Alpha(osg::TexEnvCombine::TEXTURE);
-            tec->setOperand1_Alpha(osg::TexEnvCombine::SRC_ALPHA);
-
-            stateset->setTextureAttributeAndModes(0, tec, osg::StateAttribute::OVERRIDE|osg::StateAttribute::ON);
-
-            stateset->setTextureMode(0,GL_TEXTURE_GEN_S,osg::StateAttribute::ON);
-            stateset->setTextureMode(0,GL_TEXTURE_GEN_T,osg::StateAttribute::ON);
-            stateset->setTextureMode(0,GL_TEXTURE_GEN_R,osg::StateAttribute::ON);
-
-
-            // set up color texture
-            osg::Texture3D* texture3D = new osg::Texture3D;
-            texture3D->setResizeNonPowerOfTwoHint(false);
-            texture3D->setFilter(osg::Texture3D::MIN_FILTER,minFilter);
-            texture3D->setFilter(osg::Texture3D::MAG_FILTER, magFilter);
-            texture3D->setWrap(osg::Texture3D::WRAP_R,osg::Texture3D::CLAMP_TO_EDGE);
-            texture3D->setWrap(osg::Texture3D::WRAP_S,osg::Texture3D::CLAMP_TO_EDGE);
-            texture3D->setWrap(osg::Texture3D::WRAP_T,osg::Texture3D::CLAMP_TO_EDGE);
-            if (image_3d->getPixelFormat()==GL_ALPHA || 
-                image_3d->getPixelFormat()==GL_LUMINANCE)
-            {
-                texture3D->setInternalFormatMode(osg::Texture3D::USE_USER_DEFINED_FORMAT);
-                texture3D->setInternalFormat(GL_INTENSITY);
-            }
-            else
-            {
-                texture3D->setInternalFormatMode(internalFormatMode);
-            }
-            texture3D->setImage(image_3d.get());
-
-            stateset->setTextureAttributeAndModes(1,texture3D,osg::StateAttribute::ON);
-
-            stateset->setTextureMode(1,GL_TEXTURE_GEN_S,osg::StateAttribute::ON);
-            stateset->setTextureMode(1,GL_TEXTURE_GEN_T,osg::StateAttribute::ON);
-            stateset->setTextureMode(1,GL_TEXTURE_GEN_R,osg::StateAttribute::ON);
-
-            stateset->setTextureAttributeAndModes(1,new osg::TexEnv(),osg::StateAttribute::ON);
-
-        }
-        else
-        {
-            osg::Texture3D* bump_texture3D = new osg::Texture3D;
-            bump_texture3D->setResizeNonPowerOfTwoHint(false);
-            bump_texture3D->setFilter(osg::Texture3D::MIN_FILTER,minFilter);
-            bump_texture3D->setFilter(osg::Texture3D::MAG_FILTER, magFilter);
-            bump_texture3D->setWrap(osg::Texture3D::WRAP_R,osg::Texture3D::CLAMP_TO_EDGE);
-            bump_texture3D->setWrap(osg::Texture3D::WRAP_S,osg::Texture3D::CLAMP_TO_EDGE);
-            bump_texture3D->setWrap(osg::Texture3D::WRAP_T,osg::Texture3D::CLAMP_TO_EDGE);
-            bump_texture3D->setImage(normalmap_3d.get());
-
-            bump_texture3D->setInternalFormatMode(internalFormatMode);
-
-            stateset->setTextureAttributeAndModes(0,bump_texture3D,osg::StateAttribute::ON);
-
-            osg::TexEnvCombine* tec = new osg::TexEnvCombine;
-            tec->setConstantColorAsLightDirection(lightDirection);
-
-            tec->setCombine_RGB(osg::TexEnvCombine::DOT3_RGB);
-            tec->setSource0_RGB(osg::TexEnvCombine::CONSTANT);
-            tec->setOperand0_RGB(osg::TexEnvCombine::SRC_COLOR);
-            tec->setSource1_RGB(osg::TexEnvCombine::TEXTURE);
-            tec->setOperand1_RGB(osg::TexEnvCombine::SRC_COLOR);
-
-            tec->setCombine_Alpha(osg::TexEnvCombine::MODULATE);
-            tec->setSource0_Alpha(osg::TexEnvCombine::PRIMARY_COLOR);
-            tec->setOperand0_Alpha(osg::TexEnvCombine::SRC_ALPHA);
-            tec->setSource1_Alpha(osg::TexEnvCombine::TEXTURE);
-            tec->setOperand1_Alpha(osg::TexEnvCombine::SRC_ALPHA);
-
-            stateset->setTextureAttributeAndModes(0, tec, osg::StateAttribute::OVERRIDE|osg::StateAttribute::ON);
-
-            stateset->setTextureMode(0,GL_TEXTURE_GEN_S,osg::StateAttribute::ON);
-            stateset->setTextureMode(0,GL_TEXTURE_GEN_T,osg::StateAttribute::ON);
-            stateset->setTextureMode(0,GL_TEXTURE_GEN_R,osg::StateAttribute::ON);
-
-            image_3d = normalmap_3d;
-        }
-    }
-    else
-    {     
-        // set up the 3d texture itself,
-        // note, well set the filtering up so that mip mapping is disabled,
-        // gluBuild3DMipsmaps doesn't do a very good job of handled the
-        // imbalanced dimensions of the 256x256x4 texture.
-        osg::Texture3D* texture3D = new osg::Texture3D;
-        texture3D->setResizeNonPowerOfTwoHint(false);
-        texture3D->setFilter(osg::Texture3D::MIN_FILTER,minFilter);
-        texture3D->setFilter(osg::Texture3D::MAG_FILTER, magFilter);
-        texture3D->setWrap(osg::Texture3D::WRAP_R,osg::Texture3D::CLAMP_TO_EDGE);
-        texture3D->setWrap(osg::Texture3D::WRAP_S,osg::Texture3D::CLAMP_TO_EDGE);
-        texture3D->setWrap(osg::Texture3D::WRAP_T,osg::Texture3D::CLAMP_TO_EDGE);
-        if (image_3d->getPixelFormat()==GL_ALPHA || 
-            image_3d->getPixelFormat()==GL_LUMINANCE)
-        {
-            texture3D->setInternalFormatMode(osg::Texture3D::USE_USER_DEFINED_FORMAT);
-            texture3D->setInternalFormat(GL_INTENSITY);
-        }
-        else
-        {
-            texture3D->setInternalFormatMode(internalFormatMode);
-        }
-
-        texture3D->setImage(image_3d.get());
-
-        stateset->setTextureAttributeAndModes(0,texture3D,osg::StateAttribute::ON);
-
-        stateset->setTextureMode(0,GL_TEXTURE_GEN_S,osg::StateAttribute::ON);
-        stateset->setTextureMode(0,GL_TEXTURE_GEN_T,osg::StateAttribute::ON);
-        stateset->setTextureMode(0,GL_TEXTURE_GEN_R,osg::StateAttribute::ON);
-
-        stateset->setTextureAttributeAndModes(0,new osg::TexEnv(),osg::StateAttribute::ON);
-    }
- 
-    return group;
-}
-
 struct ScaleOperator
 {
     ScaleOperator():_scale(1.0f) {}
@@ -1519,8 +577,8 @@ osg::Image* readRaw(int sizeX, int sizeY, int sizeZ, int numberBytesPerComponent
     {
         // compute range of values
         osg::Vec4 minValue, maxValue;
-        osgVolume::computeMinMax(image.get(), minValue, maxValue);
-        osgVolume::modifyImage(image.get(),ScaleOperator(1.0f/maxValue.r())); 
+        osg::computeMinMax(image.get(), minValue, maxValue);
+        osg::modifyImage(image.get(),ScaleOperator(1.0f/maxValue.r())); 
     }
     
     
@@ -1545,12 +603,12 @@ osg::Image* readRaw(int sizeX, int sizeY, int sizeZ, int numberBytesPerComponent
                 writeOp._pos = 0;
             
                 // read the pixels into readOp's _colour array
-                osgVolume::readRow(sizeS, pixelFormat, dataType, image->data(0,t,r), readOp);
+                osg::readRow(sizeS, pixelFormat, dataType, image->data(0,t,r), readOp);
                                 
                 // pass readOp's _colour array contents over to writeOp (note this is just a pointer swap).
                 writeOp._colours.swap(readOp._colours);
                 
-                osgVolume::modifyRow(sizeS, pixelFormat, GL_UNSIGNED_BYTE, new_image->data(0,t,r), writeOp);
+                osg::modifyRow(sizeS, pixelFormat, GL_UNSIGNED_BYTE, new_image->data(0,t,r), writeOp);
 
                 // return readOp's _colour array contents back to its rightful owner.
                 writeOp._colours.swap(readOp._colours);
@@ -1617,19 +675,19 @@ osg::Image* doColourSpaceConversion(ColourSpaceOperation op, osg::Image* image, 
         case (MODULATE_ALPHA_BY_LUMINANCE):
         {
             std::cout<<"doing conversion MODULATE_ALPHA_BY_LUMINANCE"<<std::endl;
-            osgVolume::modifyImage(image,ModulateAlphaByLuminanceOperator()); 
+            osg::modifyImage(image,ModulateAlphaByLuminanceOperator()); 
             return image;
         }
         case (MODULATE_ALPHA_BY_COLOUR):
         {
             std::cout<<"doing conversion MODULATE_ALPHA_BY_COLOUR"<<std::endl;
-            osgVolume::modifyImage(image,ModulateAlphaByColourOperator(colour)); 
+            osg::modifyImage(image,ModulateAlphaByColourOperator(colour)); 
             return image;
         }
         case (REPLACE_ALPHA_WITH_LUMINANACE):
         {
             std::cout<<"doing conversion REPLACE_ALPHA_WITH_LUMINANACE"<<std::endl;
-            osgVolume::modifyImage(image,ReplaceAlphaWithLuminanceOperator()); 
+            osg::modifyImage(image,ReplaceAlphaWithLuminanceOperator()); 
             return image;
         }
         case (REPLACE_RGB_WITH_LUMINANCE):
@@ -1637,8 +695,8 @@ osg::Image* doColourSpaceConversion(ColourSpaceOperation op, osg::Image* image, 
             std::cout<<"doing conversion REPLACE_ALPHA_WITH_LUMINANACE"<<std::endl;
             osg::Image* newImage = new osg::Image;
             newImage->allocateImage(image->s(), image->t(), image->r(), GL_LUMINANCE, image->getDataType());
-            osgVolume::copyImage(image, 0, 0, 0, image->s(), image->t(), image->r(),
-                                 newImage, 0, 0, 0, false);
+            osg::copyImage(image, 0, 0, 0, image->s(), image->t(), image->r(),
+                           newImage, 0, 0, 0, false);
             return newImage;
         }
         default:
@@ -1646,58 +704,6 @@ osg::Image* doColourSpaceConversion(ColourSpaceOperation op, osg::Image* image, 
     }
 }
 
-
-struct ApplyTransferFunctionOperator
-{
-    ApplyTransferFunctionOperator(osg::TransferFunction1D* tf, unsigned char* data):
-        _tf(tf),
-        _data(data) {}
-        
-    inline void luminance(float l) const
-    {
-        osg::Vec4 c = _tf->getInterpolatedValue(l);
-        //std::cout<<"l = "<<l<<" c="<<c<<std::endl;
-        *(_data++) = (unsigned char)(c[0]*255.0f + 0.5f);
-        *(_data++) = (unsigned char)(c[1]*255.0f + 0.5f);
-        *(_data++) = (unsigned char)(c[2]*255.0f + 0.5f);
-        *(_data++) = (unsigned char)(c[3]*255.0f + 0.5f);
-    }
-     
-    inline void alpha(float a) const
-    {
-        luminance(a);
-    } 
-    
-    inline void luminance_alpha(float l,float a) const
-    { 
-        luminance(l);
-    }
-     
-    inline void rgb(float r,float g,float b) const
-    {
-        luminance((r+g+b)*0.3333333);
-    }
-    
-    inline void rgba(float r,float g,float b,float a) const
-    {
-        luminance(a);
-    }
-    
-    mutable osg::ref_ptr<osg::TransferFunction1D> _tf;
-    mutable unsigned char* _data;
-};
-
-osg::Image* applyTransferFunction(osg::Image* image, osg::TransferFunction1D* transferFunction)
-{
-    std::cout<<"Applying transfer function"<<std::endl;
-    osg::Image* output_image = new osg::Image;
-    output_image->allocateImage(image->s(),image->t(), image->r(), GL_RGBA, GL_UNSIGNED_BYTE);
-    
-    ApplyTransferFunctionOperator op(transferFunction, output_image->data());
-    osgVolume::readImage(image,op); 
-    
-    return output_image;
-}
 
 osg::TransferFunction1D* readTransferFunctionFile(const std::string& filename)
 {
@@ -1710,7 +716,7 @@ osg::TransferFunction1D* readTransferFunctionFile(const std::string& filename)
     
     std::cout<<"Reading transfer function "<<filename<<std::endl;
 
-    osg::TransferFunction1D::ValueMap valueMap;
+    osg::TransferFunction1D::ColorMap colorMap;
     osgDB::ifstream fin(foundFile.c_str());
     while(fin)
     {
@@ -1719,18 +725,18 @@ osg::TransferFunction1D* readTransferFunctionFile(const std::string& filename)
         if (fin) 
         {
             std::cout<<"value = "<<value<<" ("<<red<<", "<<green<<", "<<blue<<", "<<alpha<<")"<<std::endl;
-            valueMap[value] = osg::Vec4(red,green,blue,alpha);
+            colorMap[value] = osg::Vec4(red,green,blue,alpha);
         }
     }
     
-    if (valueMap.empty())
+    if (colorMap.empty())
     {
         std::cout<<"Error: No values read from transfer function file: "<<filename<<std::endl;
         return 0;
     }
     
     osg::TransferFunction1D* tf = new osg::TransferFunction1D;
-    tf->assign(valueMap, true);
+    tf->assign(colorMap);
     
     return tf;
 }
@@ -1772,7 +778,6 @@ int main( int argc, char **argv )
     arguments.getApplicationUsage()->setDescription(arguments.getApplicationName()+" is the example which demonstrates use of 3D textures.");
     arguments.getApplicationUsage()->setCommandLineUsage(arguments.getApplicationName()+" [options] filename ...");
     arguments.getApplicationUsage()->addCommandLineOption("-h or --help","Display this information");
-    arguments.getApplicationUsage()->addCommandLineOption("-n","Create normal map for per voxel lighting.");
     arguments.getApplicationUsage()->addCommandLineOption("-s <numSlices>","Number of slices to create.");
     arguments.getApplicationUsage()->addCommandLineOption("--images [filenames]","Specify a stack of 2d images to build the 3d volume from.");
     arguments.getApplicationUsage()->addCommandLineOption("--shader","Use OpenGL Shading Language. (default)");
@@ -1803,6 +808,8 @@ int main( int argc, char **argv )
     arguments.getApplicationUsage()->addCommandLineOption("--no-rescale","Disable the rescaling of the pixel data to 0.0 to 1.0 range");
     arguments.getApplicationUsage()->addCommandLineOption("--rescale","Enable the rescale of the pixel data to 0.0 to 1.0 range (default).");
     arguments.getApplicationUsage()->addCommandLineOption("--shift-min-to-zero","Shift the pixel data so min value is 0.0.");
+    arguments.getApplicationUsage()->addCommandLineOption("--sequence-length <num>","Set the length of time that a sequence of images with run for.");
+    arguments.getApplicationUsage()->addCommandLineOption("--sd <num>","Short hand for --sequence-length");
 //    arguments.getApplicationUsage()->addCommandLineOption("--raw <sizeX> <sizeY> <sizeZ> <numberBytesPerComponent> <numberOfComponents> <endian> <filename>","read a raw image data");
 
     // construct the viewer.
@@ -1846,6 +853,23 @@ int main( int argc, char **argv )
     {
         transferFunction = readTransferFunctionFile(tranferFunctionFile);
     }
+    
+    while(arguments.read("--test"))
+    {
+        transferFunction = new osg::TransferFunction1D;
+        transferFunction->setColor(0.0, osg::Vec4(1.0,0.0,0.0,0.0));
+        transferFunction->setColor(0.5, osg::Vec4(1.0,1.0,0.0,0.5));
+        transferFunction->setColor(1.0, osg::Vec4(0.0,0.0,1.0,1.0));
+    }
+
+    while(arguments.read("--test2"))
+    {
+        transferFunction = new osg::TransferFunction1D;
+        transferFunction->setColor(0.0, osg::Vec4(1.0,0.0,0.0,0.0));
+        transferFunction->setColor(0.5, osg::Vec4(1.0,1.0,0.0,0.5));
+        transferFunction->setColor(1.0, osg::Vec4(0.0,0.0,1.0,1.0));
+        transferFunction->assign(transferFunction->getColorMap());
+    }
 
     unsigned int numSlices=500;
     while (arguments.read("-s",numSlices)) {}
@@ -1862,27 +886,14 @@ int main( int argc, char **argv )
     ShadingModel shadingModel = Standard;
     while(arguments.read("--mip")) shadingModel =  MaximumIntensityProjection;
 
-    bool createNormalMap = false;
-    while (arguments.read("-n")) 
-    {
-        shadingModel = Light;
-        createNormalMap=true;
-    }
+    while (arguments.read("--isosurface")) shadingModel = Isosurface;
 
-    while (arguments.read("--isosurface")) 
-    {
-        shadingModel = Isosurface;
-    }
+    while (arguments.read("--light")) shadingModel = Light;
 
-    float xSize=1.0f, ySize=1.0f, zSize=1.0f;
+    float xSize=0.0f, ySize=0.0f, zSize=0.0f;
     while (arguments.read("--xSize",xSize)) {}
     while (arguments.read("--ySize",ySize)) {}
     while (arguments.read("--zSize",zSize)) {}
-
-    float xMultiplier=1.0f, yMultiplier=1.0f, zMultiplier=1.0f;
-    while (arguments.read("--xMultiplier",xMultiplier)) {}
-    while (arguments.read("--yMultiplier",yMultiplier)) {}
-    while (arguments.read("--zMultiplier",zMultiplier)) {}
 
     osg::ref_ptr<TestSupportOperation> testSupportOperation = new TestSupportOperation;
     viewer.setRealizeOperation(testSupportOperation.get());
@@ -1940,11 +951,15 @@ int main( int argc, char **argv )
 
     bool useShader = true; 
     while(arguments.read("--shader")) { useShader = true; }
-    while(arguments.read("--no-shader")) { useShader = true; }
+    while(arguments.read("--no-shader")) { useShader = false; }
 
     bool gpuTransferFunction = true; 
     while(arguments.read("--gpu-tf")) { gpuTransferFunction = true; }
     while(arguments.read("--cpu-tf")) { gpuTransferFunction = false; }
+
+    double sequenceLength = 10.0;
+    while(arguments.read("--sequence-duration", sequenceLength) || 
+          arguments.read("--sd", sequenceLength)) {}
 
     typedef std::list< osg::ref_ptr<osg::Image> > Images;
     Images images;
@@ -1978,7 +993,7 @@ int main( int argc, char **argv )
             osgDB::ifstream fin(transfer_filename.c_str());
             if (fin)
             {
-                osg::TransferFunction1D::ValueMap valueMap;
+                osg::TransferFunction1D::ColorMap colorMap;
                 float value = 0.0;
                 while(fin && value<=1.0)
                 {
@@ -1986,21 +1001,21 @@ int main( int argc, char **argv )
                     fin >> red >> green >> blue >> alpha;
                     if (fin) 
                     {
-                        valueMap[value] = osg::Vec4(red/255.0f,green/255.0f,blue/255.0f,alpha/255.0f);
+                        colorMap[value] = osg::Vec4(red/255.0f,green/255.0f,blue/255.0f,alpha/255.0f);
                         std::cout<<"value = "<<value<<" ("<<red<<", "<<green<<", "<<blue<<", "<<alpha<<")";
-                        std::cout<<"  ("<<valueMap[value]<<")"<<std::endl;
+                        std::cout<<"  ("<<colorMap[value]<<")"<<std::endl;
                     }
                     value += 1/255.0;
                 }
 
-                if (valueMap.empty())
+                if (colorMap.empty())
                 {
                     std::cout<<"Error: No values read from transfer function file: "<<transfer_filename<<std::endl;
                     return 0;
                 }
 
                 transferFunction = new osg::TransferFunction1D;
-                transferFunction->assign(valueMap, true);
+                transferFunction->assign(colorMap);
             }
         }
 
@@ -2103,16 +1118,16 @@ int main( int argc, char **argv )
 
 
     Images::iterator sizeItr = images.begin();
-    xSize = (*sizeItr)->s();
-    ySize = (*sizeItr)->t();
-    zSize = (*sizeItr)->r();
+    int image_s = (*sizeItr)->s();
+    int image_t = (*sizeItr)->t();
+    int image_r = (*sizeItr)->r();
     ++sizeItr;
 
     for(;sizeItr != images.end(); ++sizeItr)
     {
-        if ((*sizeItr)->s() != xSize || 
-            (*sizeItr)->t() != ySize ||
-            (*sizeItr)->r() != zSize)
+        if ((*sizeItr)->s() != image_s || 
+            (*sizeItr)->t() != image_t ||
+            (*sizeItr)->r() != image_r)
         {
             std::cout<<"Images in sequence are not of the same dimensions."<<std::endl;
             return 1;
@@ -2120,16 +1135,19 @@ int main( int argc, char **argv )
     }
 
 
-    osg::RefMatrix* matrix = dynamic_cast<osg::RefMatrix*>(images.front()->getUserData());
-#if 0
-    if (matrix)
+    osg::ref_ptr<osg::RefMatrix> matrix = dynamic_cast<osg::RefMatrix*>(images.front()->getUserData());
+
+    if (!matrix)
     {
-        osg::notify(osg::NOTICE)<<"Image has Matrix = "<<*matrix<<std::endl;
-        xSize = xSize * (*matrix)(0,0);
-        ySize = ySize * (*matrix)(1,1);
-        zSize = zSize * (*matrix)(2,2);
+        if (xSize==0.0) xSize = static_cast<float>(image_s);
+        if (ySize==0.0) ySize = static_cast<float>(image_t);
+        if (zSize==0.0) zSize = static_cast<float>(image_r);
+        
+        matrix = new osg::RefMatrix(xSize, 0.0,   0.0,   0.0,
+                                    0.0,   ySize, 0.0,   0.0,
+                                    0.0,   0.0,   zSize, 0.0,
+                                    0.0,   0.0,   0.0,   1.0);
     }
-#endif
 
     osg::Vec4 minValue(FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX);
     osg::Vec4 maxValue(-FLT_MAX, -FLT_MAX, -FLT_MAX, -FLT_MAX);
@@ -2139,7 +1157,7 @@ int main( int argc, char **argv )
         ++itr)
     {
         osg::Vec4 localMinValue, localMaxValue;
-        if (osgVolume::computeMinMax(itr->get(), localMinValue, localMaxValue))
+        if (osg::computeMinMax(itr->get(), localMinValue, localMaxValue))
         {
             if (localMinValue.r()<minValue.r()) minValue.r() = localMinValue.r();
             if (localMinValue.g()<minValue.g()) minValue.g() = localMinValue.g();
@@ -2187,7 +1205,7 @@ int main( int argc, char **argv )
                     itr != images.end();
                     ++itr)
                 {        
-                    osgVolume::offsetAndScaleImage(itr->get(), 
+                    osg::offsetAndScaleImage(itr->get(), 
                         osg::Vec4(offset, offset, offset, offset),
                         osg::Vec4(scale, scale, scale, scale));
                 }
@@ -2201,13 +1219,12 @@ int main( int argc, char **argv )
                     itr != images.end();
                     ++itr)
                 {        
-                    osgVolume::offsetAndScaleImage(itr->get(), 
+                    osg::offsetAndScaleImage(itr->get(), 
                         osg::Vec4(offset, offset, offset, offset),
                         osg::Vec4(1.0f, 1.0f, 1.0f, 1.0f));
                 }
                 break;
             }
-                break;
         };
 
     }
@@ -2229,7 +1246,7 @@ int main( int argc, char **argv )
             itr != images.end();
             ++itr)
         {        
-            *itr = applyTransferFunction(itr->get(), transferFunction.get());
+            *itr = osgVolume::applyTransferFunction(itr->get(), transferFunction.get());
         }
     }
     
@@ -2245,7 +1262,7 @@ int main( int argc, char **argv )
         osg::notify(osg::NOTICE)<<"Creating sequence of "<<images.size()<<" volumes."<<std::endl;
     
         osg::ref_ptr<osg::ImageSequence> imageSequence = new osg::ImageSequence;
-        imageSequence->setLength(10.0);
+        imageSequence->setLength(sequenceLength);
         image_3d = imageSequence.get();
         for(Images::iterator itr = images.begin();
             itr != images.end();
@@ -2256,59 +1273,95 @@ int main( int argc, char **argv )
         imageSequence->play();
     }
     
-    osg::ref_ptr<osg::Image> normalmap_3d = 0;
-    if (createNormalMap)
-    {
-        if (images.size()==1)
-        {
-            normalmap_3d = createNormalMapTexture(images.front().get());
-        }
-        else
-        {
-            osg::ref_ptr<osg::ImageSequence> normalmapSequence = new osg::ImageSequence;
-            normalmap_3d = normalmapSequence.get();
-            for(Images::iterator itr = images.begin();
-                itr != images.end();
-                ++itr)
-            {        
-                normalmapSequence->addImage(createNormalMapTexture(itr->get()));
-            }
-            normalmapSequence->play();
-        }
-    }
+    osg::ref_ptr<osgVolume::Volume> volume = new osgVolume::Volume;
+    osg::ref_ptr<osgVolume::VolumeTile> tile = new osgVolume::VolumeTile;
+    volume->addChild(tile.get());
 
-    // create a model from the images.
-    osg::Node* rootNode = 0;
-    
+    osg::ref_ptr<osgVolume::Layer> layer = new osgVolume::ImageLayer(image_3d.get());
+
+    osgVolume::Locator* locator = new osgVolume::Locator(*matrix);
+    layer->setLocator(locator);
+    tile->setLocator(locator);
+
+    tile->setLayer(layer.get());
+
+    tile->setEventCallback(new osgVolume::PropertyAdjustmentCallback());
+
     if (useShader)
     {
-        rootNode = createShaderModel(shadingModel, 
-                               image_3d, normalmap_3d.get(), 
-                               (gpuTransferFunction ? transferFunction.get() : 0),
-                               internalFormatMode,
-                               xSize, ySize, zSize,
-                               xMultiplier, yMultiplier, zMultiplier,
-                               numSlices, sliceEnd, alphaFunc);
+
+        osgVolume::SwitchProperty* sp = new osgVolume::SwitchProperty;
+        sp->setActiveProperty(0);
+
+        osgVolume::AlphaFuncProperty* ap = new osgVolume::AlphaFuncProperty(alphaFunc);
+        osgVolume::SampleDensityProperty* sd = new osgVolume::SampleDensityProperty(0.005);
+        osgVolume::TransparencyProperty* tp = new osgVolume::TransparencyProperty(1.0);
+        osgVolume::TransferFunctionProperty* tfp = transferFunction.valid() ? new osgVolume::TransferFunctionProperty(transferFunction.get()) : 0;
+
+        {
+            // Standard
+            osgVolume::CompositeProperty* cp = new osgVolume::CompositeProperty;
+            cp->addProperty(ap);
+            cp->addProperty(sd);
+            cp->addProperty(tp);
+            if (tfp) cp->addProperty(tfp);
+
+            sp->addProperty(cp);
+        }
+
+        {
+            // Light
+            osgVolume::CompositeProperty* cp = new osgVolume::CompositeProperty;
+            cp->addProperty(ap);
+            cp->addProperty(sd);
+            cp->addProperty(tp);
+            cp->addProperty(new osgVolume::LightingProperty);
+            if (tfp) cp->addProperty(tfp);
+
+            sp->addProperty(cp);
+        }
+
+        {
+            // Isosurface
+            osgVolume::CompositeProperty* cp = new osgVolume::CompositeProperty;
+            cp->addProperty(sd);
+            cp->addProperty(tp);
+            cp->addProperty(new osgVolume::IsoSurfaceProperty(alphaFunc));
+            if (tfp) cp->addProperty(tfp);
+
+            sp->addProperty(cp);
+        }
+
+        {
+            // MaximumIntensityProjection
+            osgVolume::CompositeProperty* cp = new osgVolume::CompositeProperty;
+            cp->addProperty(ap);
+            cp->addProperty(sd);
+            cp->addProperty(tp);
+            cp->addProperty(new osgVolume::MaximumIntensityProjectionProperty);
+            if (tfp) cp->addProperty(tfp);
+
+            sp->addProperty(cp);
+        }
+
+        switch(shadingModel)
+        {
+            case(Standard):                     sp->setActiveProperty(0); break;
+            case(Light):                        sp->setActiveProperty(1); break;
+            case(Isosurface):                   sp->setActiveProperty(2); break;
+            case(MaximumIntensityProjection):   sp->setActiveProperty(3); break;
+        }
+        layer->addProperty(sp);
+
+
+        tile->setVolumeTechnique(new osgVolume::RayTracedTechnique);
     }
     else
     {
-        rootNode = createModel(shadingModel,
-                               image_3d, normalmap_3d, 
-                               internalFormatMode,
-                               xSize, ySize, zSize,
-                               xMultiplier, yMultiplier, zMultiplier,
-                               numSlices, sliceEnd, alphaFunc);
+        layer->addProperty(new osgVolume::AlphaFuncProperty(alphaFunc));
+        tile->setVolumeTechnique(new osgVolume::FixedFunctionTechnique);
     }
-    
-    if (matrix && rootNode)
-    {
-        osg::MatrixTransform* mt = new osg::MatrixTransform;
-        mt->setMatrix(*matrix);
-        mt->addChild(rootNode);
         
-        rootNode = mt;
-    }
-    
     if (!outputFile.empty())
     {   
         std::string ext = osgDB::getFileExtension(outputFile);
@@ -2320,21 +1373,15 @@ int main( int argc, char **argv )
                 image_3d->setFileName(name_no_ext + ".dds");            
                 osgDB::writeImageFile(*image_3d, image_3d->getFileName());
             }
-            if (normalmap_3d.valid())
-            {
-                normalmap_3d->setFileName(name_no_ext + "_normalmap.dds");            
-                osgDB::writeImageFile(*normalmap_3d, normalmap_3d->getFileName());
-            }
-            
-            osgDB::writeNodeFile(*rootNode, outputFile);
+            osgDB::writeNodeFile(*volume, outputFile);
         }
         else if (ext=="ive")
         {
-            osgDB::writeNodeFile(*rootNode, outputFile);        
+            osgDB::writeNodeFile(*volume, outputFile);        
         }
         else if (ext=="dds")
         {
-            osgDB::writeImageFile(*image_3d, outputFile);        
+            osgDB::writeImageFile(*image_3d, outputFile);
         }
         else
         {
@@ -2345,11 +1392,11 @@ int main( int argc, char **argv )
     }
 
 
-    if (rootNode) 
+    if (volume.valid()) 
     {
 
         // set the scene to render
-        viewer.setSceneData(rootNode);
+        viewer.setSceneData(volume.get());
         
         // the the viewers main frame loop
         viewer.run();

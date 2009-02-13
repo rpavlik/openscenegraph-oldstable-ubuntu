@@ -25,7 +25,7 @@
 namespace osgAnimation
 {
 
-    class OSGANIMATION_EXPORT Animation : public virtual osg::Object
+    class OSGANIMATION_EXPORT Animation : public osg::Object
     {
     public:
         META_Object(osgAnimation, Animation)
@@ -84,7 +84,6 @@ namespace osgAnimation
 
         ~Animation() {}
   
-        std::string _name;
         double _duration;
         double _originalDuration;
         float _weight;

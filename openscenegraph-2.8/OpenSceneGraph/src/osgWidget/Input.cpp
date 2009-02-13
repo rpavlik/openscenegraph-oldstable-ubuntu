@@ -165,8 +165,11 @@ bool Input::keyDown(int key, int mask, WindowManager*) {
 void Input::setCursor(Widget*) {
 }
 
-unsigned int Input::calculateBestYOffset(const std::string& s) {
-    const osgText::FontResolution fr(_text->getCharacterHeight(), _text->getCharacterHeight());
+unsigned int Input::calculateBestYOffset(const std::string& s)
+{
+
+    const osgText::FontResolution fr(static_cast<unsigned int>(_text->getCharacterHeight()),
+                                     static_cast<unsigned int>(_text->getCharacterHeight()));
 
     osgText::String utf(s);
 
@@ -175,7 +178,7 @@ unsigned int Input::calculateBestYOffset(const std::string& s) {
     for(osgText::String::iterator i = utf.begin(); i != utf.end(); i++) {
         osgText::Font*        font  = const_cast<osgText::Font*>(_text->getFont());
         osgText::Font::Glyph* glyph = font->getGlyph(fr, *i);
-        unsigned int          d     = abs(glyph->getHorizontalBearing().y());
+        unsigned int          d     = abs((int)glyph->getHorizontalBearing().y());
 
         if(d > descent) descent = d;
     }

@@ -1,4 +1,4 @@
-/* -*-c++-*- OpenSceneGraph - Copyright (C) 1998-2008 Robert Osfield 
+/* -*-c++-*- OpenSceneGraph - Copyright (C) 1998-2009 Robert Osfield 
  *
  * This library is open source and may be redistributed and/or modified under  
  * the terms of the OpenSceneGraph Public License (OSGPL) version 0.0 or 
@@ -20,6 +20,27 @@ using namespace osgVolume;
 
 /////////////////////////////////////////////////////////////////////////////////
 //
+// TileID
+//
+TileID::TileID():
+    level(-1),
+    x(-1),
+    y(-1),
+    z(-1)
+{
+}
+
+TileID::TileID(int in_level, int in_x, int in_y, int in_z):
+    level(in_level),
+    x(in_x),
+    y(in_y),
+    z(in_z)
+{
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////
+//
 // VolumeTile
 //
 VolumeTile::VolumeTile():
@@ -28,6 +49,8 @@ VolumeTile::VolumeTile():
     _hasBeenTraversal(false)
 {
     setThreadSafeRefUnref(true);
+
+    setNumChildrenRequiringUpdateTraversal(1);
 }
 
 VolumeTile::VolumeTile(const VolumeTile& volumeTile,const osg::CopyOp& copyop):
@@ -35,9 +58,11 @@ VolumeTile::VolumeTile(const VolumeTile& volumeTile,const osg::CopyOp& copyop):
     _volume(0),
     _dirty(false),
     _hasBeenTraversal(false),
-    _images(volumeTile._images)
+    _layer(volumeTile._layer)
 {
-    if (volumeTile.getVolumeTechnique()) 
+    setNumChildrenRequiringUpdateTraversal(getNumChildrenRequiringUpdateTraversal()+1);            
+
+    if (volumeTile.getVolumeTechnique())
     {
         setVolumeTechnique(osg::clone(volumeTile.getVolumeTechnique()));
     }
@@ -47,7 +72,7 @@ VolumeTile::~VolumeTile()
 {
     if (_volume) setVolume(0);
 }
-
+ 
 void VolumeTile::setVolume(Volume* volume)
 {
     if (_volume == volume) return;
@@ -96,6 +121,12 @@ void VolumeTile::traverse(osg::NodeVisitor& nv)
             
         _hasBeenTraversal = true;
     }
+    
+    if (nv.getVisitorType()==osg::NodeVisitor::UPDATE_VISITOR &&
+        _layer->requiresUpdateTraversal())
+    {
+        _layer->update(nv);
+    }
 
     if (_volumeTechnique.valid())
     {
@@ -115,6 +146,11 @@ void VolumeTile::init()
         
         setDirty(false);
     }    
+}
+
+void VolumeTile::setLayer(Layer* layer)
+{
+    _layer = layer;
 }
 
 void VolumeTile::setVolumeTechnique(VolumeTechnique* volumeTechnique)
@@ -158,9 +194,26 @@ void VolumeTile::setDirty(bool dirty)
 
 osg::BoundingSphere VolumeTile::computeBound() const
 {
-    osg::BoundingSphere bs;
+    const Locator* masterLocator = getLocator();
+    if (_layer.valid() && !masterLocator) 
+    {
+        masterLocator = _layer->getLocator();
+    }
 
-    osg::notify(osg::NOTICE)<<"TODO VolumeTile::computeBound()"<<std::endl;    
-    
-    return bs;
+    if (masterLocator)
+    {
+        osg::Vec3d left, right;
+        masterLocator->computeLocalBounds(left, right);
+
+        return osg::BoundingSphere((left+right)*0.5, (right-left).length()*0.5);
+    }
+    else if (_layer.valid())
+    {
+        // we have a layer but no Locator defined so will assume a Identity Locator
+        return osg::BoundingSphere( osg::Vec3(0.5,0.5,0.5), 0.867);
+    }
+    else
+    {
+        return osg::BoundingSphere();
+    }
 }

@@ -31,6 +31,7 @@ SET(LIB_PUBLIC_HEADERS
     ${HEADER_PATH}/EaseMotion
     ${HEADER_PATH}/Assert
     ${HEADER_PATH}/Timeline
+    ${HEADER_PATH}/RigGeometry
 )
 
 
@@ -42,6 +43,7 @@ ADD_LIBRARY(${LIB_NAME}
     Animation.cpp
     Bone.cpp
     RigGeometry.cpp
+    AnimationManager.cpp
     BasicAnimationManager.cpp
     TimelineAnimationManager.cpp
     AnimationManagerBase.cpp

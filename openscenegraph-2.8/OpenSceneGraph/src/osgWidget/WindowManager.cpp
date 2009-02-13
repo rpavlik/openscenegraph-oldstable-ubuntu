@@ -256,8 +256,8 @@ void WindowManager::childRemoved(unsigned int start, unsigned int numChildren) {
         if(!window) continue;
 
         if(_remove(window)) {
-            window->_index = -1;
-
+        
+            window->_index = 0;
             window->unmanaged(this);
         }
     }

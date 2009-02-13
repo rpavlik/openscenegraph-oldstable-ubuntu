@@ -17,7 +17,7 @@
  * along with  this program;  if not, write to the  Free Software Foundation,
  * Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: readwrite.cpp 9397 2008-12-18 15:49:44Z robert $
+ * $Id: readwrite.cpp 9571 2009-01-28 12:28:04Z robert $
  */
 #define LIB3DS_EXPORT
 #include "readwrite.h"
@@ -276,7 +276,7 @@ lib3ds_string_read(char *s, int buflen, FILE *f)
 {
   int k=0;
   ASSERT(f);
-  while ((*s++=fgetc(f))!=0) {
+  while ((*s++=char(fgetc(f)))!=0) {
     if (++k>=buflen) {
       return(LIB3DS_FALSE);
     }
@@ -325,8 +325,8 @@ lib3ds_word_write(Lib3dsWord w, FILE *f)
   Lib3dsByte b[2];
 
   ASSERT(f);
-  b[1]=((Lib3dsWord)w & 0xFF00) >> 8;
-  b[0]=((Lib3dsWord)w & 0x00FF);
+  b[1]=(Lib3dsByte)(((Lib3dsWord)w & 0xFF00) >> 8);
+  b[0]=(Lib3dsByte)((Lib3dsWord)w & 0x00FF);
   if (fwrite(b,2,1,f)!=1) {
     return(LIB3DS_FALSE);
   }
@@ -398,8 +398,8 @@ lib3ds_intw_write(Lib3dsIntw w, FILE *f)
   Lib3dsByte b[2];
 
   ASSERT(f);
-  b[1]=((Lib3dsWord)w & 0xFF00) >> 8;
-  b[0]=((Lib3dsWord)w & 0x00FF);
+  b[1]=(Lib3dsByte)(((Lib3dsWord)w & 0xFF00) >> 8);
+  b[0]=(Lib3dsByte)((Lib3dsWord)w & 0x00FF);
   if (fwrite(b,2,1,f)!=1) {
     return(LIB3DS_FALSE);
   }

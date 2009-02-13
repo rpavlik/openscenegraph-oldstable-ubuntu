@@ -34,6 +34,8 @@
 #include <algorithm>
 #include <set>
 
+#include <stdlib.h>
+
 #if defined(__sgi)
     #include <ctype.h>
 #elif defined(__GNUC__) || !defined(WIN32) || defined(__MWERKS__)
@@ -670,7 +672,6 @@ std::string Registry::createLibraryNameForExtension(const std::string& ext)
     return prepend+"osgdb_"+lowercase_ext+".sl";
 #else
     #ifdef _DEBUG
-#pragma message(OSG_DEBUG_POSTFIX_WITH_QUOTES)
          return prepend+"osgdb_"+lowercase_ext+ OSG_DEBUG_POSTFIX_WITH_QUOTES + ".so";
     #else
          return prepend+"osgdb_"+lowercase_ext+".so";
@@ -1515,12 +1516,16 @@ ReaderWriter::ReadResult Registry::read(const ReadFunctor& readFunctor)
                 }
             }
 
-            for(ritr=results.begin(); ritr!=results.end(); ++ritr)
+            //If the filename is a URL, don't return FILE_NOT_FOUND until the CURL plugin is given a chance
+            if (!osgDB::containsServerAddress(readFunctor._filename))
             {
-                if (ritr->status()==ReaderWriter::ReadResult::FILE_NOT_FOUND)
+                for(ritr=results.begin(); ritr!=results.end(); ++ritr)
                 {
-                    // osg::notify(osg::NOTICE)<<"Warning: could not find file \""<<readFunctor._filename<<"\""<<std::endl;
-                    return *ritr;
+                    if (ritr->status()==ReaderWriter::ReadResult::FILE_NOT_FOUND)
+                    {
+                        //osg::notify(osg::NOTICE)<<"Warning: could not find file \""<<readFunctor._filename<<"\""<<std::endl;
+                        return *ritr;
+                    }
                 }
             }
         }

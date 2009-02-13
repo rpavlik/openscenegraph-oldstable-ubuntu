@@ -65,7 +65,7 @@ BEGIN_OBJECT_REFLECTOR(osgTerrain::Terrain)
 	          __void__accept__osg_NodeVisitor_R1,
 	          "Visitor Pattern : calls the apply method of a NodeVisitor with this node's type. ",
 	          "");
-	I_Method1(void, traverse, IN, osg::NodeVisitor &, nv,
+	I_Method1(void, traverse, IN, osg::NodeVisitor &, x,
 	          Properties::VIRTUAL,
 	          __void__traverse__osg_NodeVisitor_R1,
 	          "Traverse downwards : calls children's accept method with NodeVisitor. ",
@@ -103,7 +103,7 @@ BEGIN_OBJECT_REFLECTOR(osgTerrain::Terrain)
 	I_Method1(void, setTerrainTechniquePrototype, IN, osgTerrain::TerrainTechnique *, technique,
 	          Properties::NON_VIRTUAL,
 	          __void__setTerrainTechniquePrototype__TerrainTechnique_P1,
-	          "Set the TerrainTechnique cprototype from which TerrainTiles can clone the techniques from. ",
+	          "Set the TerrainTechnique prototype from which TerrainTiles can clone the techniques from. ",
 	          "");
 	I_Method0(osgTerrain::TerrainTechnique *, getTerrainTechniquePrototype,
 	          Properties::NON_VIRTUAL,

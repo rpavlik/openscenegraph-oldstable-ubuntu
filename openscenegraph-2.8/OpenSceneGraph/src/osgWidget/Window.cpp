@@ -417,7 +417,7 @@ void Window::_setWidthAndHeight() {
 void Window::_removeFromGeode(Widget* widget) {
     if(!widget) return;
 
-    widget->_index = -1;
+    widget->_index = 0;
 
     _setParented(widget, true);
 

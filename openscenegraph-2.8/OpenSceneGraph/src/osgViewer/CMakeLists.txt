@@ -106,17 +106,25 @@ ELSE(WIN32)
         SET(LIB_PUBLIC_HEADERS ${LIB_PUBLIC_HEADERS}
             ${HEADER_PATH}/api/X11/GraphicsWindowX11
             ${HEADER_PATH}/api/X11/PixelBufferX11
-            ${XRANDR_INCLUDE_DIRS}
         )
+
+
         SET(LIB_COMMON_FILES ${LIB_COMMON_FILES} 
             GraphicsWindowX11.cpp 
             PixelBufferX11.cpp
         )
         
         IF(OSGVIEWER_USE_XRANDR)
+        
             ADD_DEFINITIONS(-DOSGVIEWER_USE_XRANDR)
-            SET(LIB_PUBLIC_HEADERS ${LIB_PUBLIC_HEADERS} ${XRANDR_INCLUDE_DIRS})
-            LINK_LIBRARIES(Xrandr)
+            SET(LIB_PRIVATE_HEADERS ${LIB_PRIVATE_HEADERS} ${XRANDR_INCLUDE_DIRS} )
+
+            IF  (X11_Xrandr_LIB)
+                SET(LIB_EXTRA_LIBS ${X11_Xrandr_LIB} ${LIB_EXTRA_LIBS})
+            ELSE(X11_Xrandr_LIB)
+                SET(LIB_EXTRA_LIBS ${XRANDR_LIBRARIES} ${LIB_EXTRA_LIBS})
+            ENDIF(X11_Xrandr_LIB)
+            
         ENDIF(OSGVIEWER_USE_XRANDR)
 
         # X11 on Apple requires X11 library plus OpenGL linking hack on Leopard

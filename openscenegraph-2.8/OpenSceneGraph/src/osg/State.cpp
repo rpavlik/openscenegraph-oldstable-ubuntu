@@ -90,6 +90,23 @@ State::State():
 
 State::~State()
 {
+    for(AppliedProgramObjectSet::iterator itr = _appliedProgramObjectSet.begin();
+        itr != _appliedProgramObjectSet.end();
+        ++itr)
+    {
+        (*itr)->removeObserver(this);
+    }
+}
+
+void State::objectDeleted(void* object)
+{
+    const Program::PerContextProgram* ppcp = reinterpret_cast<const Program::PerContextProgram*>(object);
+    AppliedProgramObjectSet::iterator itr = _appliedProgramObjectSet.find(ppcp);
+    if (itr != _appliedProgramObjectSet.end()) 
+    {
+        // osg::notify(osg::NOTICE)<<"Removing _appliedProgramObjectSet entry "<<ppcp<<std::endl;
+        _appliedProgramObjectSet.erase(itr);
+    }
 }
 
 void State::reset()
@@ -756,8 +773,8 @@ void State::initializeExtensionProcs()
     setGLExtensionFuncPtr(_glDisableVertexAttribArray, "glDisableVertexAttribArray","glDisableVertexAttribArrayARB");
     setGLExtensionFuncPtr(_glBindBuffer, "glBindBuffer","glBindBufferARB");
 
-    setGLExtensionFuncPtr(_glDrawArraysInstanced, "glDrawArraysInstanced","glDrawArraysInstancedEXT");
-    setGLExtensionFuncPtr(_glDrawElementsInstanced, "glDrawElementsInstanced","glDrawElementsInstancedEXT");
+    setGLExtensionFuncPtr(_glDrawArraysInstanced, "glDrawArraysInstanced","glDrawArraysInstancedARB","glDrawArraysInstancedEXT");
+    setGLExtensionFuncPtr(_glDrawElementsInstanced, "glDrawElementsInstanced","glDrawElementsInstancedARB","glDrawElementsInstancedEXT");
 
     if ( osg::getGLVersionNumber() >= 2.0 || osg::isGLExtensionSupported(_contextID,"GL_ARB_vertex_shader") )
     {
@@ -948,7 +965,7 @@ bool State::checkGLErrors(const char* str) const
     {
         const char* error = (char*)gluErrorString(errorNo);
         if (error) osg::notify(WARN)<<"Warning: detected OpenGL error '" << error<<"'";
-        else       osg::notify(WARN)<<"Warning: detected OpenGL error number 0x" << std::hex << errorNo;
+        else       osg::notify(WARN)<<"Warning: detected OpenGL error number 0x" << std::hex << errorNo << std::dec;
 
         if (str) osg::notify(WARN)<<" at "<<str<< std::endl;
         else     osg::notify(WARN)<<" in osg::State."<< std::endl;
@@ -979,7 +996,7 @@ bool State::checkGLErrors(const StateAttribute* attribute) const
     {
         const char* error = (char*)gluErrorString(errorNo);
         if (error) osg::notify(WARN)<<"Warning: detected OpenGL error '"<< error <<"' after applying attribute "<<attribute->className()<<" "<<attribute<< std::endl;
-        else       osg::notify(WARN)<<"Warning: detected OpenGL error number 0x"<< std::hex << errorNo <<" after applying attribute "<<attribute->className()<<" "<<attribute<< std::endl;
+        else       osg::notify(WARN)<<"Warning: detected OpenGL error number 0x"<< std::hex << errorNo <<" after applying attribute "<<attribute->className()<<" "<<attribute<< std::dec << std::endl;
 
         return true;
     }

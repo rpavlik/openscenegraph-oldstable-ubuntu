@@ -30,6 +30,7 @@
 #include <functional>
 #include <set>
 
+#include <stdlib.h>
 #include <string.h>
 
 #ifdef WIN32
@@ -256,6 +257,10 @@ public:
     std::set<osg::ref_ptr<osg::Texture> >   _textureSet;
     std::set<osg::ref_ptr<osg::Drawable> >  _drawableSet;
     osg::ref_ptr<osg::KdTreeBuilder>        _kdTreeBuilder;
+    
+protected:
+
+    FindCompileableGLObjectsVisitor& operator = (const FindCompileableGLObjectsVisitor&) { return *this; }
 };
 
 
@@ -1212,7 +1217,7 @@ bool DatabasePager::getRequestsInProgress() const
     if (getDataToMergeListSize()>0) return true;
 
     for(DatabaseThreadList::const_iterator itr = _databaseThreads.begin();
-        itr != _databaseThreads.begin();
+        itr != _databaseThreads.end();
         ++itr)
     {
         if ((*itr)->getActive()) return true;
@@ -1471,7 +1476,7 @@ void DatabasePager::addLoadedDataToSceneGraph(const osg::FrameStamp &frameStamp)
 
     osg::Timer_t last = osg::Timer::instance()->tick();
 
-    osg::notify(osg::INFO)<<"Done DatabasePager::addLoadedDataToSceneGraph"<<
+    osg::notify(osg::DEBUG_INFO)<<"Done DatabasePager::addLoadedDataToSceneGraph"<<
         osg::Timer::instance()->delta_m(before,mid)<<"ms,\t"<<
         osg::Timer::instance()->delta_m(mid,last)<<"ms"<<
         "  objects"<<localFileLoadedList.size()<<std::endl<<std::endl;
@@ -1993,7 +1998,7 @@ void DatabasePager::compileGLObjects(osg::State& state, double& availableTime)
                 StateSetList::iterator itr=sslist.begin();
                 unsigned int objTemp = numObjectsCompiled;
                 for(;
-                    itr!=sslist.end() && (elapsedTime+estimatedTextureDuration)<availableTime && numObjectsCompiled<_maximumNumOfObjectsToCompilePerFrame;
+                    itr!=sslist.end() && (compileAll || ((elapsedTime+estimatedTextureDuration)<availableTime && numObjectsCompiled<_maximumNumOfObjectsToCompilePerFrame));
                     ++itr)
                 {
                     //osg::notify(osg::INFO)<<"    Compiling stateset "<<(*itr).get()<<std::endl;
