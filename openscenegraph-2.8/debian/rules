@@ -120,8 +120,13 @@ endif
 #
 # OpenSceneGraph 2.4.0
 #
-CURRENT=7
-OSG_VERSION=2.4.0
+#CURRENT=7
+#OSG_VERSION=2.4.0
+#
+# OpenSceneGraph 2.8.0
+#
+CURRENT=55
+OSG_VERSION=2.8.0
 
 build: patch build-stamp
 build-stamp: configure-stamp 

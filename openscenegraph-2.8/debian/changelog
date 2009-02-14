@@ -4,7 +4,7 @@ openscenegraph (2.8.0-1) experimental; urgency=low
   * update download location in copyright file
   * add support for intrepid & jaunty
   
- -- Loic Dachary (OuoU) <loic@debian.org>  Fri, 12 Dec 2008 17:35:05 +0100
+ -- Loic Dachary (OuoU) <loic@debian.org>  Sat, 14 Feb 2009 08:44:32 +0100
 
 openscenegraph (2.6.0-1) experimental; urgency=low
 

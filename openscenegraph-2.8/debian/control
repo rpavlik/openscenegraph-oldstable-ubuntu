@@ -42,7 +42,7 @@ Description: Documentation for Object-Oriented (OO) thread interface
 Package: libopenscenegraph-dev
 Section: devel
 Architecture: any
-Depends: libopenthreads-dev, xlibmesa-gl-dev | libgl-dev, xlibmesa-glu-dev | libglu-dev, libopenscenegraph44 (= ${Source-Version})
+Depends: libopenthreads-dev, xlibmesa-gl-dev | libgl-dev, xlibmesa-glu-dev | libglu-dev, libopenscenegraph55 (= ${Source-Version})
 Description: 3D scenegraph development files
  A portable, high level graphics toolkit for the development of high
  performance graphics applications such as flight simulators, games,
@@ -52,7 +52,7 @@ Description: 3D scenegraph development files
  many additional utilities for rapid development of graphics
  applications.
 
-Package: libopenscenegraph44
+Package: libopenscenegraph55
 Section: libs
 Architecture: any
 Depends: ${shlibs:Depends}
