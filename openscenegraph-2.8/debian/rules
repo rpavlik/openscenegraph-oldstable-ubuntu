@@ -10,6 +10,9 @@
 #    cd openscenegraph-xxx.orig
 #    unzip OpenSceneGraph-xxx.zip
 #    mv OpenSceneGraph-xxx OpenSceneGraph
+#    cd ..
+#    cp -a openscenegraph-xxx.orig openscenegraph-xxx
+#    cd openscenegraph-xxx
 #    cp -a ../openscenegraph-yyy/debian .
 
 # Uncomment this to turn on verbose mode.
@@ -69,6 +72,7 @@ ARCH_C_FLAGS=-mlong-calls
 ARCH_CXX_FLAGS=${ARCH_C_FLAGS}
 endif
 
+# export COMPILE_INTROSPECTION=ON for the first if statement when that works.
 ifeq (i386,$(DEB_BUILD_ARCH))
 define INTROSPECTION
         binutils_version=$$(perl -ne 'if((/^Package: binutils$$/ .. /^Version:/) && /^Version: (.*)/) { print "$$1\n"; }' < /var/lib/dpkg/available) ; \
@@ -123,6 +127,11 @@ endif
 #CURRENT=7
 #OSG_VERSION=2.4.0
 #
+# OpenSceneGraph 2.6.1
+#
+#CURRENT=48
+#OSG_VERSION=2.6.1
+#
 # OpenSceneGraph 2.8.0
 #
 CURRENT=55
@@ -133,14 +142,9 @@ build-stamp: configure-stamp
 	dh_testdir
 
 	mkdir -p build/osg ; cd build/osg ; ${SETAFFINITY} ${INTROSPECTION} cmake --debug-output \
-		-D OPENSCENEGRAPH_VERSION:STRING=${CURRENT}.0.0 \
-		-D OPENSCENEGRAPH_SOVERSION:STRING=${CURRENT} \
-		-D OPENTHREADS_VERSION:STRING=${CURRENT}.0.0 \
-		-D OPENTHREADS_SOVERSION:STRING=${CURRENT} \
 		-D CMAKE_BUILD_TYPE:STRING=RelWithDebInfo \
 		-D CMAKE_CXX_FLAGS_RELWITHDEBINFO="${CFLAGS} ${ARCH_CXX_FLAGS}" \
 		-D CMAKE_C_FLAGS_RELWITHDEBINFO="${CFLAGS} ${ARCH_C_FLAGS}" \
-		-D OSG_PLUGINS:STRING=osgPlugins-${OSG_VERSION} \
 		-D CMAKE_INSTALL_PREFIX:PATH=/ \
 		-D CMAKE_CXX_COMPILER='${CCACHE}' \
 		-D BUILD_OSG_WRAPPERS:BOOL=$$COMPILE_INTROSPECTION \
@@ -153,9 +157,6 @@ clean-patched:
 	dh_testdir
 	dh_testroot
 	rm -f build-stamp configure-stamp
-
-	# Upstream has a +x source file
-	chmod a-x OpenSceneGraph/examples/osgpointsprite/osgpointsprite.cpp
 
 	# Add here commands to clean up after the build process.
 	rm -fr build
@@ -172,37 +173,54 @@ MANAPPLICATIONS = \
 	osgviewer.1 \
 	osgconv.1 \
 	osgversion.1 \
+	osgfilecache.1 \
 	osgarchive.1
 
 MANEXAMPLES = \
+	osg2cpp.1 \
 	osganimate.1 \
+	osganimationmakepath.1 \
+	osganimationnode.1 \
+	osganimationskinning.1 \
+	osganimationsolid.1 \
+	osganimationtimeline.1 \
+	osganimationviewer.1 \
+	osgarchive.1 \
+	osgautocapture.1 \
 	osgautotransform.1 \
 	osgbillboard.1 \
 	osgblendequation.1 \
+	osgbrowser.1 \
 	osgcallback.1 \
 	osgcamera.1 \
 	osgcatch.1 \
-	osgcegui.1 \
 	osgclip.1 \
 	osgcluster.1 \
 	osgcompositeviewer.1 \
+	osgconv.1 \
 	osgcopy.1 \
 	osgcubemap.1 \
 	osgdelaunay.1 \
-	osgdepthpeeling.1 \
 	osgdepthpartition.1 \
-	osgdepthshadow.1 \
+	osgdepthpeeling.1 \
 	osgdistortion.1 \
+	osgdrawinstanced.1 \
 	osgfadetext.1 \
+	osgfilecache.1 \
+	osgfont.1 \
 	osgforest.1 \
 	osgfxbrowser.1 \
+	osggameoflife.1 \
 	osggeodemo.1 \
 	osggeometry.1 \
+	osggeometryshaders.1 \
 	osghangglide.1 \
 	osghud.1 \
+	osgimagesequence.1 \
 	osgimpostor.1 \
 	osgintersection.1 \
 	osgintrospection.1 \
+	osgkdtree.1 \
 	osgkeyboard.1 \
 	osgkeyboardmouse.1 \
 	osglauncher.1 \
@@ -211,14 +229,20 @@ MANEXAMPLES = \
 	osglogicop.1 \
 	osglogo.1 \
 	osgmanipulator.1 \
+	osgmemorytest.1 \
 	osgmotionblur.1 \
 	osgmovie.1 \
+	osgmultiplerendertargets.1 \
 	osgmultitexture.1 \
+	osgmultitexturecontrol.1 \
 	osgoccluder.1 \
+	osgocclusionquery.1 \
+	osgpackeddepthstencil.1 \
 	osgpagedlod.1 \
 	osgparametric.1 \
 	osgparticle.1 \
 	osgparticleeffects.1 \
+	osgpdf.1 \
 	osgphotoalbum.1 \
 	osgpick.1 \
 	osgplanets.1 \
@@ -228,40 +252,56 @@ MANEXAMPLES = \
 	osgprerender.1 \
 	osgprerendercubemap.1 \
 	osgreflect.1 \
+	osgrobot.1 \
 	osgscalarbar.1 \
+	osgscreencapture.1 \
 	osgscribe.1 \
 	osgsequence.1 \
 	osgshaders.1 \
 	osgshaderterrain.1 \
 	osgshadow.1 \
-	osgshadowtexture.1 \
 	osgshape.1 \
+	osgsharedarray.1 \
+	osgsidebyside.1 \
 	osgsimplifier.1 \
 	osgsimulation.1 \
 	osgslice.1 \
 	osgspacewarp.1 \
 	osgspheresegment.1 \
 	osgspotlight.1 \
-	osgstaticviewer.1 \
 	osgstereoimage.1 \
+	osgstereomatch.1 \
 	osgteapot.1 \
 	osgterrain.1 \
 	osgtessellate.1 \
 	osgtext.1 \
+	osgtext3D.1 \
 	osgtexture1D.1 \
 	osgtexture2D.1 \
 	osgtexture3D.1 \
 	osgtexturerectangle.1 \
+	osgthirdpersonview.1 \
 	osgunittests.1 \
+	osgversion.1 \
 	osgvertexprogram.1 \
-	osgviewerCocoa.1 \
-	osgviewerFLTK.1 \
+	osgviewer.1 \
 	osgviewerGLUT.1 \
-	osgviewerMFC.1 \
-	osgviewerQT.1 \
-	osgviewerSDL.1 \
-	osgviewerWX.1 \
 	osgvolume.1 \
+	osgwidgetaddremove.1 \
+	osgwidgetbox.1 \
+	osgwidgetcanvas.1 \
+	osgwidgetframe.1 \
+	osgwidgetinput.1 \
+	osgwidgetlabel.1 \
+	osgwidgetmenu.1 \
+	osgwidgetmessagebox.1 \
+	osgwidgetnotebook.1 \
+	osgwidgetperformance.1 \
+	osgwidgetscrolled.1 \
+	osgwidgetshader.1 \
+	osgwidgetstyled.1 \
+	osgwidgettable.1 \
+	osgwidgetwindow.1 \
 	osgwindows.1
 
 install: build

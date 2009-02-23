@@ -6,6 +6,17 @@ openscenegraph (2.8.0-1) experimental; urgency=low
   
  -- Loic Dachary (OuoU) <loic@debian.org>  Sat, 14 Feb 2009 08:44:32 +0100
 
+openscenegraph (2.6.1-1) experimental; urgency=low
+
+  * New upstream release.
+  * Updated rules file to complete the instruction on how to make an orig
+    file.
+  * Corrected rules file when it comes to versions.
+  * libopenscenegraph44 bumped to 48.
+  * remove obsolete xlibmesa-gl-dev
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Thu, 25 Dec 2008 18:27:16 +0100
+
 openscenegraph (2.6.0-1) experimental; urgency=low
 
   * New upstream release.
