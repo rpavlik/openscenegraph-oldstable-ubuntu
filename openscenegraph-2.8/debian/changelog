@@ -10,7 +10,7 @@ openscenegraph (2.8.0-1) experimental; urgency=low
   * update libopenscenegraph short description (Closes: #493613)
   * use libgl1-mesa-dev and libgif-dev (Closes: #494553)
   
- -- Loic Dachary (OuoU) <loic@debian.org>  Sat, 14 Feb 2009 08:44:32 +0100
+ -- Loic Dachary (OuoU) <loic@debian.org>  Tue, 24 Feb 2009 12:04:02 +0100
 
 openscenegraph (2.6.1-1) experimental; urgency=low
 
