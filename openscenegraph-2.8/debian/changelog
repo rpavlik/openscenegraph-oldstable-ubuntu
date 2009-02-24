@@ -5,6 +5,7 @@ openscenegraph (2.8.0-1) experimental; urgency=low
   * add support for intrepid & jaunty
   * remove extra conflict on openthreads7 (Closes: #504113)
   * apply GNU/kFreeBSD patch (Closes: #497933)
+  * apply GCC-4.4 portability patch (Closes: #504888)
   
  -- Loic Dachary (OuoU) <loic@debian.org>  Sat, 14 Feb 2009 08:44:32 +0100
 
