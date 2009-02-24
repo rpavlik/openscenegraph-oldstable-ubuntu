@@ -9,7 +9,7 @@ Uploaders: Ola Lundqvist <opal@debian.org>
 Package: libopenthreads-dev
 Section: libdevel
 Architecture: any
-Depends: libopenthreads11 (= ${source:Version})
+Depends: libopenthreads11 (= ${binary:Version})
 Description: Object-Oriented (OO) thread interface for C++ programmers, development files
  This library is intended to provide a minimal & complete Object-Oriented (OO) 
  thread interface for C++ programmers.  It is loosely modeled on the Java thread
@@ -42,7 +42,7 @@ Description: Documentation for Object-Oriented (OO) thread interface
 Package: libopenscenegraph-dev
 Section: libdevel
 Architecture: any
-Depends: libopenthreads-dev, libgl1-mesa-dev | libgl-dev, libglu-dev, libopenscenegraph55 (= ${source:Version})
+Depends: libopenthreads-dev, libgl1-mesa-dev | libgl-dev, libglu-dev, libopenscenegraph55 (= ${binary:Version})
 Description: 3D scenegraph development files
  A portable, high level graphics toolkit for the development of high
  performance graphics applications such as flight simulators, games,
