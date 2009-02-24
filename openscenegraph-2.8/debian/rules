@@ -18,7 +18,7 @@
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
-#include /usr/share/dpatch/dpatch.make
+include /usr/share/dpatch/dpatch.make
 
 ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
 	CFLAGS += -O0 -g
@@ -137,8 +137,7 @@ endif
 CURRENT=55
 OSG_VERSION=2.8.0
 
-#build: patch build-stamp
-build: build-stamp
+build: patch build-stamp
 build-stamp: configure-stamp 
 	dh_testdir
 
@@ -153,7 +152,7 @@ build-stamp: configure-stamp
 	cd build/osg ; ${MAKE} ${PARALLEL_OPTIONS} VERBOSE=1
 	touch build-stamp
 
-clean: clean-patched # unpatch
+clean: clean-patched unpatch
 clean-patched:
 	dh_testdir
 	dh_testroot
