@@ -3,6 +3,7 @@ openscenegraph (2.8.0-1) experimental; urgency=low
   * New upstream release
   * update download location in copyright file
   * add support for intrepid & jaunty
+  * remove extra conflict on openthreads7 (Closes: #504113)
   
  -- Loic Dachary (OuoU) <loic@debian.org>  Sat, 14 Feb 2009 08:44:32 +0100
 
