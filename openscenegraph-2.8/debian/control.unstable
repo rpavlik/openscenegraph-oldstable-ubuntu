@@ -2,7 +2,7 @@ Source: openscenegraph
 Section: devel
 Priority: optional
 Maintainer: Loic Dachary (OuoU) <loic@debian.org>
-Build-Depends: debhelper (>= 4.0.0), dpatch, cmake, g++ (>= 3.3.0), libungif4-dev | giflib-dev, libjpeg-dev, libtiff-dev, lib3ds-dev, libfreetype6-dev, libpng12-dev, libcoin40-dev, libjasper-dev, libgdal-dev, libx11-dev, libxmu-dev, libglut-dev, ccache, libgl-dev, libglu-dev, doxygen, libxine-dev
+Build-Depends: debhelper (>= 4.0.0), dpatch, cmake, g++ (>= 3.3.0), libungif4-dev | giflib-dev, libjpeg-dev, libtiff-dev, lib3ds-dev, libfreetype6-dev, libpng12-dev, libcoin40-dev, libjasper-dev, libgdal-dev, libx11-dev, libxmu-dev, libglut-dev, ccache, libgl1-mesa-dev | libgl-dev, libglu-dev, doxygen, libxine-dev
 Standards-Version: 3.7.2
 Uploaders: Ola Lundqvist <opal@debian.org>
 
@@ -42,7 +42,7 @@ Description: Documentation for Object-Oriented (OO) thread interface
 Package: libopenscenegraph-dev
 Section: libdevel
 Architecture: any
-Depends: libopenthreads-dev, libgl-dev, libglu-dev, libopenscenegraph55 (= ${Source-Version})
+Depends: libopenthreads-dev, libgl1-mesa-dev | libgl-dev, libglu-dev, libopenscenegraph55 (= ${Source-Version})
 Description: 3D scenegraph development files
  A portable, high level graphics toolkit for the development of high
  performance graphics applications such as flight simulators, games,
