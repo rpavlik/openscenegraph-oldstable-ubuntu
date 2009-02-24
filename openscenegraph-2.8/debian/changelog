@@ -1,6 +1,6 @@
 openscenegraph (2.8.0-1) experimental; urgency=low
 
-  * New upstream release
+  * New upstream release (Closes: #516622)
   * update download location in copyright file
   * add support for intrepid & jaunty
   * remove extra conflict on openthreads7 (Closes: #504113)
