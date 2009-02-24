@@ -57,7 +57,7 @@ Section: libs
 Architecture: any
 Depends: ${shlibs:Depends}
 Conflicts: libopenscenegraph, libopenscenegraph2, libopenscenegraph3, libopenscenegraph1c2, libopenscenegraph7
-Description: 3D scenegraph
+Description: low level graphics library for openscenegraph
  A portable, high level graphics toolkit for the development of high
  performance graphics applications such as flight simulators, games,
  virtual reality or scientific visualization.  Providing an object

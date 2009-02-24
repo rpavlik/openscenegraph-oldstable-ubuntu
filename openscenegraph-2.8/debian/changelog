@@ -7,6 +7,7 @@ openscenegraph (2.8.0-1) experimental; urgency=low
   * apply GNU/kFreeBSD patch (Closes: #497933)
   * apply GCC-4.4 portability patch (Closes: #504888)
   * add missing libraries to openscenegraph.pc (Closes: #512316)
+  * update libopenscenegraph short description (Closes: #493613)
   
  -- Loic Dachary (OuoU) <loic@debian.org>  Sat, 14 Feb 2009 08:44:32 +0100
 
