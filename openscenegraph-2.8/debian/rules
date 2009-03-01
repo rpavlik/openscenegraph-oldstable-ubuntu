@@ -345,15 +345,6 @@ binary-arch: build install
 #	dh_installcron
 #	dh_installinfo
 	dh_installman -p openscenegraph ${MANPAGES}
-	# BEGIN: DIRTY hack for 64-bit arch's because cmake isn't easy to understand.
-	# 1. Ensure /usr/lib exists (should be, because of the .pc files)
-	# 2. Move lib64/* files to lib/, so that dh_movefiles find them there.
-	#    /usr/lib64 is a symlink to /usr/lib anyway, so...
-	if test -d $(CURDIR)/debian/tmp/usr/lib64 ; then \
-		mkdir -p $(CURDIR)/debian/tmp/usr/lib ; \
-		mv $(CURDIR)/debian/tmp/usr/lib64/* $(CURDIR)/debian/tmp/usr/lib ; \
-	fi
-	# END: DIRTY hack
 	dh_install --sourcedir=debian/tmp --fail-missing
 	dh_install -plibopenscenegraph55 debian/lintian/libopenscenegraph55 usr/share/lintian/overrides
 	# dh_install -popenscenegraph debian/lintian/openscenegraph usr/share/lintian/overrides
