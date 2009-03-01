@@ -1,7 +1,7 @@
 openscenegraph (2.8.0-2) unstable; urgency=low
 
   * unstable instead of experimental
-  * remove lib64 dirty hack that failed ( https://buildd.debian.org/fetch.cgi?&pkg=openscenegraph&ver=2.8.0-1&arch=alpha&stamp=1235690316&file=log ) 
+  * remove lib64 dirty hack that failed
   * apply GNU/kFreeBSD patch (Closes: #517354)
 
  -- Loic Dachary (OuoU) <loic@debian.org>  Sun, 01 Mar 2009 14:06:21 +0100
