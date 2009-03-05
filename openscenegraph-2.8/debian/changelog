@@ -1,7 +1,8 @@
 openscenegraph (2.8.1-1) unstable; urgency=low
 
+  * New upstream release
   * gcc-4.4 are already in upstream
-  * use lib*/ instead of lib/ to capture lib64
+  * use lib*/ instead of lib/ to capture lib64 (Closes: #517671)
 
  -- Loic Dachary (OuoU) <loic@debian.org>  Tue, 03 Mar 2009 13:07:40 +0100
 
