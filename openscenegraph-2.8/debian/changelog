@@ -1,6 +1,5 @@
-openscenegraph (2.8.1-1) unstable; urgency=low
+openscenegraph (2.8.0-3) unstable; urgency=low
 
-  * New upstream release
   * gcc-4.4 are already in upstream
   * use lib*/ instead of lib/ to capture lib64 (Closes: #517671)
 
