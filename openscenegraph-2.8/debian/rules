@@ -148,8 +148,9 @@ build-stamp: configure-stamp
 		-D CMAKE_INSTALL_PREFIX:PATH=/ \
 		-D CMAKE_CXX_COMPILER='${CCACHE}' \
 		-D BUILD_OSG_WRAPPERS:BOOL=$$COMPILE_INTROSPECTION \
-		-D BUILD_OSG_EXAMPLES:BOOL=ON ../../${OSG} \
-		-D LIB_POSTFIX=""
+		-D BUILD_OSG_EXAMPLES:BOOL=ON \
+		-D LIB_POSTFIX="" \
+		../../${OSG}
 	cd build/osg ; ${MAKE} ${PARALLEL_OPTIONS} VERBOSE=1
 	touch build-stamp
 
