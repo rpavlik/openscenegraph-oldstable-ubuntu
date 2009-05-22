@@ -391,8 +391,14 @@ void RenderStage::runCameraSetUp(osg::RenderInfo& renderInfo)
                         case Camera::PACKED_DEPTH_STENCIL_BUFFER:
                             internalFormat = GL_DEPTH_STENCIL_EXT;
                             break;
+
+                        // all other buffers are color buffers
                         default:
-                            internalFormat = GL_RGBA;
+                            // setup the internal format based on attached texture if such exists, otherwise just default format
+                            if (attachment._texture)
+                                internalFormat = attachment._texture->getInternalFormat();
+                            else
+                                internalFormat = GL_RGBA;
                             break;
                         }
                     }
@@ -887,6 +893,7 @@ void RenderStage::drawInner(osg::RenderInfo& renderInfo,RenderLeaf*& previous, b
         }
 
         // Bind the resolve framebuffer to blit into.
+        _fbo->apply(state, FrameBufferObject::READ_FRAMEBUFFER);
         _resolveFbo->apply(state, FrameBufferObject::DRAW_FRAMEBUFFER);
 
         // Blit to the resolve framebuffer.
@@ -1195,17 +1202,12 @@ void RenderStage::drawImplementation(osg::RenderInfo& renderInfo,RenderLeaf*& pr
     // set up the back buffer.
     state.applyAttribute(_viewport.get());
 
-#define USE_SISSOR_TEST
-#ifdef USE_SISSOR_TEST
     glScissor( static_cast<int>(_viewport->x()),
                static_cast<int>(_viewport->y()),
                static_cast<int>(_viewport->width()),
                static_cast<int>(_viewport->height()) );
     //cout << "    clearing "<<this<< "  "<<_viewport->x()<<","<< _viewport->y()<<","<< _viewport->width()<<","<< _viewport->height()<<std::endl;
-    
-    glEnable( GL_SCISSOR_TEST );
-#endif
-
+    state.applyMode( GL_SCISSOR_TEST, true );
 
     // glEnable( GL_DEPTH_TEST );
 
@@ -1214,21 +1216,33 @@ void RenderStage::drawImplementation(osg::RenderInfo& renderInfo,RenderLeaf*& pr
     else glColorMask(GL_TRUE,GL_TRUE,GL_TRUE,GL_TRUE);
 
     if (_clearMask & GL_COLOR_BUFFER_BIT)
+    {
         glClearColor( _clearColor[0], _clearColor[1], _clearColor[2], _clearColor[3]);
+    }
 
     if (_clearMask & GL_DEPTH_BUFFER_BIT)
+    {
         glClearDepth( _clearDepth);
+        glDepthMask ( GL_TRUE );
+        state.haveAppliedAttribute( osg::StateAttribute::DEPTH );
+    }
 
     if (_clearMask & GL_STENCIL_BUFFER_BIT)
+    {
         glClearStencil( _clearStencil);
+        glStencilMask ( GL_TRUE );
+        state.haveAppliedAttribute( osg::StateAttribute::STENCIL );
+    }
 
     if (_clearMask & GL_ACCUM_BUFFER_BIT)
+    {
         glClearAccum( _clearAccum[0], _clearAccum[1], _clearAccum[2], _clearAccum[3]);
+    }
 
 
     glClear( _clearMask );
     
-#ifdef USE_SISSOR_TEST
+#ifdef USE_SCISSOR_TEST
     glDisable( GL_SCISSOR_TEST );
 #endif
 

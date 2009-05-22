@@ -1,6 +1,6 @@
-OpenSceneGraph Library 2.8.0
+OpenSceneGraph Library 2.8.1
 
-365 Contributors:
+372 Contributors:
 
 Firstname Surname
 -----------------
@@ -31,39 +31,40 @@ Colin McDonald
 Andy Skinner
 Roger James
 Pavel Moloshtan
+Mattias Helsing
 Tom Jolley
 Jeremy Moles
 Jason Beverage
 Norman Vine
-Mattias Helsing
 Cedric Pinson
 Art Tevs
 Alberto Farre
+Roland Smeenk
+Michael Platings
 André Garneau
 Ruben Lopez
-Roland Smeenk
 Randall Hopper
-Michael Platings
-Adrian Egli
-Olaf Flebbe
 Jason Daly
 J.P. Delport
+Adrian Egli
+Olaf Flebbe
+Mathieu Marache
 Gideon May
 Don Tidrow
 Sherman Wilcox
 Romano José Magacho da Silva
 Per Fahlberg
 Michael Gronager
-Mathieu Marache
 Joakim Simonsson
 David Spilling
 Daniel Sjölie
 Chris Hanson
 Alberto Luaces
 Philip Lowman
-Melchior Franz
 Chris Denham
+Melchior Franz
 Serge Lages
+Lionel Lagarde
 Joran Jessurun
 Frederic Marmond
 David Fries
@@ -76,21 +77,21 @@ Stephane Lamoliatte
 Sondra Iverson
 Rune Schmidt Jensen
 Rainer Oder
+Neil Groves
 Mike Connell
+Martin Aumueller
 Mario Valle
 Gordon Tomlinson
 Gino van den Bergen
 Carlo Camporesi
 Ben Discoe
 Andreas Ekstrand
+Thibault Genessay
 Sukender 
 Sasa Bistrovic
-Neil Groves
 Martin Naylor
-Martin Aumueller
 Markus Trenkwalder
 Loic Dachary
-Lionel Lagarde
 Joseph Steel
 John Shue
 Jan Peciva
@@ -98,7 +99,6 @@ Jan Ciger
 Glenn Waldron
 Brad Colbert
 Vivek Rajan
-Thibault Genessay
 Sean Spicer
 Ravi Mathur
 Peter Hrenka
@@ -168,6 +168,7 @@ Wang Rui
 Tugkan Calapoglu
 Tim Daoust
 Terrex 
+Tanguy Fautré
 Sylvain Marie
 Steve Lunsford
 Stephane Simon
@@ -178,6 +179,8 @@ Sebastian Messerschmidt
 Ralf Kern
 Pierre Haritchabalet
 Perry Miller
+Paul Obermeier
+Neil Hughes
 Nathan Monteleone
 Morné Pistorius
 Michael Henheffer
@@ -185,6 +188,7 @@ Michael Guerrero
 Maya Leonard
 Max Bandazian
 Mathew May
+Martin Spott
 Martijn Kragtwijk
 Kevin Moiule
 Keith Steffen
@@ -200,6 +204,7 @@ Gustavo Wagner
 Guillaume Chouvenc
 Gerrick Bivins
 George Tarantilis
+Frederic Bouvier
 Ferdi Smit
 Ewe Woessner
 Erik den Dekker
@@ -230,7 +235,6 @@ Tino Schwarze
 Thomas Weidner
 Thom Carlo
 Tery Welsh
-Tanguy Fautré
 Steven Thomas
 Simon Hammett
 Sid Byce
@@ -238,6 +242,8 @@ Shuxing Xiao
 Shane Arnott
 Sebastien Kuntz
 Ruth Lang
+Ruben Smelik
+Ross Anderson
 Ronny Krueger
 Robert Swain
 Rob Bloemkool
@@ -253,8 +259,8 @@ Qing Shen
 Piotr Rak
 Philipp Siemoleit
 Philipp Mächler
+Petr Salinger
 Paul Palumbo
-Paul Obermeier
 Paul Fredrikson
 Patrick Hartling
 Parag Chaudhur
@@ -263,7 +269,6 @@ Panagiotis Koutsourakis
 Orhun Birsoy
 Ole-Morten Duesund
 Nicolas Brodu
-Neil Hughes
 Nathan Cournia
 Morten Haukness
 Mirko Viviani
@@ -281,13 +286,11 @@ Matt Burke
 Mathia Walker
 Mason Menninger
 Martins Innus
-Martin Spott
-Martin Amueller
 Mario Guimaraes
 Marin Lavery
 Marco Lehmann
 Marcin Prus
-Maceij Krol
+Maciej Krol
 Lukas Diduch
 Louis Hamilton
 Lilin Xiong
@@ -295,6 +298,7 @@ Lewis Harmon
 Lars Nilson
 Kyle Centers
 Kristopher Bixler
+Konstantin Sinitsyn
 Karsten Weiss
 Karl Heijdenberg
 Jutta Sauer
@@ -306,24 +310,27 @@ John Donovan
 John Davis
 John Argentieri
 Joan Abadie
-Jeoen den Dekker
+Jeroen den Dekker
 Jean-Christophe Lombardo
 Jay Zuckerman
 Jason Howlett
 Jason Ballenger
 J.E. Hoffmann
+Humar Carmona
 Henrique Bucher
 Hautio Jari
 Guillaume Millet
 Graeme Harkness
+Glen Waldron
 Gian Lorenzetto
 George Papagiannakis
 Galen Faidley
-Frederic Bouvier
 Frank Warmerdam
+Frank Midgley
 Frank Lindeman
 Frank Lichtenheld
 Ferdinand Cornelissen
+Fajran Iman
 Fabien Dachicourt
 Emmanuel Roche
 Edmond Gheury

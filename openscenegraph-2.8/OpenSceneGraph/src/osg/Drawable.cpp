@@ -223,7 +223,6 @@ Drawable::Drawable()
 Drawable::Drawable(const Drawable& drawable,const CopyOp& copyop):
     Object(drawable,copyop),
     _parents(), // leave empty as parentList is managed by Geode
-    _stateset(copyop(drawable._stateset.get())),
     _initialBound(drawable._initialBound),
     _computeBoundCallback(drawable._computeBoundCallback),
     _boundingBox(drawable._boundingBox),
@@ -240,6 +239,7 @@ Drawable::Drawable(const Drawable& drawable,const CopyOp& copyop):
     _cullCallback(drawable._cullCallback),
     _drawCallback(drawable._drawCallback)
 {
+    setStateSet(copyop(drawable._stateset.get()));
 }
 
 Drawable::~Drawable()
@@ -443,6 +443,17 @@ void Drawable::dirtyBound()
 
 void Drawable::compileGLObjects(RenderInfo& renderInfo) const
 {
+    bool useVertexArrays = _supportsVertexBufferObjects && _useVertexBufferObjects && renderInfo.getState()->isVertexBufferObjectSupported();
+    if (useVertexArrays)
+    {
+        if (_drawCallback.valid())
+            _drawCallback->drawImplementation(renderInfo,this);
+        else
+            drawImplementation(renderInfo);
+
+        return;
+    }
+
     if (!_useDisplayList) return;
 
     // get the contextID (user defined ID of 0 upwards) for the 

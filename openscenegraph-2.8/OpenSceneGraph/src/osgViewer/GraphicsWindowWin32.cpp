@@ -1029,6 +1029,7 @@ GraphicsWindowWin32::GraphicsWindowWin32( osg::GraphicsContext::Traits* traits )
   _closeWindow(false),
   _destroyWindow(false),
   _destroying(false),
+  _mouseCursor(InheritCursor),
   _appMouseCursor(LeftArrowCursor),
   _applyWorkaroundForMultimonitorMultithreadNVidiaWin32Issues( false )
 {
@@ -1782,7 +1783,7 @@ void GraphicsWindowWin32::closeImplementation()
 void GraphicsWindowWin32::swapBuffersImplementation()
 {
     if (!_realized) return;
-    if (!::SwapBuffers(_hdc))
+    if (!::SwapBuffers(_hdc) && ::GetLastError() != 0)
     {
         reportErrorForScreen("GraphicsWindowWin32::swapBuffersImplementation() - Unable to swap display buffers", _traits->screenNum, ::GetLastError());
     }
@@ -1935,25 +1936,28 @@ void GraphicsWindowWin32::useCursor( bool cursorOn )
 
 void GraphicsWindowWin32::setCursor( MouseCursor mouseCursor )
 {
-    if (mouseCursor != LeftRightCursor && 
-        mouseCursor != UpDownCursor && 
-        mouseCursor != TopLeftCorner && 
-        mouseCursor != TopRightCorner && 
-        mouseCursor != BottomLeftCorner && 
-        mouseCursor != BottomRightCorner)
+    if (_mouseCursor != mouseCursor)
     {
-        _appMouseCursor = mouseCursor;
+        if (mouseCursor != LeftRightCursor && 
+            mouseCursor != UpDownCursor && 
+            mouseCursor != TopLeftCorner && 
+            mouseCursor != TopRightCorner && 
+            mouseCursor != BottomLeftCorner && 
+            mouseCursor != BottomRightCorner)
+        {
+            _appMouseCursor = mouseCursor;
+        }
+
+        _mouseCursor = mouseCursor;
+        HCURSOR newCursor = getOrCreateCursor( mouseCursor);
+        if (newCursor == _currentCursor) return;
+
+        _currentCursor = newCursor;
+        _traits->useCursor = (_currentCursor != NULL);
+
+        if (_mouseCursor != InheritCursor)
+            ::SetCursor(_currentCursor);
     }
-
-    _mouseCursor = mouseCursor;
-    HCURSOR newCursor = getOrCreateCursor( mouseCursor);
-    if (newCursor == _currentCursor) return;
-
-    _currentCursor = newCursor;
-    _traits->useCursor = (_currentCursor != NULL);
-
-    if (_mouseCursor != InheritCursor)
-        ::SetCursor(_currentCursor);
 }
 
 HCURSOR GraphicsWindowWin32::getOrCreateCursor(MouseCursor mouseCursor)
@@ -2364,7 +2368,7 @@ LRESULT GraphicsWindowWin32::handleNativeWindowingEvent( HWND hwnd, UINT uMsg, W
                     break;
                 default:
                     if (_traits->useCursor && _appMouseCursor != InheritCursor)
-                        setCursor(LeftArrowCursor);
+                        setCursor(_appMouseCursor);
                     break;
                 }
                 return result;

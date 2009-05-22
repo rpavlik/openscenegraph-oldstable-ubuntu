@@ -1,3 +1,721 @@
+2009-05-19 16:05  robert
+
+	* CMakeLists.txt, NEWS.txt, README.txt: Updated dates and reset
+	  release candidate back to 0 for final 2.8.1 release
+
+2009-05-18 16:02  robert
+
+	* AUTHORS.txt, CMakeLists.txt, ChangeLog, NEWS.txt, README.txt:
+	  Updated ChangeLog, NEWS, README and AUTHORS files for rc5.
+
+2009-05-18 15:49  robert
+
+	* src/osgUtil/RenderStage.cpp: Merged changed from svn/trunk,
+	  improving the reliability of the clear of the stencil and depth
+	  buffer.
+
+2009-05-18 14:53  robert
+
+	* include/osg, include/osg/BoundingSphere, include/osg/ImageUtils,
+	  include/osg/Vec2b, include/osg/Vec3b, include/osg/Vec4b,
+	  include/osg/Vec4ub, src/osgWrappers/osg/Vec2b.cpp,
+	  src/osgWrappers/osg/Vec3b.cpp, src/osgWrappers/osg/Vec4b.cpp,
+	  src/osgWrappers/osg/Vec4ub.cpp: From Paul Obermeier, "Please find
+	  enclosed some changed OSG header files.
+	  The changes are more or less just beautifications
+	  (when looked at them from the C++ view), but make
+	  wrapping OSG with SWIG easier.
+	  I have tested the changes with both 2.8.1-rc4 and the
+	  current head and would appreciate to incorporate the
+	  changes in both branches.
+	  
+	  Here is a description of the changes:
+	  
+	  osg/BoundingSphere:
+	  Use the following typedef (like used in BoundingBox)
+	  typedef typename VT::value_type value_type;
+	  instead of
+	  typedef typename vec_type::value_type value_type;
+	  
+	  SWIG reports errors on the latter construct.
+	  Also makes it consistent with BoundingBox.
+	  
+	  
+	  osg/Vec4ub:
+	  Consistent use of "value_type" throughout the file.
+	  
+	  
+	  osg/Vec?b:
+	  Consistent use of "value_type" throughout the files.
+	  
+	  Also changed
+	  typedef char value_type;
+	  to
+	  typedef signed char value_type;
+	  
+	  In the case of a simple "char", SWIG assumes a string.
+	  Using "signed char" instead of "char" does not change
+	  the behaviour of the class."
+
+2009-05-18 12:56  robert
+
+	* src/osgTerrain, src/osgTerrain/Layer.cpp: From Ross Anderson,
+	  "Symptom: The computation of TerrainTiles containing only image
+	  layers (no elevation layer) is incorrect. The resulting bounding
+	  sphere will always have a radius of zero.
+	  
+	  The fix is to remove the call to bs.expandBy(v) and compute the
+	  radius directly. I believe this call was intended to be
+	  bs.expandRadiusBy(v), but it is superfluous when the radius is
+	  computed directly.
+	  "
+	  
+	  Merged from svn/trunk using:
+	  
+	  svn merge -r 10229:10230
+	  http://www.openscenegraph.org/svn/osg/OpenSceneGraph/trunk/src/osgTerrain
+
+2009-05-15 15:13  robert
+
+	* src/osgPlugins/curl, src/osgPlugins/curl/ReaderWriterCURL.cpp:
+	  Merged from svn/trunk libcurl version checks to enable build
+	  against older versions of libcurl.
+	  
+	  svn merge -r 10221:10222
+	  http://www.openscenegraph.org/svn/osg/OpenSceneGraph/trunk/src/osgPlugins/curl/
+
+2009-05-15 12:37  robert
+
+	* src/OpenThreads/pthreads, src/OpenThreads/pthreads/PThread.c++:
+	  Removed redundent errno and version string declaration
+
+2009-05-15 09:25  robert
+
+	* ChangeLog, NEWS.txt, README.txt: Updated ChangeLog and dates for
+	  2.8.0-rc4
+
+2009-05-14 17:26  robert
+
+	* NEWS.txt, README.txt: Updated dates
+
+2009-05-14 17:25  robert
+
+	* AUTHORS.txt, ChangeLog: Updated ChangeLog and AUTHOR file
+
+2009-05-14 17:18  robert
+
+	* applications/osgversion/CMakeLists.txt,
+	  applications/osgversion/Contributors.cpp,
+	  applications/osgversion/osgversion.cpp: Moved the Contributors
+	  generation code out into a separate source file that is only
+	  compiled when OSG_MAINTAINER is enable via ccamke. This has been
+	  done to prevent build issues on some machines with compilers that
+	  chose a different local to the one that the contributors names
+	  are encoded.
+
+2009-05-13 08:35  robert
+
+	* src/OpenThreads/win32, src/OpenThreads/win32/Win32Thread.cpp:
+	  From Thibault Genessay, "On Windows, when a process tries to
+	  spawn one too many thread,
+	  _beginthreadex() fails but OpenThreads still waits on the startup
+	  Block before returning to the caller of
+	  OpenThreads::Thread::start().
+	  This causes a deadlock. The return value of _beginthreadex() is
+	  actually checked, but after the call to
+	  OpenThreads::Block::block() so
+	  it is basically useless.
+	  
+	  Attached is a fix to move the check for the return value of
+	  _beginthreadex() before the call to block(), so that start() can
+	  return to the caller with a non-zero error code. This solves the
+	  problem for me."
+	  
+	  Merged from svn trunk using:
+	  
+	  svn merge -r 10190:10191
+	  http://www.openscenegraph.org/svn/osg/OpenSceneGraph/trunk/src/OpenThreads/win32
+
+2009-05-12 11:15  robert
+
+	* ChangeLog, NEWS.txt, README.txt: Updated ChangeLog and
+	  NEWS/READER for release candidate
+
+2009-05-12 11:12  robert
+
+	* src/osgWrappers/osgUtil/IntersectVisitor.cpp: Updated wrappers
+
+2009-05-12 10:49  robert
+
+	* src/osgWidget, src/osgWidget/WindowManager.cpp: From Fajran Iman
+	  Rusadi, fixed to handling of widget indices in insert and remove
+	  methods. Merged from svn/trunk using:
+	  
+	  svn merge -r 10181:10182
+	  http://www.openscenegraph.org/svn/osg/OpenSceneGraph/trunk/src/osgWidget
+
+2009-05-08 12:38  robert
+
+	* src/osgViewer/GraphicsWindowWin32.cpp: Added initializer for
+	  _mouseCursor
+
+2009-05-08 07:49  robert
+
+	* src/osgViewer/GraphicsWindowWin32.cpp: From Neil Groves, fixed
+	  unitialized variable
+
+2009-05-07 15:59  robert
+
+	* CMakeLists.txt: Updated release candidate to 4.
+
+2009-05-07 15:14  robert
+
+	* src/osgViewer/GraphicsWindowWin32.cpp: From Frederic Bouvier,
+	  workaround of setCursor problems under Windows.
+
+2009-05-07 14:58  robert
+
+	* src/osg/GraphicsContext.cpp: Fixed ABSOLUTE_RF slave camera
+	  resize policy, merged from svn trunk using:
+	  
+	  http://www.openscenegraph.org/svn/osg/OpenSceneGraph/trunk/src/
+
+2009-05-07 13:24  robert
+
+	* src/osgDB, src/osgDB/CMakeLists.txt, src/osgDB/DatabasePager.cpp,
+	  src/osgDB/Registry.cpp: From Stephan Huber, "while debugging a
+	  problem in finding plugins on OS X I discovered, that
+	  the conditional directives for setting the prepend-string in
+	  createLibraryNameForExtension were not in effect, because of the
+	  mixture
+	  of different #ifdef styles.
+	  
+	  I removed the conditional part for __APPLE__ completely to be
+	  more
+	  standard-conform with other platforms (plugins should be located
+	  in
+	  osgPlugins-X.X.X/). Because of the wrong syntax of the
+	  conditional
+	  compile the old code was not used anyway -- so no functional
+	  change.
+	  "
+	  
+	  Merged from svn/trunk using:
+	  
+	  svn merge -r 10149:10150
+	  http://www.openscenegraph.org/svn/osg/OpenSceneGraph/trunk/src/osgDB
+
+2009-05-07 13:18  robert
+
+	* src/osgViewer, src/osgViewer/GraphicsWindowWin32.cpp: From Chris
+	  Denham, fix for swapBuffers warning when window is minimized
+	  under Windows.
+	  
+	  
+	  svn merge -r 10146:10147
+	  http://www.openscenegraph.org/svn/osg/OpenSceneGraph/trunk/src/osgViewer/
+
+2009-05-07 09:47  robert
+
+	* src/osgPlugins/pdf, src/osgPlugins/pdf/CMakeLists.txt: Fixed name
+	  of POPPLER_LIBRARY_DIRS, merged from svn trunk using svn merge -r
+	  10143:10144
+	  http://www.openscenegraph.org/svn/osg/OpenSceneGraph/trunk/src/osgPlugins/pdf
+
+2009-05-05 12:56  robert
+
+	* src/osgPlugins/osgVolume,
+	  src/osgPlugins/osgVolume/ImageLayer.cpp,
+	  src/osgPlugins/osgVolume/RayTracedTechnique.cpp: Merged from
+	  svn/trunk support for searching for imagery in path relative to
+	  the .osg file being loaded. Merged using:
+	  
+	  svn merge -r 10100:10137
+	  http://www.openscenegraph.org/svn/osg/OpenSceneGraph/trunk/src/osgPlugins/osgVolume
+
+2009-05-05 12:54  robert
+
+	* src/osgVolume, src/osgVolume/FixedFunctionTechnique.cpp,
+	  src/osgVolume/RayTracedTechnique.cpp,
+	  src/osgVolume/Shaders/volume_iso_frag.cpp,
+	  src/osgVolume/VolumeTile.cpp: Merged improvements to osgVolume
+	  from svn/trunk using :
+	  
+	  svn merge -r 10100:10137
+	  http://www.openscenegraph.org/svn/osg/OpenSceneGraph/trunk/src/osgVolume
+
+2009-04-24 17:52  robert
+
+	* include/osgUtil/IntersectVisitor: Changed doxygen docs to
+	  indicate deprecated status with suggestion of IntersectionVisitor
+	  instead.
+
+2009-04-24 10:56  robert
+
+	* src/osgPlugins/mdl, src/osgPlugins/mdl/VTXReader.cpp: From Jason
+	  Daly, "Currently, the .mdl plugin loads vertices in the native
+	  DirectX order, which is the reverse of OpenGL order. This means
+	  that the back faces are currently rendered as front faces, and
+	  vice versa.
+	  
+	  This fix reverses the vertex order and sets up proper OpenGL
+	  facing. I didn't notice this problem until I started using the
+	  plug-in in my own code (osgviewer seems to not enable backface
+	  culling)."
+	  
+	  merged from svn/trunk using:
+	  
+	  svn merge -r 10092:10093
+	  http://www.openscenegraph.org/svn/osg/OpenSceneGraph/trunk/src/osgPlugins/mdl/
+
+2009-04-23 15:11  robert
+
+	* NEWS.txt: Fixed typo
+
+2009-04-23 13:46  robert
+
+	* AUTHORS.txt, ChangeLog, NEWS.txt, README.txt: Update ChnageLog,
+	  dates and authors for 2.8.1-rc3
+
+2009-04-23 13:27  robert
+
+	* CMakeLists.txt: Updated release candidate number
+
+2009-04-23 11:08  robert
+
+	* src/osgPlugins/OpenFlight,
+	  src/osgPlugins/OpenFlight/Document.cpp,
+	  src/osgPlugins/OpenFlight/Document.h,
+	  src/osgPlugins/OpenFlight/GeometryRecords.cpp: Fix to handling of
+	  subsurface layers so that more appropriate PolygonOffset values
+	  are chosen. Merged from svn/trunk using:
+	  
+	  svn merge -r 10083:10084
+	  http://www.openscenegraph.org/svn/osg/OpenSceneGraph/trunk/src/osgPlugins/OpenFlight/
+
+2009-04-23 11:07  robert
+
+	* src/osg/PolygonOffset.cpp: Merged from svn trunk using:
+	  
+	  svn merge -r 10082:10083
+	  http://www.openscenegraph.org/svn/osg/OpenSceneGraph/trunk/src/osg/PolygonOffset.cpp
+
+2009-04-22 13:54  robert
+
+	* applications/osgversion/osgversion.cpp: Fixed typo.
+
+2009-04-22 13:09  robert
+
+	* src/osgPlugins/dae/daeWriter.h: From Bob Kuehne, "fix for failing
+	  collada builds on osx due to not being able to stringstreamify
+	  osg::Vec3 without io_utils included."
+
+2009-04-22 10:56  robert
+
+	* examples, examples/osgcluster/broadcaster.cpp,
+	  examples/osgmanipulator/osgmanipulator.cpp,
+	  examples/osgscreencapture/osgscreencapture.cpp: From Paul Martz,
+	  "Looks like the people who created these two examples were a bit
+	  careless with cut and paste."
+	  
+	  Merged from svn/trunk using:
+	  
+	  svn merge -r 10063:10064
+	  http://www.openscenegraph.org/svn/osg/OpenSceneGraph/trunk/examples/
+
+2009-04-22 10:49  robert
+
+	* src/osg/Image.cpp: From Eric Sokolowsky, "src/osg/Image.cpp is
+	  missing the GL_RGBA8 image type when calculating the number of
+	  components in an image. It is added here."
+	  
+	  Merged from svn trunk using:
+	  
+	  svn merge -r 10061:10062
+	  http://www.openscenegraph.org/svn/osg/OpenSceneGraph/trunk/src/osg/Image.cpp
+
+2009-04-21 10:20  robert
+
+	* src/osgDB/DatabasePager.cpp: Fix for handling case of no graphics
+	  contexts being registered.
+	  
+	  Merged from svn/trunk using:
+	  svn merge -r 10053:10054
+	  http://www.openscenegraph.org/svn/osg/OpenSceneGraph/trunk/src/osgDB/DatabasePager.cpp
+
+2009-04-12 18:58  robert
+
+	* CMakeLists.txt, NEWS.txt, README.txt: Updated dates for 2.8.1-rc2
+
+2009-04-12 18:53  robert
+
+	* CMakeLists.txt, ChangeLog,
+	  applications/osgversion/osgversion.cpp: Updated CMakeLists.txt
+	  ChangeLog generator so that it tracks the current branch or
+	  svn/trunk to prevent branches generating logs for svn/trunk.
+	  
+	  Updated osgversion's authors mapping.
+	  
+	  Updated ChangeLog.
+
+2009-04-12 10:29  robert
+
+	* src/osg/GraphicsThread.cpp: Added release from svn/trunk to
+	  enable osgCompute.
+
+2009-04-10 21:25  robert
+
+	* NEWS.txt: Updated NEWS for 2.8.1-rc1
+
+2009-04-10 14:35  robert
+
+	* README.txt: UPdated date
+
+2009-04-10 12:56  robert
+
+	* AUTHORS.txt, ChangeLog: Update ChangeLog and AUTHORS.txt file for
+	  2.8.1-rc1
+
+2009-04-10 12:54  robert
+
+	* applications/osgversion/osgversion.cpp: Merged changes from
+	  svn/trunk
+
+2009-04-10 10:58  robert
+
+	* CMakeLists.txt, include/osg/Version: Updater version numbers to
+	  2.8.1-rc1
+
+2009-04-10 09:43  robert
+
+	* LICENSE.txt: From J.P. Delport, spelling and grammer fixes
+
+2009-04-09 15:56  robert
+
+	* CMakeModules/OsgCPack.cmake: From Mattias Helsing, "
+	  * Use the CPack ZIP generator on windows (WIN32)
+	  * Reformatted according to Philip Lowman's recent submissions"
+
+2009-04-08 10:50  robert
+
+	* src/osgUtil/Optimizer.cpp: From Glen Waldron, "Attached is a
+	  patch for osgUtil::Optimizer. If you run the
+	  SpatializeGroupsVisitor on a scene graph containing Geodes,
+	  StateSets attached to Geodes can be lost.
+	  
+	  The problem is in SpatializeGroupsVisitor::divide(osg::Geode*,
+	  unsigned int) where the code creates a new Group and divides up
+	  the input Geode into one Geode per Drawable.
+	  
+	  I fixed the problem by assigning the Geode's stateset to the new
+	  parent group.
+	  
+	  To replicate the bug, see attached osg/dds files:
+	  
+	  osgviewer b.osg -- model renders correctly
+	  set OSG_OPTIMIZER="SPATIALIZE_GROUPS"
+	  osgviewer b.osg -- textures are missing."
+	  
+	  Merged from svn/trunk using:
+	  
+	  svn merge -r 9986:9987
+	  http://www.openscenegraph.org/svn/osg/OpenSceneGraph/trunk/src/osgUtil/Optimizer.cpp
+
+2009-04-06 12:29  robert
+
+	* src/osgTerrain/GeometryTechnique.cpp: Added disabling of
+	  mipmapping for non power of two textures
+
+2009-04-06 11:27  robert
+
+	* src/osgTerrain/GeometryTechnique.cpp: Merged from svn/trunk
+	  disabling of use of display lists and a extra check against NULL
+	  to prevent a crash when NULL colour layers are assigned
+
+2009-04-03 11:29  robert
+
+	* src/osg/Drawable.cpp: Merged fix in svn/trunk that avoids the
+	  building of display lists when VBO's are compiled.
+
+2009-03-26 10:25  robert
+
+	* src/osg/Texture.cpp: Merged fixes to the texture compression
+	  settings from svn/trunk that don't change the
+	  requested compression type when the pixel type is not a direct
+	  match.
+
+2009-03-23 16:26  robert
+
+	* src/osgPlugins/dae/daeRGeometry.cpp,
+	  src/osgPlugins/dae/daeRMaterials.cpp,
+	  src/osgPlugins/dae/daeReader.h: From Michael Platings, fixed
+	  memory leak
+
+2009-03-12 17:57  robert
+
+	* src/osgDB/CMakeLists.txt: From Frank Midgley, "I tried running
+	  osgconv --formats yesterday on OS X and got no results. Turns out
+	  the changes discussed in the "osgDB::listAllAvailablePlugins
+	  win32 fix" thread back in Sep '08 broke this. The
+	  OSG_PLUGIN_EXTENSION macro is being defined in
+	  src/osgDB/CMakeLists.txt from CMAKE_SHARED_LIBRARY_SUFFIX which
+	  is "dylib" on OS X. The problem is that all of the plug-ins are
+	  setup in OsgMacroUtils.cmake with:
+	  
+	  ADD_LIBRARY(${TARGET_TARGETNAME} MODULE ${TARGET_SRC}
+	  ${TARGET_H})
+	  
+	  which gives them .so extensions. Since ".so" != ".dylib"
+	  osgDB::listAllAvailablePlugins finds no plug-ins. I believe the
+	  correct solution is to use CMAKE_SHARED_MODULE_SUFFIX instead.
+	  This builds and runs correctly on OS X but I have not tested on
+	  other platforms.
+	  
+	  Attached is an updated src/osgDB/CMakeLists.txt based on rev
+	  9915. The change is at line 108. To validate: build and then run
+	  bin/osgconv --formats. You should get many screenfuls of plug-in
+	  features, extensions and options."
+	  
+	  Merged from svn/trunk using:
+	  
+	  svn merge -r 9921:9922
+	  http://www.openscenegraph.org/svn/osg/OpenSceneGraph/trunk/src/osgDB/CMakeLists.txt
+
+2009-03-12 17:51  robert
+
+	* src/osgUtil/Optimizer.cpp: From Konstantin Sinitsyn, "At this
+	  moment, I just introducing to OSG. When I reviewing optimizer
+	  code, I find a mistake in
+	  Optimizer::RemoveLoadedProxyNodesVisitor, as it seems. This
+	  optimizer removes proxy nodes that fully loaded and in some cases
+	  attach their childs to parrents directly (without creating of
+	  group). I dont understand how this works, because if proxy node
+	  doesn't have any attributes such as name, description, node mask
+	  and any callbacks, then new group does not created to hold proxy
+	  node childs. And code below trying to attach their children to
+	  all parents but seems like only first child beeing attached to
+	  all parents correctly."
+	  
+	  Merged from svn/trunk using:
+	  svn merge -r 9919:9920
+	  http://www.openscenegraph.org/svn/osg/OpenSceneGraph/trunk/src/osgUtil/Optimizer.cpp
+
+2009-03-11 13:31  robert
+
+	* src/osgPlugins/3ds/ReaderWriter3DS.cpp: From Neil Hughes, changed
+	  the handling of opacity maps so that when they are used blending
+	  in enabled. Merged from svn/trunk using:
+	  
+	  svn merge -r 9905:9906
+	  http://www.openscenegraph.org/svn/osg/OpenSceneGraph/trunk/src/osgPlugins/3ds/ReaderWriter3DS.cpp
+
+2009-03-11 12:42  robert
+
+	* src/osgUtil/Optimizer.cpp: From Lionel Lagarde, "the attachment
+	  contains a correction of the Optimizer::MergeGeometryVisitor.
+	  When 2 geometries are merged, the primitive sets of the second
+	  geometry
+	  are copied to the first geometry.
+	  
+	  The primitive sets were copied with a std::insert into the first
+	  geometry
+	  primitive set vector. It doesn't work when the geometry is using
+	  VBOs (because
+	  the element buffer object of the primitive set is not updated).
+	  
+	  The correction replaces
+	  
+	  lhs.getPrimitiveSetList().insert(
+	  lhs.getPrimitiveSetList().end(),
+	  rhs.getPrimitiveSetList().begin(),
+	  rhs.getPrimitiveSetList().end() );
+	  
+	  by
+	  for( primItr=rhs.getPrimitiveSetList().begin();
+	  primItr!=rhs.getPrimitiveSetList().end();
+	  ++primItr )
+	  {
+	  lhs.addPrimitiveSet(primItr->get());
+	  }
+	  "
+
+2009-03-11 12:02  robert
+
+	* src/osg/Geometry.cpp: Fix to crash due to indices being present
+	  witout any associated arrays. Merged from svn/trunk using:
+	  
+	  svn merge -r 9899:9900
+	  http://www.openscenegraph.org/svn/osg/OpenSceneGraph/trunk/src/osg/Geometry.cpp
+
+2009-03-11 11:03  robert
+
+	* src/osg/Drawable.cpp, src/osg/ImageUtils.cpp, src/osg/Node.cpp:
+	  From Lionel Lagarde, "The copy constructor of the nodes and the
+	  drawables do :
+	  
+	  Node::Node(Node &node, copyop) :
+	  _stateSet(copyop(node.getStateSet()),
+	  
+	  It doesn't call the setStateSet method of osg::Node (or
+	  osg::Drawable). So the parent
+	  list of the state set is not updated with the new node
+	  (drawable)."
+	  
+	  Merged from svn/trunk using:
+	  
+	  svn merge -r 9896:9897
+	  http://www.openscenegraph.org/svn/osg/OpenSceneGraph/trunk/src/osg/Drawable.cpp
+	  svn merge -r 9896:9897
+	  http://www.openscenegraph.org/svn/osg/OpenSceneGraph/trunk/src/osg/Node.cpp
+
+2009-03-10 11:56  robert
+
+	* include/osg/GLU, include/osg/Math: From Martin Spott, fixes for
+	  IBM AIX build. Merged from svn/trunk using:
+	  
+	  svn merge -r 9881:9882
+	  http://www.openscenegraph.org/svn/osg/OpenSceneGraph/trunk/include/osg/
+
+2009-03-02 10:51  robert
+
+	* src/OpenThreads/win32, src/OpenThreads/win32/Win32Thread.cpp,
+	  src/OpenThreads/win32/Win32ThreadPrivateData.h: From Mathias
+	  Froehlich, "An other one:
+	  The TLS Varialbe is accessed before it is initialized.
+	  Attached is a change to rev 9791."
+	  
+	  Merged from svn/trunk using:
+	  
+	  svn merge -r 9831:9832
+	  http://www.openscenegraph.org/svn/osg/OpenSceneGraph/trunk/src/OpenThreads/win32
+
+2009-03-02 09:59  robert
+
+	* examples/osgcluster/broadcaster.cpp: From Petr Salinger, build
+	  fix for GNU/kFreeBSD.
+	  
+	  Merged from svn/trunk using:
+	  
+	  svn merge -r 9827:9828
+	  http://www.openscenegraph.org/svn/osg/OpenSceneGraph/trunk/examples/osgcluster/broadcaster.cpp
+
+2009-02-27 11:14  robert
+
+	* src/osgViewer/GraphicsWindowWin32.cpp: From Roland Smeenk,
+	  "Attached is a small bug fix for the redundant messages that are
+	  created in OSG applications on windows.
+	  GraphicsWindowWin32::setCursor is called every frame from the
+	  WM_NCHITTEST message. This will result in a call to
+	  ::SetCursor(_currentCursor) every frame, which again causes a
+	  WM_MOUSEMOVE to occur. The fix exits
+	  GraphicsWindowWin32::setCursor if the requested cursor already is
+	  the current cursor.
+	  
+	  "
+	  
+	  Merged from svn/trunk using:
+	  
+	  svn merge -r 9823:9824
+	  http://www.openscenegraph.org/svn/osg/OpenSceneGraph/trunk/src/osgViewer/GraphicsWindowWin32.cpp
+
+2009-02-27 10:50  robert
+
+	* src/osgUtil/RenderStage.cpp: From Atr Tevs, fixes to FBO
+	  blitting. Merged from svn/trunk using:
+	  
+	  svn merge -r 9821:9822
+	  http://www.openscenegraph.org/svn/osg/OpenSceneGraph/trunk/src/osgUtil/RenderStage.cpp
+
+2009-02-26 22:10  robert
+
+	* CMakeModules/Find3rdPartyDependencies.cmake: From Mattias
+	  Helsing, "
+	  In file
+	  "/home/robert/OpenSceneGraph/CMakeModules//Find3rdPartyDependencies.cmake":
+	  ------------------------------
+	  64: SET(FREETYPE_INCLUDE_DIRS
+	  "${FREETYPE_INCLUDE_DIR_ft2build};${FREETYPE_INCLUDE_DIR_freetype2}")
+	  "
+
+2009-02-20 17:28  robert
+
+	* applications/osgarchive/osgarchive.cpp: From Mathieu Marache, "I
+	  was trying to use the archive output of osgdem without success
+	  when
+	  I eventually found out that it was now disabled (the mailing list
+	  archive tells me it is because of multithreaded write issues with
+	  vpn). I then decided to use osgarchive to make it myself from the
+	  generated output. However if one of the insert parameters is a
+	  directory, it won't be able to find them. The attached versions
+	  corrects this"
+
+2009-02-20 11:41  robert
+
+	* src/osgPlugins/dxf, src/osgPlugins/dxf/dxfEntity.cpp: From Humar
+	  Carmona, "When reading a DXF file, the reader breaks at a debug
+	  assertion at vector (it breaks on release version). Inspecting
+	  the code show that the cause could be in dxfEntity.cpp.
+	  
+	  It seems that the problem is an offending "short" used in a for
+	  loop, where it should be "int" or "long". It causes an index out
+	  of range error. "
+	  
+	  Merged from svn trunk using:
+	  svn merge -r 9803:9804
+	  http://www.openscenegraph.org/svn/osg/OpenSceneGraph/trunk/src/osgPlugins/dxf/dxfEntity.cpp
+
+2009-02-19 17:40  robert
+
+	* src/osgPlugins/hdr/hdrloader.cpp: Fixed bug in checking of return
+	  values. Fix merged in from svn/trunk using:
+	  
+	  svn merge -r 9800:9801
+	  http://www.openscenegraph.org/svn/osg/OpenSceneGraph/trunk/src/osgPlugins/hdr/hdrloader.cpp
+
+2009-02-19 16:36  robert
+
+	* src/osg/State.cpp: From Tanguy Fautre, This fixes the OSG crashes
+	  reported by
+	  http://lists.openscenegraph.org/pipermail/osg-users-openscenegraph.org/2009-February/023499.html
+	  
+	  It's a one line change against OSG 2.8.0 (see line 196). I've
+	  already tested the change, and confirmed it\u2019s fixing the
+	  crashes described above."
+	  
+	  merged from svn trunk using:
+	  
+	  svn merge -r 9797:9798
+	  http://www.openscenegraph.org/svn/osg/OpenSceneGraph/trunk/src/osg/State.cpp
+
+2009-02-19 16:00  robert
+
+	* src/osg/PrimitiveSet.cpp: From Ruben Smelik, "I've found a
+	  (copy-paste?) error in PrimitiveSet.cpp regarding instanced
+	  drawing. For DrawElementsUInt and DrawElementsUShort the type
+	  argument of glDrawElementsInstanced was set as GL_BYTE instead of
+	  GL_UNSIGNED_INT and GL_UNSIGNED_SHORT. I've attached the fixed
+	  source file (based on the current SVN head version)."
+	  
+	  Merged from svn/trunk using:
+	  
+	  svn merge -r 9795:9796
+	  http://www.openscenegraph.org/svn/osg/OpenSceneGraph/trunk/src/osg/
+
+2009-02-19 15:38  robert
+
+	* src/OpenThreads/CMakeLists.txt: merged from svn/trunk using:
+	  
+	  svn merge -r 9793:9794
+	  http://www.openscenegraph.org/svn/osg/OpenSceneGraph/trunk
+
+2009-02-19 13:44  robert
+
+	* NEWS.txt: Fixed number of contributors
+
+2009-02-12 14:46  robert
+
+	* ChangeLog: Updated ChangeLog for 2.8.0
+
 2009-02-12 14:35  robert
 
 	* examples/osgviewerQT/QOSGWidget.cpp: Compiled fix

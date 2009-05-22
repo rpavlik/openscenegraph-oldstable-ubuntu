@@ -1494,14 +1494,15 @@ void Optimizer::RemoveLoadedProxyNodesVisitor::removeRedundantNodes()
                 // take a copy of parents list since subsequent removes will modify the original one.
                 osg::Node::ParentList parents = group->getParents();
 
-                for(unsigned int i=0;i<group->getNumChildren();++i)
+                for(osg::Node::ParentList::iterator pitr=parents.begin();
+                    pitr!=parents.end();
+                    ++pitr)
                 {
-                    osg::Node* child = group->getChild(i);
-                    for(osg::Node::ParentList::iterator pitr=parents.begin();
-                        pitr!=parents.end();
-                        ++pitr)
+                    (*pitr)->removeChild(group.get());
+                    for(unsigned int i=0;i<group->getNumChildren();++i)
                     {
-                        (*pitr)->replaceChild(group.get(),child);
+                        osg::Node* child = group->getChild(i);
+                        (*pitr)->addChild(child);
                     }
 
                 }
@@ -2415,11 +2416,11 @@ bool Optimizer::MergeGeometryVisitor::mergeGeometry(osg::Geometry& lhs,osg::Geom
 
 
     // shift the indices of the incoming primitives to account for the pre existing geometry.
-    for(osg::Geometry::PrimitiveSetList::iterator primItr=rhs.getPrimitiveSetList().begin();
-        primItr!=rhs.getPrimitiveSetList().end();
-        ++primItr)
+    osg::Geometry::PrimitiveSetList::iterator primItr;
+    for(primItr=rhs.getPrimitiveSetList().begin(); primItr!=rhs.getPrimitiveSetList().end(); ++primItr)
     {
         osg::PrimitiveSet* primitive = primItr->get();
+        
         switch(primitive->getType())
         {
         case(osg::PrimitiveSet::DrawElementsUBytePrimitiveType):
@@ -2486,12 +2487,12 @@ bool Optimizer::MergeGeometryVisitor::mergeGeometry(osg::Geometry& lhs,osg::Geom
             primitive->offsetIndices(base);
             break;
         }
-
-        
     }
     
-    lhs.getPrimitiveSetList().insert(lhs.getPrimitiveSetList().end(),
-                                     rhs.getPrimitiveSetList().begin(),rhs.getPrimitiveSetList().end());
+    for(primItr=rhs.getPrimitiveSetList().begin(); primItr!=rhs.getPrimitiveSetList().end(); ++primItr)
+    {
+        lhs.addPrimitiveSet(primItr->get());
+    }
 
     lhs.dirtyBound();
     lhs.dirtyDisplayList();
@@ -2791,6 +2792,8 @@ bool Optimizer::SpatializeGroupsVisitor::divide(osg::Geode* geode, unsigned int 
     }
 
     osg::ref_ptr<osg::Group> group = new osg::Group;
+    group->setName(geode->getName());
+    group->setStateSet(geode->getStateSet());
     for(i=0; i<geode->getNumDrawables(); ++i)
     {
         osg::Geode* newGeode = new osg::Geode;
