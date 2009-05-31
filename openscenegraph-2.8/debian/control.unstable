@@ -9,7 +9,7 @@ Uploaders: Ola Lundqvist <opal@debian.org>
 Package: libopenthreads-dev
 Section: libdevel
 Architecture: any
-Depends: libopenthreads11 (= ${binary:Version})
+Depends: libopenthreads12 (= ${binary:Version})
 Description: Object-Oriented (OO) thread interface for C++ programmers, development files
  This library is intended to provide a minimal & complete Object-Oriented (OO) 
  thread interface for C++ programmers.  It is loosely modeled on the Java thread
@@ -17,11 +17,11 @@ Description: Object-Oriented (OO) thread interface for C++ programmers, developm
  designed around "swappable" thread models which are defined at compile-time
  in a shared object library. 
 
-Package: libopenthreads11
+Package: libopenthreads12
 Section: libs
 Architecture: any
 Depends: ${shlibs:Depends}
-Conflicts: libopenthreads, libopenthreads2, libopenthreads3, libopenthreads1c2
+Conflicts: libopenthreads, libopenthreads2, libopenthreads3, libopenthreads1c2, libopenthreads11
 Description: Object-Oriented (OO) thread interface for C++ programmers, development files
  This library is intended to provide a minimal & complete Object-Oriented (OO) 
  thread interface for C++ programmers.  It is loosely modeled on the Java thread
@@ -42,7 +42,7 @@ Description: Documentation for Object-Oriented (OO) thread interface
 Package: libopenscenegraph-dev
 Section: libdevel
 Architecture: any
-Depends: libopenthreads-dev, libgl1-mesa-dev | libgl-dev, libglu-dev, libopenscenegraph55 (= ${binary:Version})
+Depends: libopenthreads-dev, libgl1-mesa-dev | libgl-dev, libglu-dev, libopenscenegraph56 (= ${binary:Version})
 Description: 3D scenegraph development files
  A portable, high level graphics toolkit for the development of high
  performance graphics applications such as flight simulators, games,
@@ -52,11 +52,11 @@ Description: 3D scenegraph development files
  many additional utilities for rapid development of graphics
  applications.
 
-Package: libopenscenegraph55
+Package: libopenscenegraph56
 Section: libs
 Architecture: any
 Depends: ${shlibs:Depends}
-Conflicts: libopenscenegraph, libopenscenegraph2, libopenscenegraph3, libopenscenegraph1c2, libopenscenegraph7
+Conflicts: libopenscenegraph, libopenscenegraph2, libopenscenegraph3, libopenscenegraph1c2, libopenscenegraph7, libopenscenegraph55
 Description: low level graphics library for openscenegraph
  A portable, high level graphics toolkit for the development of high
  performance graphics applications such as flight simulators, games,
