@@ -322,8 +322,6 @@ install: build
 	$(MAKE) -C build/osg DESTDIR=$(CURDIR)/debian/tmp/usr install
 	mkdir -p $(CURDIR)/debian/tmp/usr/bin
 	-mv $(CURDIR)/debian/tmp/usr/share/OpenSceneGraph/bin/* $(CURDIR)/debian/tmp/usr/bin
-	install -m 444 -D debian/openthreads.pc $(CURDIR)/debian/tmp/usr/lib/pkgconfig/openthreads.pc
-	install -m 444 -D debian/openscenegraph.pc $(CURDIR)/debian/tmp/usr/lib/pkgconfig/openscenegraph.pc
 	mkdir -p $(CURDIR)/debian/tmp/usr/share/openscenegraph/
 	cp -r OpenSceneGraph/examples $(CURDIR)/debian/tmp/usr/share/openscenegraph
 	mkdir -p html
