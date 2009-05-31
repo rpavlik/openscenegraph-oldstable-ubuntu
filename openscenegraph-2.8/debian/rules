@@ -88,6 +88,12 @@ define INTROSPECTION
 endef
 endif
 
+# Alberto Luaces <aluaces@udc.es> solution to armel compilation problems
+# http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=529091
+ifeq (armel,$(DEB_BUILD_ARCH))
+LINKER_FLAGS=-D CMAKE_SHARED_LINKER_FLAGS="-Wl,--whole-archive -lgcc -lgcc_s -Wl,--no-whole-archive" -D CMAKE_MODULE_LINKER_FLAGS="-Wl,--whole-archive -lgcc -lgcc_s -Wl,--no-whole-archive"
+endif
+
 #
 # Shared libraries version numbers
 #
@@ -157,6 +163,7 @@ build-stamp: configure-stamp
 		-D BUILD_OSG_WRAPPERS:BOOL=$$COMPILE_INTROSPECTION \
 		-D BUILD_OSG_EXAMPLES:BOOL=ON \
 		-D LIB_POSTFIX="" \
+		${LINKER_FLAGS} \
 		../../${OSG}
 	cd build/osg ; ${MAKE} ${PARALLEL_OPTIONS} VERBOSE=1
 	touch build-stamp

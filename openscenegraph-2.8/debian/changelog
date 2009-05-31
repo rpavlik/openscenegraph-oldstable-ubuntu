@@ -4,8 +4,9 @@ openscenegraph (2.8.1-1) unstable; urgency=low
   * osg soversion from 55 to 56, openthreads from 11 to 12 and patch
     to allow overriding the soversion when the upstream forgets to change it.
   * Alberto Luaces patch applied to add new pkg-config files (Closes: #528229).
+  * Alberto Luaces linker flags to cope with armel specific problems (Closes: #529091).
 
- -- Loic Dachary (OuoU) <loic@debian.org>  Sun, 31 May 2009 11:32:49 +0200
+ -- Loic Dachary (OuoU) <loic@debian.org>  Sun, 31 May 2009 12:07:05 +0200
 
 openscenegraph (2.8.0-4) unstable; urgency=low
 
