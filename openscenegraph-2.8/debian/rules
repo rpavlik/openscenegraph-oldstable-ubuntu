@@ -93,60 +93,62 @@ endif
 #
 # OpenSceneGraph/OpenThreads/Producer 0.9.8
 #
-#CURRENT=0
+#OPENSCENEGRAPH_SOVERSION=0
 #
 # OpenSceneGraph/OpenThreads/Producer 0.9.9
 #
-#CURRENT=1
+#OPENSCENEGRAPH_SOVERSION=1
 #
 # OpenSceneGraph/OpenThreads/Producer 1.0
 #
-#CURRENT=2
+#OPENSCENEGRAPH_SOVERSION=2
 #
 # OpenSceneGraph/OpenThreads/Producer 1.1
 #
-#CURRENT=3
+#OPENSCENEGRAPH_SOVERSION=3
 #
 # OpenSceneGraph/OpenThreads/Producer 1.2
 #
-#CURRENT=4
+#OPENSCENEGRAPH_SOVERSION=4
 #
 # OpenSceneGraph-1.9.1/OpenThreads-1.9.3 overriden with
 # OpenSceneGraph-1.9.3, OpenSceneGraph-1.9.4, OpenSceneGraph-1.9.5, OpenSceneGraph-1.9.7 and
 # OpenSceneGraph-2.0.0
 #
-#CURRENT=5
+#OPENSCENEGRAPH_SOVERSION=5
 #
 # OpenSceneGraph 2.2.0
 #
 #
-#CURRENT=6
+#OPENSCENEGRAPH_SOVERSION=6
 #
 # OpenSceneGraph 2.4.0
 #
-#CURRENT=7
+#OPENSCENEGRAPH_SOVERSION=7
 #OSG_VERSION=2.4.0
 #
 # OpenSceneGraph 2.6.1
 #
-#CURRENT=48
+#OPENSCENEGRAPH_SOVERSION=48
 #OSG_VERSION=2.6.1
 #
 # OpenSceneGraph 2.8.0
 #
-#CURRENT=55
+#OPENSCENEGRAPH_SOVERSION=55
 #OSG_VERSION=2.8.0
 #
 # OpenSceneGraph 2.8.1
 #
-CURRENT=56
-OSG_VERSION=2.8.1
+OPENTHREADS_SOVERSION=12
+OPENSCENEGRAPH_SOVERSION=56
 
 build: patch build-stamp
 build-stamp: configure-stamp 
 	dh_testdir
 
 	mkdir -p build/osg ; cd build/osg ; ${SETAFFINITY} ${INTROSPECTION} cmake --debug-output \
+		-D OPENTHREADS_SOVERSION:STRING=${OPENTHREADS_SOVERSION} \
+		-D OPENSCENEGRAPH_SOVERSION:STRING=${OPENSCENEGRAPH_SOVERSION} \
 		-D CMAKE_BUILD_TYPE:STRING=RelWithDebInfo \
 		-D CMAKE_CXX_FLAGS_RELWITHDEBINFO="${CFLAGS} ${ARCH_CXX_FLAGS}" \
 		-D CMAKE_C_FLAGS_RELWITHDEBINFO="${CFLAGS} ${ARCH_C_FLAGS}" \
