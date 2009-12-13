@@ -2,7 +2,7 @@ Source: openscenegraph
 Section: devel
 Priority: optional
 Maintainer: Loic Dachary (OuoU) <loic@debian.org>
-Build-Depends: debhelper (>= 4.0.0), dpatch, cmake, g++ (>= 3.3.0), libungif4-dev | giflib-dev, libjpeg-dev, libtiff-dev, lib3ds-dev, libfreetype6-dev, libpng12-dev, libcoin40-dev, libjasper-dev, libgdal1-1.3.2-dev, libx11-dev, libxmu-dev, libglut-dev, ccache, xlibmesa-gl-dev | libgl-dev, xlibmesa-glu-dev | libglu-dev, doxygen, libxine-dev
+Build-Depends: debhelper (>= 4.0.0), dpatch, cmake, g++ (>= 3.3.0), libungif4-dev | giflib-dev, libjpeg-dev, libtiff-dev, lib3ds-dev, libfreetype6-dev, libpng12-dev, libcoin40-dev, libjasper-dev, libgdal1-1.3.2-dev, libx11-dev, libxmu-dev, freeglut3-dev, ccache, xlibmesa-gl-dev | libgl-dev, xlibmesa-glu-dev | libglu-dev, doxygen, libxine-dev
 Standards-Version: 3.7.2
 Uploaders: Cyril Brulebois <cyril.brulebois@enst-bretagne.fr>
 

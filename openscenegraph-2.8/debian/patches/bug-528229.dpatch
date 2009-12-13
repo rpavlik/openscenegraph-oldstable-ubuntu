@@ -1,10 +1,10 @@
 #! /bin/sh /usr/share/dpatch/dpatch-run
 
 @DPATCH@
-diff -r a8aa2086fa1c openscenegraph-2.8/OpenSceneGraph/CMakeLists.txt
---- a/OpenSceneGraph/CMakeLists.txt	Fri May 22 15:26:21 2009 +0200
-+++ b/OpenSceneGraph/CMakeLists.txt	Sun May 31 11:24:19 2009 +0200
-@@ -770,14 +770,36 @@
+diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/CMakeLists.txt openscenegraph-2.8.2/OpenSceneGraph/CMakeLists.txt
+--- openscenegraph-2.8.2~/OpenSceneGraph/CMakeLists.txt	2009-07-28 08:02:27.000000000 +0200
++++ openscenegraph-2.8.2/OpenSceneGraph/CMakeLists.txt	2009-12-12 19:30:24.000000000 +0100
+@@ -772,14 +772,36 @@
      ENDIF(BUILD_OSG_PACKAGES)
  ENDIF(CMAKE_CPACK_COMMAND)
  
@@ -45,9 +45,9 @@ diff -r a8aa2086fa1c openscenegraph-2.8/OpenSceneGraph/CMakeLists.txt
  
  # Run this as late as possible so users can easier spot the message
  IF (${CMAKE_INSTALL_PREFIX} STREQUAL "/usr/local")
-diff -r a8aa2086fa1c openscenegraph-2.8/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osg.pc.in
---- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osg.pc.in	Sun May 31 11:24:19 2009 +0200
+diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osg.pc.in openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osg.pc.in
+--- openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osg.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osg.pc.in	2009-12-12 19:30:24.000000000 +0100
 @@ -0,0 +1,14 @@
 +# pkg-config source file
 +
@@ -63,9 +63,9 @@ diff -r a8aa2086fa1c openscenegraph-2.8/OpenSceneGraph/packaging/pkgconfig/opens
 +Conflicts:
 +Libs: -L${libdir} -losg
 +Cflags: -I${includedir}
-diff -r a8aa2086fa1c openscenegraph-2.8/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgAnimation.pc.in
---- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgAnimation.pc.in	Sun May 31 11:24:19 2009 +0200
+diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgAnimation.pc.in openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgAnimation.pc.in
+--- openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgAnimation.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgAnimation.pc.in	2009-12-12 19:30:24.000000000 +0100
 @@ -0,0 +1,14 @@
 +# pkg-config source file
 +
@@ -81,9 +81,9 @@ diff -r a8aa2086fa1c openscenegraph-2.8/OpenSceneGraph/packaging/pkgconfig/opens
 +Conflicts:
 +Libs: -L${libdir} -losgAnimation
 +Cflags: -I${includedir}
-diff -r a8aa2086fa1c openscenegraph-2.8/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgDB.pc.in
---- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgDB.pc.in	Sun May 31 11:24:19 2009 +0200
+diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgDB.pc.in openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgDB.pc.in
+--- openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgDB.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgDB.pc.in	2009-12-12 19:30:24.000000000 +0100
 @@ -0,0 +1,14 @@
 +# pkg-config source file
 +
@@ -99,9 +99,9 @@ diff -r a8aa2086fa1c openscenegraph-2.8/OpenSceneGraph/packaging/pkgconfig/opens
 +Conflicts:
 +Libs: -L${libdir} -losgDB
 +Cflags: -I${includedir}
-diff -r a8aa2086fa1c openscenegraph-2.8/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgFX.pc.in
---- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgFX.pc.in	Sun May 31 11:24:19 2009 +0200
+diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgFX.pc.in openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgFX.pc.in
+--- openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgFX.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgFX.pc.in	2009-12-12 19:30:24.000000000 +0100
 @@ -0,0 +1,14 @@
 +# pkg-config source file
 +
@@ -117,9 +117,9 @@ diff -r a8aa2086fa1c openscenegraph-2.8/OpenSceneGraph/packaging/pkgconfig/opens
 +Conflicts:
 +Libs: -L${libdir} -losgFX
 +Cflags: -I${includedir}
-diff -r a8aa2086fa1c openscenegraph-2.8/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgGA.pc.in
---- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgGA.pc.in	Sun May 31 11:24:19 2009 +0200
+diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgGA.pc.in openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgGA.pc.in
+--- openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgGA.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgGA.pc.in	2009-12-12 19:30:24.000000000 +0100
 @@ -0,0 +1,14 @@
 +# pkg-config source file
 +
@@ -135,9 +135,9 @@ diff -r a8aa2086fa1c openscenegraph-2.8/OpenSceneGraph/packaging/pkgconfig/opens
 +Conflicts:
 +Libs: -L${libdir} -losgGA
 +Cflags: -I${includedir}
-diff -r a8aa2086fa1c openscenegraph-2.8/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgIntrospection.pc.in
---- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgIntrospection.pc.in	Sun May 31 11:24:19 2009 +0200
+diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgIntrospection.pc.in openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgIntrospection.pc.in
+--- openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgIntrospection.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgIntrospection.pc.in	2009-12-12 19:30:24.000000000 +0100
 @@ -0,0 +1,14 @@
 +# pkg-config source file
 +
@@ -153,9 +153,9 @@ diff -r a8aa2086fa1c openscenegraph-2.8/OpenSceneGraph/packaging/pkgconfig/opens
 +Conflicts:
 +Libs: -L${libdir} -losgIntrospection
 +Cflags: -I${includedir}
-diff -r a8aa2086fa1c openscenegraph-2.8/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgManipulator.pc.in
---- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgManipulator.pc.in	Sun May 31 11:24:19 2009 +0200
+diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgManipulator.pc.in openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgManipulator.pc.in
+--- openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgManipulator.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgManipulator.pc.in	2009-12-12 19:30:24.000000000 +0100
 @@ -0,0 +1,14 @@
 +# pkg-config source file
 +
@@ -171,9 +171,9 @@ diff -r a8aa2086fa1c openscenegraph-2.8/OpenSceneGraph/packaging/pkgconfig/opens
 +Conflicts:
 +Libs: -L${libdir} -losgManipulator
 +Cflags: -I${includedir}
-diff -r a8aa2086fa1c openscenegraph-2.8/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgParticle.pc.in
---- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgParticle.pc.in	Sun May 31 11:24:19 2009 +0200
+diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgParticle.pc.in openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgParticle.pc.in
+--- openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgParticle.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgParticle.pc.in	2009-12-12 19:30:24.000000000 +0100
 @@ -0,0 +1,14 @@
 +# pkg-config source file
 +
@@ -189,9 +189,9 @@ diff -r a8aa2086fa1c openscenegraph-2.8/OpenSceneGraph/packaging/pkgconfig/opens
 +Conflicts:
 +Libs: -L${libdir} -losgParticle
 +Cflags: -I${includedir}
-diff -r a8aa2086fa1c openscenegraph-2.8/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgShadow.pc.in
---- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgShadow.pc.in	Sun May 31 11:24:19 2009 +0200
+diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgShadow.pc.in openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgShadow.pc.in
+--- openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgShadow.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgShadow.pc.in	2009-12-12 19:30:24.000000000 +0100
 @@ -0,0 +1,14 @@
 +# pkg-config source file
 +
@@ -207,9 +207,9 @@ diff -r a8aa2086fa1c openscenegraph-2.8/OpenSceneGraph/packaging/pkgconfig/opens
 +Conflicts:
 +Libs: -L${libdir} -losgShadow
 +Cflags: -I${includedir}
-diff -r a8aa2086fa1c openscenegraph-2.8/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgSim.pc.in
---- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgSim.pc.in	Sun May 31 11:24:19 2009 +0200
+diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgSim.pc.in openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgSim.pc.in
+--- openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgSim.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgSim.pc.in	2009-12-12 19:30:24.000000000 +0100
 @@ -0,0 +1,14 @@
 +# pkg-config source file
 +
@@ -225,9 +225,9 @@ diff -r a8aa2086fa1c openscenegraph-2.8/OpenSceneGraph/packaging/pkgconfig/opens
 +Conflicts:
 +Libs: -L${libdir} -losgSim
 +Cflags: -I${includedir}
-diff -r a8aa2086fa1c openscenegraph-2.8/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgTerrain.pc.in
---- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgTerrain.pc.in	Sun May 31 11:24:19 2009 +0200
+diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgTerrain.pc.in openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgTerrain.pc.in
+--- openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgTerrain.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgTerrain.pc.in	2009-12-12 19:30:24.000000000 +0100
 @@ -0,0 +1,14 @@
 +# pkg-config source file
 +
@@ -243,9 +243,9 @@ diff -r a8aa2086fa1c openscenegraph-2.8/OpenSceneGraph/packaging/pkgconfig/opens
 +Conflicts:
 +Libs: -L${libdir} -losgTerrain
 +Cflags: -I${includedir}
-diff -r a8aa2086fa1c openscenegraph-2.8/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgText.pc.in
---- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgText.pc.in	Sun May 31 11:24:19 2009 +0200
+diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgText.pc.in openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgText.pc.in
+--- openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgText.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgText.pc.in	2009-12-12 19:30:24.000000000 +0100
 @@ -0,0 +1,14 @@
 +# pkg-config source file
 +
@@ -261,9 +261,9 @@ diff -r a8aa2086fa1c openscenegraph-2.8/OpenSceneGraph/packaging/pkgconfig/opens
 +Conflicts:
 +Libs: -L${libdir} -losgText
 +Cflags: -I${includedir}
-diff -r a8aa2086fa1c openscenegraph-2.8/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgUtil.pc.in
---- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgUtil.pc.in	Sun May 31 11:24:19 2009 +0200
+diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgUtil.pc.in openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgUtil.pc.in
+--- openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgUtil.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgUtil.pc.in	2009-12-12 19:30:24.000000000 +0100
 @@ -0,0 +1,14 @@
 +# pkg-config source file
 +
@@ -279,9 +279,9 @@ diff -r a8aa2086fa1c openscenegraph-2.8/OpenSceneGraph/packaging/pkgconfig/opens
 +Conflicts:
 +Libs: -L${libdir} -losgUtil
 +Cflags: -I${includedir}
-diff -r a8aa2086fa1c openscenegraph-2.8/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgViewer.pc.in
---- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgViewer.pc.in	Sun May 31 11:24:19 2009 +0200
+diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgViewer.pc.in openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgViewer.pc.in
+--- openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgViewer.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgViewer.pc.in	2009-12-12 19:30:24.000000000 +0100
 @@ -0,0 +1,14 @@
 +# pkg-config source file
 +
@@ -297,9 +297,9 @@ diff -r a8aa2086fa1c openscenegraph-2.8/OpenSceneGraph/packaging/pkgconfig/opens
 +Conflicts:
 +Libs: -L${libdir} -losgViewer
 +Cflags: -I${includedir}
-diff -r a8aa2086fa1c openscenegraph-2.8/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgVolume.pc.in
---- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgVolume.pc.in	Sun May 31 11:24:19 2009 +0200
+diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgVolume.pc.in openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgVolume.pc.in
+--- openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgVolume.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgVolume.pc.in	2009-12-12 19:30:24.000000000 +0100
 @@ -0,0 +1,14 @@
 +# pkg-config source file
 +
@@ -315,9 +315,9 @@ diff -r a8aa2086fa1c openscenegraph-2.8/OpenSceneGraph/packaging/pkgconfig/opens
 +Conflicts:
 +Libs: -L${libdir} -losgVolume
 +Cflags: -I${includedir}
-diff -r a8aa2086fa1c openscenegraph-2.8/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgWidget.pc.in
---- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgWidget.pc.in	Sun May 31 11:24:19 2009 +0200
+diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgWidget.pc.in openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgWidget.pc.in
+--- openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgWidget.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgWidget.pc.in	2009-12-12 19:30:24.000000000 +0100
 @@ -0,0 +1,14 @@
 +# pkg-config source file
 +

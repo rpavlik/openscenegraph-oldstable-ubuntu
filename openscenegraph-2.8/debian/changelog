@@ -1,3 +1,23 @@
+openscenegraph (2.8.2-1) unstable; urgency=low
+
+  * New upstream release
+  * Changed debhelper compat to level 7 (level 4 is deprecated)
+  * Build-Depend on libcoin60-dev instead of libcoin40-dev (Closes: #535250)
+  * Build-Depend on freeglut3-dev instead of libglut*-dev (Closes: #552157)
+  * Added patch from Alberto Luaces to allow using binutils-gold (Closes: #555869)
+  * Dropped patch (fixed upstream already in 2.8.1):
+     - bug-497933.dpatch
+
+ -- Manuel A. Fernandez Montecelo <manuel.montezelo@gmail.com>  Tue, 12 Dec 2009 21:25:40 +0100
+
+openscenegraph (2.8.1-1.1) unstable; urgency=high
+
+  * Non-maintainer upload.
+  * Build-Depend on freeglut3-dev instead of freeglut-dev as someone
+    "cleaned up" provides of that package. Closes: #544648
+
+ -- Andreas Barth <aba@not.so.argh.org>  Wed, 02 Sep 2009 12:35:42 +0200
+
 openscenegraph (2.8.1-1) unstable; urgency=low
 
   * New upstream release
