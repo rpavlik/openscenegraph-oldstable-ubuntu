@@ -351,11 +351,6 @@ binary-arch: build install
 	dh_installman -p openscenegraph ${MANPAGES}
 	dh_install --sourcedir=debian/tmp --fail-missing
 	dh_install -plibopenscenegraph56 debian/lintian/libopenscenegraph56 usr/share/lintian/overrides
-	# dh_install -popenscenegraph debian/lintian/openscenegraph usr/share/lintian/overrides
-	# fails with
-	# cp: cannot stat `./usr/bin': No such file or directory
-	# although the above works. copy manually instead.
-	mkdir -p debian/openscenegraph/usr/share/lintian/overrides ; cp debian/lintian/openscenegraph debian/openscenegraph/usr/share/lintian/overrides
 	dh_link
 	dh_strip
 	dh_compress
