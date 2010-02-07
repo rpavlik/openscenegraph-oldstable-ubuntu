@@ -1,3 +1,27 @@
+openscenegraph (2.8.2-2) unstable; urgency=low
+
+  * Fixed problem in armel, failing to build due to linking problems.
+    According to Alberto Luaces this could be caused by a previous workaround
+    introduced to deal with a GCC bug, and fixed since then, see #529091 and
+    #530388
+  * Added 'watch' file
+  * Updated lintian overrides regarding package-name-doesnt-match-sonames
+  * Removed the duplicated entries in man pages as examples and apps
+  * Removed lintian overrides about man pages
+  * Removed duplicated patch bug-555869-ftbfs_with_binutils_gold.diff (it was
+    repeated in dpatch form)
+  * Quelling lintian warnings:
+    - package-lacks-versioned-build-depends-on-debhelper (updated to >= 7.0.0)
+    - debhelper-but-no-misc-depends
+    - out-of-date-standards-version (updated from 3.8.0 to 3.8.4)
+    - patch-system-but-no-source-readme
+    - dh-clean-k-is-deprecated (using 'dh_prep' instead of 'dh_clean -k')
+    - manpage-has-bad-whatis-entry (trick to avoid warning and get whatis
+      program working, removing related overrides as said above)
+    - debian-watch-file-is-missing (adding 'watch' file as said above)
+
+ -- Manuel A. Fernandez Montecelo <manuel.montezelo@gmail.com>  Wed, 03 Feb 2010 10:44:56 +0100
+
 openscenegraph (2.8.2-1) unstable; urgency=low
 
   * New upstream release

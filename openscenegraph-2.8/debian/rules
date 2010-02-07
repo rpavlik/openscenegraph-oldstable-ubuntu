@@ -88,12 +88,6 @@ define INTROSPECTION
 endef
 endif
 
-# Alberto Luaces <aluaces@udc.es> solution to armel compilation problems
-# http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=529091
-ifeq (armel,$(DEB_BUILD_ARCH))
-LINKER_FLAGS=-D CMAKE_SHARED_LINKER_FLAGS="-Wl,--whole-archive -lgcc -lgcc_s -Wl,--no-whole-archive" -D CMAKE_MODULE_LINKER_FLAGS="-Wl,--whole-archive -lgcc -lgcc_s -Wl,--no-whole-archive"
-endif
-
 #
 # Shared libraries version numbers
 #
@@ -201,7 +195,6 @@ MANEXAMPLES = \
 	osganimationsolid.1 \
 	osganimationtimeline.1 \
 	osganimationviewer.1 \
-	osgarchive.1 \
 	osgautocapture.1 \
 	osgautotransform.1 \
 	osgbillboard.1 \
@@ -213,7 +206,6 @@ MANEXAMPLES = \
 	osgclip.1 \
 	osgcluster.1 \
 	osgcompositeviewer.1 \
-	osgconv.1 \
 	osgcopy.1 \
 	osgcubemap.1 \
 	osgdelaunay.1 \
@@ -298,9 +290,7 @@ MANEXAMPLES = \
 	osgtexturerectangle.1 \
 	osgthirdpersonview.1 \
 	osgunittests.1 \
-	osgversion.1 \
 	osgvertexprogram.1 \
-	osgviewer.1 \
 	osgviewerGLUT.1 \
 	osgvolume.1 \
 	osgwidgetaddremove.1 \
@@ -323,7 +313,7 @@ MANEXAMPLES = \
 install: build
 	dh_testdir
 	dh_testroot
-	dh_clean -k 
+	dh_prep 
 	dh_installdirs
 
 	# Add here commands to install the package into debian/tmp
