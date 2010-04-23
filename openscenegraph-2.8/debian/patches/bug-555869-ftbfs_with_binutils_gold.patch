@@ -1,0 +1,13 @@
+Author: Alberto Luaces <aluaces@udc.es>
+Description: Missing -ldl so it fails to build with GNU binutils-gold (because of the default '--no-add-needed' behaviour).
+--- a/OpenSceneGraph/src/osg/CMakeLists.txt
++++ b/OpenSceneGraph/src/osg/CMakeLists.txt
+@@ -326,7 +326,7 @@
+ LINK_INTERNAL(${LIB_NAME}     
+     OpenThreads
+ )
+-LINK_EXTERNAL(${LIB_NAME} ${CMAKE_THREAD_LIBS_INIT}    ${MATH_LIBRARY} )
++LINK_EXTERNAL(${LIB_NAME} ${CMAKE_THREAD_LIBS_INIT}    ${MATH_LIBRARY} -ldl )
+ LINK_CORELIB_DEFAULT(${LIB_NAME} ${CMAKE_THREAD_LIBS_INIT} ${MATH_LIBRARY} )
+ 
+ INCLUDE(ModuleInstall OPTIONAL)

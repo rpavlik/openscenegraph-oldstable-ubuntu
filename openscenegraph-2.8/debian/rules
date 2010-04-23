@@ -18,12 +18,10 @@
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
-include /usr/share/dpatch/dpatch.make
-
 ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
-	CFLAGS += -O0 -g
+	CFLAGS += -O0
 else
-	CFLAGS += -O3 -g
+	CFLAGS += -O2
 endif
 ifeq (,$(findstring nostrip,$(DEB_BUILD_OPTIONS)))
 	INSTALL_PROGRAM += -s
@@ -137,12 +135,16 @@ endif
 #OPENSCENEGRAPH_SOVERSION=55
 #OSG_VERSION=2.8.0
 #
-# OpenSceneGraph 2.8.1
+# OpenSceneGraph 2.8.1 and .2
 #
+#OPENTHREADS_SOVERSION=12
+#OPENSCENEGRAPH_SOVERSION=56
+#
+# OpenSceneGraph 2.8.3
 OPENTHREADS_SOVERSION=12
-OPENSCENEGRAPH_SOVERSION=56
+OPENSCENEGRAPH_SOVERSION=65
 
-build: patch build-stamp
+build: build-stamp
 build-stamp: configure-stamp 
 	dh_testdir
 
@@ -162,7 +164,7 @@ build-stamp: configure-stamp
 	cd build/osg ; ${MAKE} ${PARALLEL_OPTIONS} VERBOSE=1
 	touch build-stamp
 
-clean: clean-patched unpatch
+clean: clean-patched
 clean-patched:
 	dh_testdir
 	dh_testroot
@@ -189,6 +191,7 @@ MANAPPLICATIONS = \
 MANEXAMPLES = \
 	osg2cpp.1 \
 	osganimate.1 \
+	osganimationhardware.1 \
 	osganimationmakepath.1 \
 	osganimationnode.1 \
 	osganimationskinning.1 \
@@ -350,7 +353,7 @@ binary-arch: build install
 #	dh_installinfo
 	dh_installman -p openscenegraph ${MANPAGES}
 	dh_install --sourcedir=debian/tmp --fail-missing
-	dh_install -plibopenscenegraph56 debian/lintian/libopenscenegraph56 usr/share/lintian/overrides
+	dh_install -plibopenscenegraph65 debian/lintian/libopenscenegraph65 usr/share/lintian/overrides
 	dh_link
 	dh_strip
 	dh_compress

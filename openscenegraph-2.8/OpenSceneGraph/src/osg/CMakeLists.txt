@@ -25,6 +25,7 @@ SET(LIB_PUBLIC_HEADERS
     ${HEADER_PATH}/ApplicationUsage
     ${HEADER_PATH}/ArgumentParser
     ${HEADER_PATH}/Array
+    ${HEADER_PATH}/AudioStream
     ${HEADER_PATH}/AutoTransform
     ${HEADER_PATH}/Billboard
     ${HEADER_PATH}/BlendColor
@@ -137,6 +138,7 @@ SET(LIB_PUBLIC_HEADERS
     ${HEADER_PATH}/ShapeDrawable
     ${HEADER_PATH}/State
     ${HEADER_PATH}/StateAttribute
+    ${HEADER_PATH}/StateAttributeCallback
     ${HEADER_PATH}/StateSet
     ${HEADER_PATH}/Stats
     ${HEADER_PATH}/Stencil
@@ -193,6 +195,7 @@ ADD_LIBRARY(${LIB_NAME}
     ApplicationUsage.cpp
     ArgumentParser.cpp
     Array.cpp
+    AudioStream.cpp
     AutoTransform.cpp
     Billboard.cpp
     BlendColor.cpp
@@ -323,7 +326,7 @@ ADD_LIBRARY(${LIB_NAME}
 LINK_INTERNAL(${LIB_NAME}     
     OpenThreads
 )
-LINK_EXTERNAL(${LIB_NAME} ${CMAKE_THREAD_LIBS_INIT}    ${MATH_LIBRARY} )
+LINK_EXTERNAL(${LIB_NAME} ${CMAKE_THREAD_LIBS_INIT}    ${MATH_LIBRARY} -ldl )
 LINK_CORELIB_DEFAULT(${LIB_NAME} ${CMAKE_THREAD_LIBS_INIT} ${MATH_LIBRARY} )
 
 INCLUDE(ModuleInstall OPTIONAL)

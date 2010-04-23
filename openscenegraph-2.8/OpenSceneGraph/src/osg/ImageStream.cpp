@@ -32,7 +32,8 @@ ImageStream::ImageStream():
 ImageStream::ImageStream(const ImageStream& image,const CopyOp& copyop):
     Image(image,copyop),
     _status(image._status),
-    _loopingMode(image._loopingMode)
+    _loopingMode(image._loopingMode),
+    _audioStreams(image._audioStreams)
 {
 }
 

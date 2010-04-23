@@ -1,3 +1,16 @@
+openscenegraph (2.8.3-1) unstable; urgency=low
+
+  * New upstream release
+  * Switch to dpkg-source 3.0 (quilt) format
+  * Updated package descriptions
+  * Removed dependence from giflib-dev, doesn't seem to be there anymore
+  * Created a package for examples sources previously in openscenegraph binary
+    package, the sources of examples are quite big (4MiB+ and growing) and
+    architecture independent.
+  * Updated Doxygen configuration file (had some obsolete options).
+
+ -- Manuel A. Fernandez Montecelo <manuel.montezelo@gmail.com>  Thu, 22 Apr 2010 16:03:58 +0200
+
 openscenegraph (2.8.2-2) unstable; urgency=low
 
   * Fixed problem in armel, failing to build due to linking problems.
@@ -32,7 +45,7 @@ openscenegraph (2.8.2-1) unstable; urgency=low
   * Dropped patch (fixed upstream already in 2.8.1):
      - bug-497933.dpatch
 
- -- Manuel A. Fernandez Montecelo <manuel.montezelo@gmail.com>  Tue, 12 Dec 2009 21:25:40 +0100
+ -- Manuel A. Fernandez Montecelo <manuel.montezelo@gmail.com>  Sat, 12 Dec 2009 21:25:40 +0100
 
 openscenegraph (2.8.1-1.1) unstable; urgency=high
 

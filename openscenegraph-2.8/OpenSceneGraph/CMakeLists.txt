@@ -30,8 +30,10 @@ PROJECT(OpenSceneGraph)
 
 SET(OPENSCENEGRAPH_MAJOR_VERSION 2)
 SET(OPENSCENEGRAPH_MINOR_VERSION 8)
-SET(OPENSCENEGRAPH_PATCH_VERSION 2)
-SET(OPENSCENEGRAPH_SOVERSION 55)
+SET(OPENSCENEGRAPH_PATCH_VERSION 3)
+IF(NOT OPENSCENEGRAPH_SOVERSION)
+    SET(OPENSCENEGRAPH_SOVERSION 65)
+ENDIF(NOT OPENSCENEGRAPH_SOVERSION)
 
 # set to 0 when not a release candidate, non zero means that any generated 
 # svn tags will be treated as release candidates of given number
@@ -265,6 +267,8 @@ MARK_AS_ADVANCED(OSG_DISABLE_MSVC_WARNINGS)
 
 OPTION(OSG_USE_REF_PTR_IMPLICIT_OUTPUT_CONVERSION "Set to ON to use the ref_ptr<> T* operator() output conversion. " ON)
 
+OPTION(OSG_CPP_EXCEPTIONS_AVAILABLE "Set to OFF to disable compile of OSG components that use C++ exceptions." ON)
+
 ################################################################################
 # Set Config file
 
@@ -295,6 +299,7 @@ FIND_PACKAGE(Inventor)
 FIND_PACKAGE(Jasper)
 FIND_PACKAGE(OpenEXR)
 FIND_PACKAGE(COLLADA)
+FIND_PACKAGE(FBX)
 FIND_PACKAGE(ZLIB)
 FIND_PACKAGE(Xine)
 FIND_PACKAGE(OpenVRML)
@@ -304,7 +309,9 @@ FIND_PACKAGE(CURL)
 FIND_PACKAGE(ITK)
 FIND_PACKAGE(LibVNCServer)
 FIND_PACKAGE(OurDCMTK)
+FIND_PACKAGE(OpenAL)
 FIND_PACKAGE(XUL)
+FIND_PACKAGE(FFmpeg)
 
 #use pkg-config to find various modues
 INCLUDE(FindPkgConfig OPTIONAL)
@@ -772,14 +779,36 @@ IF(CMAKE_CPACK_COMMAND)
     ENDIF(BUILD_OSG_PACKAGES)
 ENDIF(CMAKE_CPACK_COMMAND)
 
-# Generate pkg-config configuration file
+# Generate pkg-config configuration files
 
-CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/packaging/pkgconfig/openscenegraph.pc.in
-        ${PROJECT_BINARY_DIR}/packaging/pkgconfig/openscenegraph.pc
+SET(PKGCONFIG_FILES
+  openscenegraph
+  openscenegraph-osg
+  openscenegraph-osgDB
+  openscenegraph-osgFX
+  openscenegraph-osgGA
+  openscenegraph-osgParticle
+  openscenegraph-osgSim
+  openscenegraph-osgText
+  openscenegraph-osgUtil
+  openscenegraph-osgTerrain
+  openscenegraph-osgManipulator
+  openscenegraph-osgViewer
+  openscenegraph-osgWidget
+  openscenegraph-osgShadow
+  openscenegraph-osgAnimation
+  openscenegraph-osgVolume
+  openscenegraph-osgIntrospection
+)
+
+FOREACH(PKGCONFIG_FILE ${PKGCONFIG_FILES})
+  CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/packaging/pkgconfig/${PKGCONFIG_FILE}.pc.in
+    ${PROJECT_BINARY_DIR}/packaging/pkgconfig/${PKGCONFIG_FILE}.pc
     @ONLY
     )
+  INSTALL(FILES ${PROJECT_BINARY_DIR}/packaging/pkgconfig/${PKGCONFIG_FILE}.pc DESTINATION lib${LIB_POSTFIX}/pkgconfig COMPONENT libopenscenegraph-dev)
+ENDFOREACH(PKGCONFIG_FILE)
 
-INSTALL(FILES ${PROJECT_BINARY_DIR}/packaging/pkgconfig/openscenegraph.pc DESTINATION lib${LIB_POSTFIX}/pkgconfig COMPONENT libopenscenegraph-dev)
 
 # Run this as late as possible so users can easier spot the message
 IF (${CMAKE_INSTALL_PREFIX} STREQUAL "/usr/local")

@@ -1,2 +1,1 @@
-usr/lib/libOpenThreads.so.2.4.0
-usr/lib/libOpenThreads.so.12
+usr/lib/libOpenThreads.so.*
