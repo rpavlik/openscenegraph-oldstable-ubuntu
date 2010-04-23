@@ -1,0 +1,114 @@
+Source: openscenegraph
+Section: devel
+Priority: optional
+Maintainer: Loic Dachary (OuoU) <loic@debian.org>
+Build-Depends: debhelper (>= 7.0.0), quilt, cmake, g++ (>= 3.3.0), libgif-dev, libjpeg-dev, libtiff-dev, lib3ds-dev, libfreetype6-dev, libpng12-dev, libcoin60-dev, libjasper-dev, libgdal-dev, libx11-dev, libxmu-dev, freeglut3-dev, ccache, libgl1-mesa-dev | libgl-dev, libglu-dev, doxygen, libxine-dev
+Standards-Version: 3.8.4
+Uploaders: Ola Lundqvist <opal@debian.org>
+Homepage: http://www.openscenegraph.org/
+
+Package: libopenthreads-dev
+Section: libdevel
+Architecture: any
+Depends: ${misc:Depends}, libopenthreads12 (= ${binary:Version})
+Description: Object-Oriented (OO) thread interface for C++, development files
+ This library is intended to provide a minimal & complete Object-Oriented (OO)
+ thread interface for C++ programmers, used primarily in OpenSceneGraph.  It is
+ loosely modeled on the Java thread API, and the POSIX Threads standards.
+ .
+ This package contains the development headers.
+
+Package: libopenthreads12
+Section: libs
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Conflicts: libopenthreads, libopenthreads2, libopenthreads3, libopenthreads1c2, libopenthreads11
+Description: Object-Oriented (OO) thread interface for C++, shared libs
+ This library is intended to provide a minimal & complete Object-Oriented (OO)
+ thread interface for C++ programmers, used primarily in OpenSceneGraph.  It is
+ loosely modeled on the Java thread API, and the POSIX Threads standards.
+ .
+ This package contains the shared libraries.
+
+Package: openthreads-doc
+Section: doc
+Architecture: all
+Depends: ${misc:Depends}
+Description: Object-Oriented (OO) thread interface for C++, documentation
+ This library is intended to provide a minimal & complete Object-Oriented (OO)
+ thread interface for C++ programmers, used primarily in OpenSceneGraph.  It is
+ loosely modeled on the Java thread API, and the POSIX Threads standards.
+ .
+ This package contains the documentation.
+
+Package: libopenscenegraph-dev
+Section: libdevel
+Architecture: any
+Depends: ${misc:Depends}, libopenthreads-dev, libgl1-mesa-dev | libgl-dev, libglu-dev, libopenscenegraph65 (= ${binary:Version})
+Suggests: openscenegraph-doc, openscenegraph-examples
+Description: 3D scene graph, development files
+ A portable, high level graphics toolkit for the development of high performance
+ graphics applications such as flight simulators, games, virtual reality or
+ scientific visualization.  Providing an object orientated framework on top of
+ OpenGL, it frees the developer from implementing and optimizing low level
+ graphics calls, and provide many additional utilities for rapid development of
+ graphics applications.
+ .
+ This package contains the development headers.
+
+Package: libopenscenegraph65
+Section: libs
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Conflicts: libopenscenegraph, libopenscenegraph2, libopenscenegraph3, libopenscenegraph1c2, libopenscenegraph7, libopenscenegraph55, libopenscenegraph56
+Description: 3D scene graph, shared libs
+ A portable, high level graphics toolkit for the development of high performance
+ graphics applications such as flight simulators, games, virtual reality or
+ scientific visualization.  Providing an object orientated framework on top of
+ OpenGL, it frees the developer from implementing and optimizing low level
+ graphics calls, and provide many additional utilities for rapid development of
+ graphics applications.
+ .
+ This package contains the shared libraries.
+
+Package: openscenegraph-doc
+Section: doc
+Architecture: all
+Depends: ${misc:Depends}
+Description: 3D scene graph, documentation
+ A portable, high level graphics toolkit for the development of high performance
+ graphics applications such as flight simulators, games, virtual reality or
+ scientific visualization.  Providing an object orientated framework on top of
+ OpenGL, it frees the developer from implementing and optimizing low level
+ graphics calls, and provide many additional utilities for rapid development of
+ graphics applications.
+ .
+ This package contains the documentation.
+
+Package: openscenegraph
+Section: devel
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: 3D scene graph, utilities and examples (binaries)
+ A portable, high level graphics toolkit for the development of high performance
+ graphics applications such as flight simulators, games, virtual reality or
+ scientific visualization.  Providing an object orientated framework on top of
+ OpenGL, it frees the developer from implementing and optimizing low level
+ graphics calls, and provide many additional utilities for rapid development of
+ graphics applications.
+ .
+ This package contains utilities and examples (binaries).
+
+Package: openscenegraph-examples
+Section: devel
+Architecture: all
+Depends: ${misc:Depends}
+Description: 3D scene graph, examples (sources)
+ A portable, high level graphics toolkit for the development of high performance
+ graphics applications such as flight simulators, games, virtual reality or
+ scientific visualization.  Providing an object orientated framework on top of
+ OpenGL, it frees the developer from implementing and optimizing low level
+ graphics calls, and provide many additional utilities for rapid development of
+ graphics applications.
+ .
+ This package contains examples (sources).
