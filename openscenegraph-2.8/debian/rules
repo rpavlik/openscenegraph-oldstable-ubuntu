@@ -18,6 +18,8 @@
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
+include /usr/share/dpatch/dpatch.make
+
 ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
 	CFLAGS += -O0
 else
@@ -141,10 +143,10 @@ endif
 #OPENSCENEGRAPH_SOVERSION=56
 #
 # OpenSceneGraph 2.8.3
-OPENTHREADS_SOVERSION=12
+OPENTHREADS_SOVERSION=13
 OPENSCENEGRAPH_SOVERSION=65
 
-build: build-stamp
+build: patch build-stamp
 build-stamp: configure-stamp 
 	dh_testdir
 
@@ -164,11 +166,14 @@ build-stamp: configure-stamp
 	cd build/osg ; ${MAKE} ${PARALLEL_OPTIONS} VERBOSE=1
 	touch build-stamp
 
-clean: clean-patched
+clean: clean-patched unpatch
 clean-patched:
 	dh_testdir
 	dh_testroot
 	rm -f build-stamp configure-stamp
+
+	# Upstream has a +x source file
+	chmod a-x OpenSceneGraph/examples/osgpointsprite/osgpointsprite.cpp
 
 	# Add here commands to clean up after the build process.
 	rm -fr build

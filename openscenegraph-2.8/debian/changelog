@@ -1,7 +1,6 @@
 openscenegraph (2.8.3-1) unstable; urgency=low
 
   * New upstream release
-  * Switch to dpkg-source 3.0 (quilt) format
   * Updated package descriptions
   * Removed dependence from giflib-dev, doesn't seem to be there anymore
   * Created a package for examples sources previously in openscenegraph binary
