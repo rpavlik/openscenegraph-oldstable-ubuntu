@@ -1,8 +1,9 @@
-Author: Alberto Luaces <aluaces@udc.es>
-Description: Missing -ldl so it fails to build with GNU binutils-gold (because of the default '--no-add-needed' behaviour).
+#! /bin/sh /usr/share/dpatch/dpatch-run
+
+@DPATCH@
 --- a/OpenSceneGraph/src/osg/CMakeLists.txt
 +++ b/OpenSceneGraph/src/osg/CMakeLists.txt
-@@ -326,7 +326,7 @@
+@@ -323,7 +323,7 @@
  LINK_INTERNAL(${LIB_NAME}     
      OpenThreads
  )

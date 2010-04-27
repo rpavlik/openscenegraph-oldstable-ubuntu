@@ -1,7 +1,9 @@
-Author: 
-Description: 
---- a/OpenSceneGraph/CMakeLists.txt
-+++ b/OpenSceneGraph/CMakeLists.txt
+#! /bin/sh /usr/share/dpatch/dpatch-run
+
+@DPATCH@
+diff -r 90a6b11aff0d openscenegraph-2.8/OpenSceneGraph/CMakeLists.txt
+--- a/OpenSceneGraph/CMakeLists.txt	Sun May 31 11:36:47 2009 +0200
++++ b/OpenSceneGraph/CMakeLists.txt	Sun May 31 11:57:43 2009 +0200
 @@ -31,7 +31,9 @@
  SET(OPENSCENEGRAPH_MAJOR_VERSION 2)
  SET(OPENSCENEGRAPH_MINOR_VERSION 8)
@@ -13,8 +15,9 @@ Description:
  
  # set to 0 when not a release candidate, non zero means that any generated 
  # svn tags will be treated as release candidates of given number
---- a/OpenSceneGraph/src/OpenThreads/CMakeLists.txt
-+++ b/OpenSceneGraph/src/OpenThreads/CMakeLists.txt
+diff -r 90a6b11aff0d openscenegraph-2.8/OpenSceneGraph/src/OpenThreads/CMakeLists.txt
+--- a/OpenSceneGraph/src/OpenThreads/CMakeLists.txt	Sun May 31 11:36:47 2009 +0200
++++ b/openscenegraph-2.8/OpenSceneGraph/src/OpenThreads/CMakeLists.txt	Sun May 31 11:57:43 2009 +0200
 @@ -5,7 +5,9 @@
  SET(OPENTHREADS_MAJOR_VERSION 2)
  SET(OPENTHREADS_MINOR_VERSION 4)

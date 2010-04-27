@@ -1,8 +1,10 @@
-Author: Alberto Luaces <aluaces@udc.es>
-Description: Split the .pc file into smaller chunks, one per OSG library. This way, programs linked to OSG won't have unneeded references as well.
---- a/OpenSceneGraph/CMakeLists.txt
-+++ b/OpenSceneGraph/CMakeLists.txt
-@@ -777,14 +777,36 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+
+@DPATCH@
+diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/CMakeLists.txt openscenegraph-2.8.2/OpenSceneGraph/CMakeLists.txt
+--- openscenegraph-2.8.2~/OpenSceneGraph/CMakeLists.txt	2009-07-28 08:02:27.000000000 +0200
++++ openscenegraph-2.8.2/OpenSceneGraph/CMakeLists.txt	2009-12-12 19:30:24.000000000 +0100
+@@ -772,14 +772,36 @@
      ENDIF(BUILD_OSG_PACKAGES)
  ENDIF(CMAKE_CPACK_COMMAND)
  
@@ -43,8 +45,9 @@ Description: Split the .pc file into smaller chunks, one per OSG library. This w
  
  # Run this as late as possible so users can easier spot the message
  IF (${CMAKE_INSTALL_PREFIX} STREQUAL "/usr/local")
---- /dev/null
-+++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osg.pc.in
+diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osg.pc.in openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osg.pc.in
+--- openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osg.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osg.pc.in	2009-12-12 19:30:24.000000000 +0100
 @@ -0,0 +1,14 @@
 +# pkg-config source file
 +
@@ -60,8 +63,9 @@ Description: Split the .pc file into smaller chunks, one per OSG library. This w
 +Conflicts:
 +Libs: -L${libdir} -losg
 +Cflags: -I${includedir}
---- /dev/null
-+++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgAnimation.pc.in
+diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgAnimation.pc.in openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgAnimation.pc.in
+--- openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgAnimation.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgAnimation.pc.in	2009-12-12 19:30:24.000000000 +0100
 @@ -0,0 +1,14 @@
 +# pkg-config source file
 +
@@ -77,8 +81,9 @@ Description: Split the .pc file into smaller chunks, one per OSG library. This w
 +Conflicts:
 +Libs: -L${libdir} -losgAnimation
 +Cflags: -I${includedir}
---- /dev/null
-+++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgDB.pc.in
+diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgDB.pc.in openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgDB.pc.in
+--- openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgDB.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgDB.pc.in	2009-12-12 19:30:24.000000000 +0100
 @@ -0,0 +1,14 @@
 +# pkg-config source file
 +
@@ -94,8 +99,9 @@ Description: Split the .pc file into smaller chunks, one per OSG library. This w
 +Conflicts:
 +Libs: -L${libdir} -losgDB
 +Cflags: -I${includedir}
---- /dev/null
-+++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgFX.pc.in
+diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgFX.pc.in openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgFX.pc.in
+--- openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgFX.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgFX.pc.in	2009-12-12 19:30:24.000000000 +0100
 @@ -0,0 +1,14 @@
 +# pkg-config source file
 +
@@ -111,8 +117,9 @@ Description: Split the .pc file into smaller chunks, one per OSG library. This w
 +Conflicts:
 +Libs: -L${libdir} -losgFX
 +Cflags: -I${includedir}
---- /dev/null
-+++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgGA.pc.in
+diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgGA.pc.in openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgGA.pc.in
+--- openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgGA.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgGA.pc.in	2009-12-12 19:30:24.000000000 +0100
 @@ -0,0 +1,14 @@
 +# pkg-config source file
 +
@@ -128,8 +135,9 @@ Description: Split the .pc file into smaller chunks, one per OSG library. This w
 +Conflicts:
 +Libs: -L${libdir} -losgGA
 +Cflags: -I${includedir}
---- /dev/null
-+++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgIntrospection.pc.in
+diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgIntrospection.pc.in openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgIntrospection.pc.in
+--- openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgIntrospection.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgIntrospection.pc.in	2009-12-12 19:30:24.000000000 +0100
 @@ -0,0 +1,14 @@
 +# pkg-config source file
 +
@@ -145,8 +153,9 @@ Description: Split the .pc file into smaller chunks, one per OSG library. This w
 +Conflicts:
 +Libs: -L${libdir} -losgIntrospection
 +Cflags: -I${includedir}
---- /dev/null
-+++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgManipulator.pc.in
+diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgManipulator.pc.in openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgManipulator.pc.in
+--- openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgManipulator.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgManipulator.pc.in	2009-12-12 19:30:24.000000000 +0100
 @@ -0,0 +1,14 @@
 +# pkg-config source file
 +
@@ -162,8 +171,9 @@ Description: Split the .pc file into smaller chunks, one per OSG library. This w
 +Conflicts:
 +Libs: -L${libdir} -losgManipulator
 +Cflags: -I${includedir}
---- /dev/null
-+++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgParticle.pc.in
+diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgParticle.pc.in openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgParticle.pc.in
+--- openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgParticle.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgParticle.pc.in	2009-12-12 19:30:24.000000000 +0100
 @@ -0,0 +1,14 @@
 +# pkg-config source file
 +
@@ -179,8 +189,9 @@ Description: Split the .pc file into smaller chunks, one per OSG library. This w
 +Conflicts:
 +Libs: -L${libdir} -losgParticle
 +Cflags: -I${includedir}
---- /dev/null
-+++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgShadow.pc.in
+diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgShadow.pc.in openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgShadow.pc.in
+--- openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgShadow.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgShadow.pc.in	2009-12-12 19:30:24.000000000 +0100
 @@ -0,0 +1,14 @@
 +# pkg-config source file
 +
@@ -196,8 +207,9 @@ Description: Split the .pc file into smaller chunks, one per OSG library. This w
 +Conflicts:
 +Libs: -L${libdir} -losgShadow
 +Cflags: -I${includedir}
---- /dev/null
-+++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgSim.pc.in
+diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgSim.pc.in openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgSim.pc.in
+--- openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgSim.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgSim.pc.in	2009-12-12 19:30:24.000000000 +0100
 @@ -0,0 +1,14 @@
 +# pkg-config source file
 +
@@ -213,8 +225,9 @@ Description: Split the .pc file into smaller chunks, one per OSG library. This w
 +Conflicts:
 +Libs: -L${libdir} -losgSim
 +Cflags: -I${includedir}
---- /dev/null
-+++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgTerrain.pc.in
+diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgTerrain.pc.in openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgTerrain.pc.in
+--- openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgTerrain.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgTerrain.pc.in	2009-12-12 19:30:24.000000000 +0100
 @@ -0,0 +1,14 @@
 +# pkg-config source file
 +
@@ -230,8 +243,9 @@ Description: Split the .pc file into smaller chunks, one per OSG library. This w
 +Conflicts:
 +Libs: -L${libdir} -losgTerrain
 +Cflags: -I${includedir}
---- /dev/null
-+++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgText.pc.in
+diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgText.pc.in openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgText.pc.in
+--- openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgText.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgText.pc.in	2009-12-12 19:30:24.000000000 +0100
 @@ -0,0 +1,14 @@
 +# pkg-config source file
 +
@@ -247,8 +261,9 @@ Description: Split the .pc file into smaller chunks, one per OSG library. This w
 +Conflicts:
 +Libs: -L${libdir} -losgText
 +Cflags: -I${includedir}
---- /dev/null
-+++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgUtil.pc.in
+diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgUtil.pc.in openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgUtil.pc.in
+--- openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgUtil.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgUtil.pc.in	2009-12-12 19:30:24.000000000 +0100
 @@ -0,0 +1,14 @@
 +# pkg-config source file
 +
@@ -264,8 +279,9 @@ Description: Split the .pc file into smaller chunks, one per OSG library. This w
 +Conflicts:
 +Libs: -L${libdir} -losgUtil
 +Cflags: -I${includedir}
---- /dev/null
-+++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgViewer.pc.in
+diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgViewer.pc.in openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgViewer.pc.in
+--- openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgViewer.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgViewer.pc.in	2009-12-12 19:30:24.000000000 +0100
 @@ -0,0 +1,14 @@
 +# pkg-config source file
 +
@@ -281,8 +297,9 @@ Description: Split the .pc file into smaller chunks, one per OSG library. This w
 +Conflicts:
 +Libs: -L${libdir} -losgViewer
 +Cflags: -I${includedir}
---- /dev/null
-+++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgVolume.pc.in
+diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgVolume.pc.in openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgVolume.pc.in
+--- openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgVolume.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgVolume.pc.in	2009-12-12 19:30:24.000000000 +0100
 @@ -0,0 +1,14 @@
 +# pkg-config source file
 +
@@ -298,8 +315,9 @@ Description: Split the .pc file into smaller chunks, one per OSG library. This w
 +Conflicts:
 +Libs: -L${libdir} -losgVolume
 +Cflags: -I${includedir}
---- /dev/null
-+++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgWidget.pc.in
+diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgWidget.pc.in openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgWidget.pc.in
+--- openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgWidget.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgWidget.pc.in	2009-12-12 19:30:24.000000000 +0100
 @@ -0,0 +1,14 @@
 +# pkg-config source file
 +

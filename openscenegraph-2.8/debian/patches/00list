@@ -1,0 +1,3 @@
+bug-555869-ftbfs_with_binutils_gold.dpatch
+bug-528229.dpatch
+override-soversions.dpatch
