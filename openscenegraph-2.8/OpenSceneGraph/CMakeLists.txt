@@ -31,9 +31,7 @@ PROJECT(OpenSceneGraph)
 SET(OPENSCENEGRAPH_MAJOR_VERSION 2)
 SET(OPENSCENEGRAPH_MINOR_VERSION 8)
 SET(OPENSCENEGRAPH_PATCH_VERSION 3)
-IF(NOT OPENSCENEGRAPH_SOVERSION)
-    SET(OPENSCENEGRAPH_SOVERSION 65)
-ENDIF(NOT OPENSCENEGRAPH_SOVERSION)
+SET(OPENSCENEGRAPH_SOVERSION 65)
 
 # set to 0 when not a release candidate, non zero means that any generated 
 # svn tags will be treated as release candidates of given number
@@ -779,36 +777,14 @@ IF(CMAKE_CPACK_COMMAND)
     ENDIF(BUILD_OSG_PACKAGES)
 ENDIF(CMAKE_CPACK_COMMAND)
 
-# Generate pkg-config configuration files
+# Generate pkg-config configuration file
 
-SET(PKGCONFIG_FILES
-  openscenegraph
-  openscenegraph-osg
-  openscenegraph-osgDB
-  openscenegraph-osgFX
-  openscenegraph-osgGA
-  openscenegraph-osgParticle
-  openscenegraph-osgSim
-  openscenegraph-osgText
-  openscenegraph-osgUtil
-  openscenegraph-osgTerrain
-  openscenegraph-osgManipulator
-  openscenegraph-osgViewer
-  openscenegraph-osgWidget
-  openscenegraph-osgShadow
-  openscenegraph-osgAnimation
-  openscenegraph-osgVolume
-  openscenegraph-osgIntrospection
-)
-
-FOREACH(PKGCONFIG_FILE ${PKGCONFIG_FILES})
-  CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/packaging/pkgconfig/${PKGCONFIG_FILE}.pc.in
-    ${PROJECT_BINARY_DIR}/packaging/pkgconfig/${PKGCONFIG_FILE}.pc
+CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/packaging/pkgconfig/openscenegraph.pc.in
+        ${PROJECT_BINARY_DIR}/packaging/pkgconfig/openscenegraph.pc
     @ONLY
     )
-  INSTALL(FILES ${PROJECT_BINARY_DIR}/packaging/pkgconfig/${PKGCONFIG_FILE}.pc DESTINATION lib${LIB_POSTFIX}/pkgconfig COMPONENT libopenscenegraph-dev)
-ENDFOREACH(PKGCONFIG_FILE)
 
+INSTALL(FILES ${PROJECT_BINARY_DIR}/packaging/pkgconfig/openscenegraph.pc DESTINATION lib${LIB_POSTFIX}/pkgconfig COMPONENT libopenscenegraph-dev)
 
 # Run this as late as possible so users can easier spot the message
 IF (${CMAKE_INSTALL_PREFIX} STREQUAL "/usr/local")
