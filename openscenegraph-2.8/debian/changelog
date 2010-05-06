@@ -1,3 +1,17 @@
+openscenegraph (2.8.3-3) unstable; urgency=low
+
+  * Added README.source. Thanks Manuel Montecelo.
+  * Removed FindGDAL.cmake file supplied by upstream since it does not
+    detect current libgdal1-1.6.0. The script provided by CMake works
+    fine.
+  * Removed openthreads-doc since OpenThreads documentation is shared with
+    OpenSceneGraph's, hence this package was empty.
+  * Now ccache handling is being done automatically by CMake.
+  * Drop conflict dependencies with previous versions to let them coexist
+    with current ones (Closes: #580079 #580081).
+
+ -- Alberto Luaces <alberto@udc.es>  Mon, 03 May 2010 21:42:01 +0200
+
 openscenegraph (2.8.3-2) unstable; urgency=low
 
   * Added missing conflict dependency with libopenthreads12 to clear

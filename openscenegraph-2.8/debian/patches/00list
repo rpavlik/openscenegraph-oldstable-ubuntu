@@ -1,3 +1,5 @@
 bug-555869-ftbfs_with_binutils_gold.dpatch
 bug-528229.dpatch
 override-soversions.dpatch
+remove-broken-FindGDAL.dpatch
+bug-580081-change-openthreads-version.dpatch

@@ -30,12 +30,6 @@ ifeq (,$(findstring nostrip,$(DEB_BUILD_OPTIONS)))
 endif
 # Default to g++
 CXX ?= g++
-ifeq (ccache,$(findstring ccache,$(DEB_BUILD_OPTIONS)))
-	CCACHE = /usr/lib/ccache/g++
-else
-	# Full path to make ccache happy
-	CCACHE = $(shell which $(CXX))
-endif
 
 # Detect parallel builds.
 ifneq (,$(findstring parallel,$(DEB_BUILD_OPTIONS)))
