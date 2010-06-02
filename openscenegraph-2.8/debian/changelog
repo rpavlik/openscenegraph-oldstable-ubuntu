@@ -1,3 +1,9 @@
+openscenegraph (2.8.3-4) unstable; urgency=low
+
+  * re-submit because of incorrect libtiff5 dependency in the -3 upload
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Wed, 02 Jun 2010 10:55:06 +0200
+
 openscenegraph (2.8.3-3) unstable; urgency=low
 
   * Added README.source. Thanks Manuel Montecelo.
