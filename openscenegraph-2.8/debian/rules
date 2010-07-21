@@ -67,7 +67,7 @@ ARCH_CXX_FLAGS=${ARCH_C_FLAGS}
 endif
 
 # export COMPILE_INTROSPECTION=ON for the first if statement when that works.
-ifeq (i386,$(DEB_BUILD_ARCH))
+ifneq (,$(strip $(filter i386 amd64 kfreebsd-i386 kfreebsd-amd64,$(DEB_BUILD_ARCH))))
 define INTROSPECTION
         binutils_version=$$(perl -ne 'if((/^Package: binutils$$/ .. /^Version:/) && /^Version: (.*)/) { print "$$1\n"; }' < /var/lib/dpkg/available) ; \
         if dpkg --compare-versions $${binutils_version} '>=' 2.17 ; then \
