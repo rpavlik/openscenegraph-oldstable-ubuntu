@@ -1,10 +1,10 @@
 #! /bin/sh /usr/share/dpatch/dpatch-run
 
 @DPATCH@
-diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/CMakeLists.txt openscenegraph-2.8.2/OpenSceneGraph/CMakeLists.txt
---- openscenegraph-2.8.2~/OpenSceneGraph/CMakeLists.txt	2009-07-28 08:02:27.000000000 +0200
-+++ openscenegraph-2.8.2/OpenSceneGraph/CMakeLists.txt	2009-12-12 19:30:24.000000000 +0100
-@@ -772,14 +772,36 @@
+diff -urNad '--exclude=CVS' '--exclude=.svn' '--exclude=.git' '--exclude=.arch' '--exclude=.hg' '--exclude=_darcs' '--exclude=.bzr' openscenegraph-2.8.3~/OpenSceneGraph/CMakeLists.txt openscenegraph-2.8.3/OpenSceneGraph/CMakeLists.txt
+--- openscenegraph-2.8.3~/OpenSceneGraph/CMakeLists.txt	2010-07-21 10:58:09.000000000 +0200
++++ openscenegraph-2.8.3/OpenSceneGraph/CMakeLists.txt	2010-07-21 11:11:52.000000000 +0200
+@@ -777,14 +777,39 @@
      ENDIF(BUILD_OSG_PACKAGES)
  ENDIF(CMAKE_CPACK_COMMAND)
  
@@ -45,10 +45,10 @@ diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/CMakeLists.txt openscenegraph-2
  
  # Run this as late as possible so users can easier spot the message
  IF (${CMAKE_INSTALL_PREFIX} STREQUAL "/usr/local")
-diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osg.pc.in openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osg.pc.in
---- openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osg.pc.in	1970-01-01 01:00:00.000000000 +0100
-+++ openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osg.pc.in	2009-12-12 19:30:24.000000000 +0100
-@@ -0,0 +1,14 @@
+diff -urNad '--exclude=CVS' '--exclude=.svn' '--exclude=.git' '--exclude=.arch' '--exclude=.hg' '--exclude=_darcs' '--exclude=.bzr' openscenegraph-2.8.3~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osg.pc.in openscenegraph-2.8.3/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osg.pc.in
+--- openscenegraph-2.8.3~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osg.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ openscenegraph-2.8.3/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osg.pc.in	2010-07-21 11:02:46.000000000 +0200
+@@ -0,0 +1,15 @@
 +# pkg-config source file
 +
 +prefix=@CMAKE_INSTALL_PREFIX@
@@ -61,11 +61,12 @@ diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegr
 +Version: @OPENSCENEGRAPH_VERSION@
 +Requires: openthreads
 +Conflicts:
++Libs.private: /usr/lib/libGLU.so /usr/lib/libGL.so /usr/lib/libSM.so /usr/lib/libICE.so /usr/lib/libX11.so /usr/lib/libXext.so
 +Libs: -L${libdir} -losg
 +Cflags: -I${includedir}
-diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgAnimation.pc.in openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgAnimation.pc.in
---- openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgAnimation.pc.in	1970-01-01 01:00:00.000000000 +0100
-+++ openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgAnimation.pc.in	2009-12-12 19:30:24.000000000 +0100
+diff -urNad '--exclude=CVS' '--exclude=.svn' '--exclude=.git' '--exclude=.arch' '--exclude=.hg' '--exclude=_darcs' '--exclude=.bzr' openscenegraph-2.8.3~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgAnimation.pc.in openscenegraph-2.8.3/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgAnimation.pc.in
+--- openscenegraph-2.8.3~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgAnimation.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ openscenegraph-2.8.3/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgAnimation.pc.in	2010-07-21 11:02:04.000000000 +0200
 @@ -0,0 +1,14 @@
 +# pkg-config source file
 +
@@ -81,9 +82,9 @@ diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegr
 +Conflicts:
 +Libs: -L${libdir} -losgAnimation
 +Cflags: -I${includedir}
-diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgDB.pc.in openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgDB.pc.in
---- openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgDB.pc.in	1970-01-01 01:00:00.000000000 +0100
-+++ openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgDB.pc.in	2009-12-12 19:30:24.000000000 +0100
+diff -urNad '--exclude=CVS' '--exclude=.svn' '--exclude=.git' '--exclude=.arch' '--exclude=.hg' '--exclude=_darcs' '--exclude=.bzr' openscenegraph-2.8.3~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgDB.pc.in openscenegraph-2.8.3/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgDB.pc.in
+--- openscenegraph-2.8.3~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgDB.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ openscenegraph-2.8.3/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgDB.pc.in	2010-07-21 11:02:04.000000000 +0200
 @@ -0,0 +1,14 @@
 +# pkg-config source file
 +
@@ -99,9 +100,9 @@ diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegr
 +Conflicts:
 +Libs: -L${libdir} -losgDB
 +Cflags: -I${includedir}
-diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgFX.pc.in openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgFX.pc.in
---- openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgFX.pc.in	1970-01-01 01:00:00.000000000 +0100
-+++ openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgFX.pc.in	2009-12-12 19:30:24.000000000 +0100
+diff -urNad '--exclude=CVS' '--exclude=.svn' '--exclude=.git' '--exclude=.arch' '--exclude=.hg' '--exclude=_darcs' '--exclude=.bzr' openscenegraph-2.8.3~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgFX.pc.in openscenegraph-2.8.3/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgFX.pc.in
+--- openscenegraph-2.8.3~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgFX.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ openscenegraph-2.8.3/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgFX.pc.in	2010-07-21 11:02:04.000000000 +0200
 @@ -0,0 +1,14 @@
 +# pkg-config source file
 +
@@ -117,9 +118,9 @@ diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegr
 +Conflicts:
 +Libs: -L${libdir} -losgFX
 +Cflags: -I${includedir}
-diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgGA.pc.in openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgGA.pc.in
---- openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgGA.pc.in	1970-01-01 01:00:00.000000000 +0100
-+++ openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgGA.pc.in	2009-12-12 19:30:24.000000000 +0100
+diff -urNad '--exclude=CVS' '--exclude=.svn' '--exclude=.git' '--exclude=.arch' '--exclude=.hg' '--exclude=_darcs' '--exclude=.bzr' openscenegraph-2.8.3~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgGA.pc.in openscenegraph-2.8.3/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgGA.pc.in
+--- openscenegraph-2.8.3~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgGA.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ openscenegraph-2.8.3/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgGA.pc.in	2010-07-21 11:02:04.000000000 +0200
 @@ -0,0 +1,14 @@
 +# pkg-config source file
 +
@@ -135,9 +136,9 @@ diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegr
 +Conflicts:
 +Libs: -L${libdir} -losgGA
 +Cflags: -I${includedir}
-diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgIntrospection.pc.in openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgIntrospection.pc.in
---- openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgIntrospection.pc.in	1970-01-01 01:00:00.000000000 +0100
-+++ openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgIntrospection.pc.in	2009-12-12 19:30:24.000000000 +0100
+diff -urNad '--exclude=CVS' '--exclude=.svn' '--exclude=.git' '--exclude=.arch' '--exclude=.hg' '--exclude=_darcs' '--exclude=.bzr' openscenegraph-2.8.3~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgIntrospection.pc.in openscenegraph-2.8.3/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgIntrospection.pc.in
+--- openscenegraph-2.8.3~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgIntrospection.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ openscenegraph-2.8.3/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgIntrospection.pc.in	2010-07-21 11:02:04.000000000 +0200
 @@ -0,0 +1,14 @@
 +# pkg-config source file
 +
@@ -153,9 +154,9 @@ diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegr
 +Conflicts:
 +Libs: -L${libdir} -losgIntrospection
 +Cflags: -I${includedir}
-diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgManipulator.pc.in openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgManipulator.pc.in
---- openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgManipulator.pc.in	1970-01-01 01:00:00.000000000 +0100
-+++ openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgManipulator.pc.in	2009-12-12 19:30:24.000000000 +0100
+diff -urNad '--exclude=CVS' '--exclude=.svn' '--exclude=.git' '--exclude=.arch' '--exclude=.hg' '--exclude=_darcs' '--exclude=.bzr' openscenegraph-2.8.3~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgManipulator.pc.in openscenegraph-2.8.3/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgManipulator.pc.in
+--- openscenegraph-2.8.3~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgManipulator.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ openscenegraph-2.8.3/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgManipulator.pc.in	2010-07-21 11:02:04.000000000 +0200
 @@ -0,0 +1,14 @@
 +# pkg-config source file
 +
@@ -171,9 +172,9 @@ diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegr
 +Conflicts:
 +Libs: -L${libdir} -losgManipulator
 +Cflags: -I${includedir}
-diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgParticle.pc.in openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgParticle.pc.in
---- openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgParticle.pc.in	1970-01-01 01:00:00.000000000 +0100
-+++ openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgParticle.pc.in	2009-12-12 19:30:24.000000000 +0100
+diff -urNad '--exclude=CVS' '--exclude=.svn' '--exclude=.git' '--exclude=.arch' '--exclude=.hg' '--exclude=_darcs' '--exclude=.bzr' openscenegraph-2.8.3~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgParticle.pc.in openscenegraph-2.8.3/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgParticle.pc.in
+--- openscenegraph-2.8.3~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgParticle.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ openscenegraph-2.8.3/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgParticle.pc.in	2010-07-21 11:02:04.000000000 +0200
 @@ -0,0 +1,14 @@
 +# pkg-config source file
 +
@@ -189,9 +190,9 @@ diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegr
 +Conflicts:
 +Libs: -L${libdir} -losgParticle
 +Cflags: -I${includedir}
-diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgShadow.pc.in openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgShadow.pc.in
---- openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgShadow.pc.in	1970-01-01 01:00:00.000000000 +0100
-+++ openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgShadow.pc.in	2009-12-12 19:30:24.000000000 +0100
+diff -urNad '--exclude=CVS' '--exclude=.svn' '--exclude=.git' '--exclude=.arch' '--exclude=.hg' '--exclude=_darcs' '--exclude=.bzr' openscenegraph-2.8.3~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgShadow.pc.in openscenegraph-2.8.3/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgShadow.pc.in
+--- openscenegraph-2.8.3~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgShadow.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ openscenegraph-2.8.3/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgShadow.pc.in	2010-07-21 11:02:04.000000000 +0200
 @@ -0,0 +1,14 @@
 +# pkg-config source file
 +
@@ -207,9 +208,9 @@ diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegr
 +Conflicts:
 +Libs: -L${libdir} -losgShadow
 +Cflags: -I${includedir}
-diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgSim.pc.in openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgSim.pc.in
---- openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgSim.pc.in	1970-01-01 01:00:00.000000000 +0100
-+++ openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgSim.pc.in	2009-12-12 19:30:24.000000000 +0100
+diff -urNad '--exclude=CVS' '--exclude=.svn' '--exclude=.git' '--exclude=.arch' '--exclude=.hg' '--exclude=_darcs' '--exclude=.bzr' openscenegraph-2.8.3~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgSim.pc.in openscenegraph-2.8.3/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgSim.pc.in
+--- openscenegraph-2.8.3~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgSim.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ openscenegraph-2.8.3/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgSim.pc.in	2010-07-21 11:02:04.000000000 +0200
 @@ -0,0 +1,14 @@
 +# pkg-config source file
 +
@@ -225,9 +226,9 @@ diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegr
 +Conflicts:
 +Libs: -L${libdir} -losgSim
 +Cflags: -I${includedir}
-diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgTerrain.pc.in openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgTerrain.pc.in
---- openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgTerrain.pc.in	1970-01-01 01:00:00.000000000 +0100
-+++ openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgTerrain.pc.in	2009-12-12 19:30:24.000000000 +0100
+diff -urNad '--exclude=CVS' '--exclude=.svn' '--exclude=.git' '--exclude=.arch' '--exclude=.hg' '--exclude=_darcs' '--exclude=.bzr' openscenegraph-2.8.3~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgTerrain.pc.in openscenegraph-2.8.3/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgTerrain.pc.in
+--- openscenegraph-2.8.3~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgTerrain.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ openscenegraph-2.8.3/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgTerrain.pc.in	2010-07-21 11:02:04.000000000 +0200
 @@ -0,0 +1,14 @@
 +# pkg-config source file
 +
@@ -243,9 +244,9 @@ diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegr
 +Conflicts:
 +Libs: -L${libdir} -losgTerrain
 +Cflags: -I${includedir}
-diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgText.pc.in openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgText.pc.in
---- openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgText.pc.in	1970-01-01 01:00:00.000000000 +0100
-+++ openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgText.pc.in	2009-12-12 19:30:24.000000000 +0100
+diff -urNad '--exclude=CVS' '--exclude=.svn' '--exclude=.git' '--exclude=.arch' '--exclude=.hg' '--exclude=_darcs' '--exclude=.bzr' openscenegraph-2.8.3~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgText.pc.in openscenegraph-2.8.3/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgText.pc.in
+--- openscenegraph-2.8.3~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgText.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ openscenegraph-2.8.3/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgText.pc.in	2010-07-21 11:02:04.000000000 +0200
 @@ -0,0 +1,14 @@
 +# pkg-config source file
 +
@@ -261,9 +262,9 @@ diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegr
 +Conflicts:
 +Libs: -L${libdir} -losgText
 +Cflags: -I${includedir}
-diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgUtil.pc.in openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgUtil.pc.in
---- openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgUtil.pc.in	1970-01-01 01:00:00.000000000 +0100
-+++ openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgUtil.pc.in	2009-12-12 19:30:24.000000000 +0100
+diff -urNad '--exclude=CVS' '--exclude=.svn' '--exclude=.git' '--exclude=.arch' '--exclude=.hg' '--exclude=_darcs' '--exclude=.bzr' openscenegraph-2.8.3~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgUtil.pc.in openscenegraph-2.8.3/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgUtil.pc.in
+--- openscenegraph-2.8.3~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgUtil.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ openscenegraph-2.8.3/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgUtil.pc.in	2010-07-21 11:02:04.000000000 +0200
 @@ -0,0 +1,14 @@
 +# pkg-config source file
 +
@@ -279,9 +280,9 @@ diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegr
 +Conflicts:
 +Libs: -L${libdir} -losgUtil
 +Cflags: -I${includedir}
-diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgViewer.pc.in openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgViewer.pc.in
---- openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgViewer.pc.in	1970-01-01 01:00:00.000000000 +0100
-+++ openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgViewer.pc.in	2009-12-12 19:30:24.000000000 +0100
+diff -urNad '--exclude=CVS' '--exclude=.svn' '--exclude=.git' '--exclude=.arch' '--exclude=.hg' '--exclude=_darcs' '--exclude=.bzr' openscenegraph-2.8.3~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgViewer.pc.in openscenegraph-2.8.3/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgViewer.pc.in
+--- openscenegraph-2.8.3~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgViewer.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ openscenegraph-2.8.3/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgViewer.pc.in	2010-07-21 11:02:04.000000000 +0200
 @@ -0,0 +1,14 @@
 +# pkg-config source file
 +
@@ -297,9 +298,9 @@ diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegr
 +Conflicts:
 +Libs: -L${libdir} -losgViewer
 +Cflags: -I${includedir}
-diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgVolume.pc.in openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgVolume.pc.in
---- openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgVolume.pc.in	1970-01-01 01:00:00.000000000 +0100
-+++ openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgVolume.pc.in	2009-12-12 19:30:24.000000000 +0100
+diff -urNad '--exclude=CVS' '--exclude=.svn' '--exclude=.git' '--exclude=.arch' '--exclude=.hg' '--exclude=_darcs' '--exclude=.bzr' openscenegraph-2.8.3~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgVolume.pc.in openscenegraph-2.8.3/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgVolume.pc.in
+--- openscenegraph-2.8.3~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgVolume.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ openscenegraph-2.8.3/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgVolume.pc.in	2010-07-21 11:02:04.000000000 +0200
 @@ -0,0 +1,14 @@
 +# pkg-config source file
 +
@@ -315,9 +316,9 @@ diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegr
 +Conflicts:
 +Libs: -L${libdir} -losgVolume
 +Cflags: -I${includedir}
-diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgWidget.pc.in openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgWidget.pc.in
---- openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgWidget.pc.in	1970-01-01 01:00:00.000000000 +0100
-+++ openscenegraph-2.8.2/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgWidget.pc.in	2009-12-12 19:30:24.000000000 +0100
+diff -urNad '--exclude=CVS' '--exclude=.svn' '--exclude=.git' '--exclude=.arch' '--exclude=.hg' '--exclude=_darcs' '--exclude=.bzr' openscenegraph-2.8.3~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgWidget.pc.in openscenegraph-2.8.3/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgWidget.pc.in
+--- openscenegraph-2.8.3~/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgWidget.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ openscenegraph-2.8.3/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgWidget.pc.in	2010-07-21 11:02:04.000000000 +0200
 @@ -0,0 +1,14 @@
 +# pkg-config source file
 +
@@ -333,3 +334,24 @@ diff -urNad openscenegraph-2.8.2~/OpenSceneGraph/packaging/pkgconfig/openscenegr
 +Conflicts:
 +Libs: -L${libdir} -losgWidget
 +Cflags: -I${includedir}
+diff -urNad '--exclude=CVS' '--exclude=.svn' '--exclude=.git' '--exclude=.arch' '--exclude=.hg' '--exclude=_darcs' '--exclude=.bzr' openscenegraph-2.8.3~/OpenSceneGraph/packaging/pkgconfig/openscenegraph.pc.in openscenegraph-2.8.3/OpenSceneGraph/packaging/pkgconfig/openscenegraph.pc.in
+--- openscenegraph-2.8.3~/OpenSceneGraph/packaging/pkgconfig/openscenegraph.pc.in	2009-01-27 16:34:28.000000000 +0100
++++ openscenegraph-2.8.3/OpenSceneGraph/packaging/pkgconfig/openscenegraph.pc.in	2010-07-21 11:02:31.000000000 +0200
+@@ -10,5 +10,6 @@
+ Version: @OPENSCENEGRAPH_VERSION@
+ Requires: openthreads
+ Conflicts:
++Libs.private: /usr/lib/libGLU.so /usr/lib/libGL.so /usr/lib/libSM.so /usr/lib/libICE.so /usr/lib/libX11.so /usr/lib/libXext.so
+ Libs: -L${libdir} -losg -losgDB -losgFX -losgGA -losgParticle -losgSim -losgText -losgUtil -losgTerrain -losgManipulator -losgViewer -losgWidget -losgShadow -losgAnimation -losgVolume
+ Cflags: -I${includedir}
+diff -urNad '--exclude=CVS' '--exclude=.svn' '--exclude=.git' '--exclude=.arch' '--exclude=.hg' '--exclude=_darcs' '--exclude=.bzr' openscenegraph-2.8.3~/OpenSceneGraph/packaging/pkgconfig/openthreads.pc.in openscenegraph-2.8.3/OpenSceneGraph/packaging/pkgconfig/openthreads.pc.in
+--- openscenegraph-2.8.3~/OpenSceneGraph/packaging/pkgconfig/openthreads.pc.in	2009-01-27 16:34:28.000000000 +0100
++++ openscenegraph-2.8.3/OpenSceneGraph/packaging/pkgconfig/openthreads.pc.in	2010-07-21 11:04:50.000000000 +0200
+@@ -10,5 +10,5 @@
+ Version: @OPENTHREADS_VERSION@
+ Requires:
+ Conflicts:
+-Libs: -L${libdir} -lOpenThreads
+-Cflags: -I${includedir}
++Libs: -L${libdir} -lOpenThreads -pthread
++Cflags: -I${includedir} -pthread

@@ -144,7 +144,24 @@ build: patch build-stamp
 build-stamp: configure-stamp 
 	dh_testdir
 
-	mkdir -p build/osg ; cd build/osg ; ${SETAFFINITY} ${INTROSPECTION} cmake --debug-output \
+
+# Static
+
+	mkdir -p build/osgstatic ; cd build/osgstatic ; ${SETAFFINITY} cmake --debug-output \
+		-D CMAKE_BUILD_TYPE:STRING=RelWithDebInfo \
+		-D CMAKE_CXX_FLAGS_RELWITHDEBINFO="${CFLAGS} ${ARCH_CXX_FLAGS}" \
+		-D CMAKE_C_FLAGS_RELWITHDEBINFO="${CFLAGS} ${ARCH_C_FLAGS}" \
+		-D CMAKE_INSTALL_PREFIX:PATH=/ \
+		-D DYNAMIC_OPENTHREADS:BOOL=OFF \
+		-D DYNAMIC_OPENSCENEGRAPH:BOOL=OFF \
+		-D LIB_POSTFIX="" \
+		${LINKER_FLAGS} \
+		../../${OSG}
+	cd build/osgstatic ; ${MAKE} ${PARALLEL_OPTIONS} VERBOSE=1
+
+# Dynamic + osgIntrospection
+
+	mkdir -p build/osg; cd build/osg ; ${SETAFFINITY} ${INTROSPECTION} cmake --debug-output \
 		-D OPENTHREADS_SOVERSION:STRING=${OPENTHREADS_SOVERSION} \
 		-D OPENSCENEGRAPH_SOVERSION:STRING=${OPENSCENEGRAPH_SOVERSION} \
 		-D CMAKE_BUILD_TYPE:STRING=RelWithDebInfo \
@@ -157,6 +174,7 @@ build-stamp: configure-stamp
 		${LINKER_FLAGS} \
 		../../${OSG}
 	cd build/osg ; ${MAKE} ${PARALLEL_OPTIONS} VERBOSE=1
+
 	touch build-stamp
 
 clean: clean-patched unpatch
@@ -319,6 +337,7 @@ install: build
 
 	# Add here commands to install the package into debian/tmp
 	mkdir -p $(CURDIR)/debian/tmp/usr
+	$(MAKE) -C build/osgstatic DESTDIR=$(CURDIR)/debian/tmp/usr install
 	$(MAKE) -C build/osg DESTDIR=$(CURDIR)/debian/tmp/usr install
 	mkdir -p $(CURDIR)/debian/tmp/usr/bin
 	-mv $(CURDIR)/debian/tmp/usr/share/OpenSceneGraph/bin/* $(CURDIR)/debian/tmp/usr/bin

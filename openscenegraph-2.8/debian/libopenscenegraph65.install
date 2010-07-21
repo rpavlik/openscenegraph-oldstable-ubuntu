@@ -1,2 +1,2 @@
 usr/lib/libosg*.so.*
-usr/lib/osgPlugins-*
+usr/lib/osgPlugins-*/*.so
