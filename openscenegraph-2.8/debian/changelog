@@ -1,3 +1,11 @@
+openscenegraph (2.8.3-5) unstable; urgency=low
+
+  * ffmpeg plugin enabled.
+  * Build osgIntrospection on {,kfreebsd}-{amd64,i386} architectures (Closes: #586256).
+  * Also build static libraries (Closes: #517273).
+
+ -- Alberto Luaces <aluaces@udc.es>  Wed, 21 Jul 2010 11:19:33 +0200
+
 openscenegraph (2.8.3-4) unstable; urgency=low
 
   * re-submit because of incorrect libtiff5 dependency in the -3 upload
