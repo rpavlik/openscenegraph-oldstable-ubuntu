@@ -1,7 +1,19 @@
+openscenegraph (2.8.3-6) unstable; urgency=low
+
+  * Bump Standards-Version to 3.9.1 (no changes needed)
+  * Added Vcs fields to the control file
+  * Put myself in the Uploaders field, add DM-Upload-Allowed: yes
+  * Quelling lintian warnings:
+    - debian-changelog-line-too-long (line 2)
+    - out-of-date-standards-version (bumped from 3.8.4 to 3.9.1)
+
+ -- Manuel A. Fernandez Montecelo <manuel.montezelo@gmail.com>  Thu, 26 Aug 2010 12:28:06 +0200
+
 openscenegraph (2.8.3-5) unstable; urgency=low
 
   * ffmpeg plugin enabled.
-  * Build osgIntrospection on {,kfreebsd}-{amd64,i386} architectures (Closes: #586256).
+  * Build osgIntrospection on {,kfreebsd}-{amd64,i386} architectures
+    (Closes: #586256).
   * Also build static libraries (Closes: #517273).
 
  -- Alberto Luaces <aluaces@udc.es>  Wed, 21 Jul 2010 11:19:33 +0200
