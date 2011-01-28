@@ -1,0 +1,23 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## disable-zip-plugin-with-embedded-zlib.dpatch by  <alberto@pantallon>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: No description.
+
+@DPATCH@
+diff -urNad '--exclude=CVS' '--exclude=.svn' '--exclude=.git' '--exclude=.arch' '--exclude=.hg' '--exclude=_darcs' '--exclude=.bzr' openscenegraph~/OpenSceneGraph/src/osgPlugins/CMakeLists.txt openscenegraph/OpenSceneGraph/src/osgPlugins/CMakeLists.txt
+--- openscenegraph~/OpenSceneGraph/src/osgPlugins/CMakeLists.txt	2010-11-11 17:51:46.000000000 +0100
++++ openscenegraph/OpenSceneGraph/src/osgPlugins/CMakeLists.txt	2011-01-28 13:42:45.000000000 +0100
+@@ -230,9 +230,9 @@
+     ADD_SUBDIRECTORY(qfont)
+ ENDIF()
+ 
+-IF(ZLIB_FOUND)
+-    ADD_SUBDIRECTORY(zip)
+-ENDIF()
++# IF(ZLIB_FOUND)
++#     ADD_SUBDIRECTORY(zip)
++# ENDIF()
+ 
+ IF(RSVG_FOUND)
+     ADD_SUBDIRECTORY(svg)

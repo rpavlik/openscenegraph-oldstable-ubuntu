@@ -1,6 +1,9 @@
 openscenegraph (2.8.5-1~rp~lucid1) lucid; urgency=low
 
-  * Porting to Lucid - no changes
+  * Porting to Lucid.
+  * Changes ported from the devel branch of the package:
+    - Disabled zip plugin as its implementation stores an embedded copy of
+      zlib.
 
  -- Ryan Pavlik <abiryan@ryand.net>  Mon, 10 Oct 2011 14:33:22 -0500
 
