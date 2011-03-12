@@ -1,0 +1,42 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## bug-614467-FTBFS_with_ffmpeg_0.6.dpatch by  <alberto@pantallon>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: No description.
+
+@DPATCH@
+diff -urNad '--exclude=CVS' '--exclude=.svn' '--exclude=.git' '--exclude=.arch' '--exclude=.hg' '--exclude=_darcs' '--exclude=.bzr' openscenegraph~/OpenSceneGraph/src/osgPlugins/ffmpeg/FFmpegAudioStream.cpp openscenegraph/OpenSceneGraph/src/osgPlugins/ffmpeg/FFmpegAudioStream.cpp
+--- openscenegraph~/OpenSceneGraph/src/osgPlugins/ffmpeg/FFmpegAudioStream.cpp	2011-03-12 21:36:16.000000000 +0100
++++ openscenegraph/OpenSceneGraph/src/osgPlugins/ffmpeg/FFmpegAudioStream.cpp	2011-03-12 21:46:06.000000000 +0100
+@@ -1,4 +1,4 @@
+-
++#include "FFmpegHeaders.hpp"
+ #include "FFmpegAudioStream.hpp"
+ 
+ #include <OpenThreads/ScopedLock>
+diff -urNad '--exclude=CVS' '--exclude=.svn' '--exclude=.git' '--exclude=.arch' '--exclude=.hg' '--exclude=_darcs' '--exclude=.bzr' openscenegraph~/OpenSceneGraph/src/osgPlugins/ffmpeg/FFmpegImageStream.cpp openscenegraph/OpenSceneGraph/src/osgPlugins/ffmpeg/FFmpegImageStream.cpp
+--- openscenegraph~/OpenSceneGraph/src/osgPlugins/ffmpeg/FFmpegImageStream.cpp	2011-03-12 21:36:16.000000000 +0100
++++ openscenegraph/OpenSceneGraph/src/osgPlugins/ffmpeg/FFmpegImageStream.cpp	2011-03-12 21:46:06.000000000 +0100
+@@ -1,4 +1,4 @@
+-
++#include "FFmpegHeaders.hpp"
+ #include "FFmpegImageStream.hpp"
+ #include "FFmpegAudioStream.hpp"
+ 
+diff -urNad '--exclude=CVS' '--exclude=.svn' '--exclude=.git' '--exclude=.arch' '--exclude=.hg' '--exclude=_darcs' '--exclude=.bzr' openscenegraph~/OpenSceneGraph/src/osgPlugins/ffmpeg/ReaderWriterFFmpeg.cpp openscenegraph/OpenSceneGraph/src/osgPlugins/ffmpeg/ReaderWriterFFmpeg.cpp
+--- openscenegraph~/OpenSceneGraph/src/osgPlugins/ffmpeg/ReaderWriterFFmpeg.cpp	2011-03-12 21:36:16.000000000 +0100
++++ openscenegraph/OpenSceneGraph/src/osgPlugins/ffmpeg/ReaderWriterFFmpeg.cpp	2011-03-12 21:46:06.000000000 +0100
+@@ -10,12 +10,12 @@
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
+  * OpenSceneGraph Public License for more details.
+ */
++#include "FFmpegHeaders.hpp"
+ 
+ #include <osgDB/Registry>
+ #include <osgDB/FileNameUtils>
+ #include <osgDB/FileUtils>
+ 
+-#include "FFmpegHeaders.hpp"
+ #include "FFmpegImageStream.hpp"
+ 
+ 
