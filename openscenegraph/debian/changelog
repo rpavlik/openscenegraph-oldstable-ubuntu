@@ -1,3 +1,9 @@
+openscenegraph (2.8.3-7) unstable; urgency=low
+
+  * Rearranged headers to compile with ffmpeg 0.6. This is solved in current SVN. (Closes: #614467).
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Sun, 13 Mar 2011 01:27:54 +0100
+
 openscenegraph (2.8.3-6) unstable; urgency=low
 
   * Bump Standards-Version to 3.9.1 (no changes needed)
