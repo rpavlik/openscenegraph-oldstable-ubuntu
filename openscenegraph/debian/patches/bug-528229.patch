@@ -1,7 +1,5 @@
-#! /bin/sh /usr/share/dpatch/dpatch-run
-
-@DPATCH@
-diff -urNad '--exclude=CVS' '--exclude=.svn' '--exclude=.git' '--exclude=.arch' '--exclude=.hg' '--exclude=_darcs' '--exclude=.bzr' openscenegraph-2.8.3~/OpenSceneGraph/CMakeLists.txt openscenegraph-2.8.3/OpenSceneGraph/CMakeLists.txt
+Author: unknown
+Description: fix bug 528229
 --- openscenegraph-2.8.3~/OpenSceneGraph/CMakeLists.txt	2010-07-21 10:58:09.000000000 +0200
 +++ openscenegraph-2.8.3/OpenSceneGraph/CMakeLists.txt	2010-07-21 11:11:52.000000000 +0200
 @@ -777,14 +777,39 @@

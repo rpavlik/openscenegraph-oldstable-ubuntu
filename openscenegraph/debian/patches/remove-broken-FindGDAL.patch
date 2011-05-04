@@ -1,11 +1,5 @@
-#! /bin/sh /usr/share/dpatch/dpatch-run
-## remove-broken-FindGDAL.dpatch by  <alberto@negro>
-##
-## All lines beginning with `## DP:' are a description of the patch.
-## DP: No description.
-
-@DPATCH@
-diff -urNad '--exclude=CVS' '--exclude=.svn' '--exclude=.git' '--exclude=.arch' '--exclude=.hg' '--exclude=_darcs' '--exclude=.bzr' openscenegraph-2.8.3~/OpenSceneGraph/CMakeModules/FindGDAL.cmake openscenegraph-2.8.3/OpenSceneGraph/CMakeModules/FindGDAL.cmake
+Author: <alberto@negro>
+Description: No description.
 --- openscenegraph-2.8.3~/OpenSceneGraph/CMakeModules/FindGDAL.cmake	2008-11-26 13:07:03.000000000 +0100
 +++ openscenegraph-2.8.3/OpenSceneGraph/CMakeModules/FindGDAL.cmake	1970-01-01 01:00:00.000000000 +0100
 @@ -1,94 +0,0 @@
