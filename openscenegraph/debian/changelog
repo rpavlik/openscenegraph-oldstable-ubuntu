@@ -6,6 +6,9 @@ openscenegraph (2.8.5-1~rp~lucid1) lucid; urgency=low
       zlib.
     - Enabled SVG and PDF plugins. Thanks James Goppert.
     - Updated to 3.0 (quilt) format.
+    - Removed CMakeLists.txt files in `openscenegraph-examples'. An
+      explanatory README was written with simple instructions for compiling
+      the examples those sources if desired (Closes: #612954, #612957).
 
  -- Ryan Pavlik <abiryan@ryand.net>  Mon, 10 Oct 2011 15:16:56 -0500
 

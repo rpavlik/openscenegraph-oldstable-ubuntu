@@ -295,7 +295,7 @@ install-arch: build-arch
 binary-indep: install-indep
 	dh_installdocs -i
 	dh_installchangelogs -i
-	dh_install -i
+	dh_install -i -XCMakeLists.txt
 	dh_installman -p openscenegraph ${MANPAGES}
 	dh_lintian -i
 	dh_compress -i
