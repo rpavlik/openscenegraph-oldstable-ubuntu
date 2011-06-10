@@ -137,8 +137,12 @@ endif
 #OPENSCENEGRAPH_SOVERSION=56
 #
 # OpenSceneGraph 2.8.3
+# OPENTHREADS_SOVERSION=13
+# OPENSCENEGRAPH_SOVERSION=65
+#
+# OpenSceneGraph 2.8.5
 OPENTHREADS_SOVERSION=13
-OPENSCENEGRAPH_SOVERSION=65
+OPENSCENEGRAPH_SOVERSION=74
 
 build: patch build-stamp
 build-stamp: configure-stamp 
@@ -370,7 +374,7 @@ binary-arch: build install
 #	dh_installinfo
 	dh_installman -p openscenegraph ${MANPAGES}
 	dh_install --sourcedir=debian/tmp --fail-missing
-	dh_install -plibopenscenegraph65 debian/lintian/libopenscenegraph65 usr/share/lintian/overrides
+	dh_install -plibopenscenegraph74 debian/lintian/libopenscenegraph74 usr/share/lintian/overrides
 	dh_link
 	dh_strip
 	dh_compress
