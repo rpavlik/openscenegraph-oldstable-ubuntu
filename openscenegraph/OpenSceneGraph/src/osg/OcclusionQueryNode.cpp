@@ -48,6 +48,8 @@ static OcclusionQueryBufferedExtensions s_OQ_bufferedExtensions;
 //   of these classes existed in their own separate header and
 //   source files.)
 
+namespace osg
+{
 
 // Create and return a StateSet appropriate for performing an occlusion
 //   query test (disable lighting, texture mapping, etc). Probably some
@@ -109,69 +111,13 @@ initOQDebugState()
     return debugState;
 }
 
-
-// TestResult -- stores (per context) results of an occlusion query
-//   test performed by QueryGeometry. An OcclusionQueryNode has a
-//   Geode owning a single QueryGeometry that
-//   draws the occlusion query geometry. QueryGeometry keeps a
-//   TestResult per context to store the result/status of each query.
-// Accessed during the cull and draw traversals.
-class TestResult : public osg::Referenced
-{
-public:
-    TestResult() : _init( false ), _id( 0 ), _contextID( 0 ), _active( false ), _numPixels( 0 ) {}
-    ~TestResult() {}
-
-    bool _init;
-
-    // Query ID for this context.
-    GLuint _id;
-    // Context ID owning this query ID.
-    unsigned int _contextID;
-
-    // Set to true when a query gets issued and set to
-    //   false when the result is retrieved.
-    mutable bool _active;
-
-    // Result of last query.
-    GLint _numPixels;
-};
-
-// QueryGeometry -- A Drawable that performs an occlusion query,
-//   using its geometric data as the query geometry.
-class QueryGeometry : public osg::Geometry
-{
-public:
-    QueryGeometry( const std::string& oqnName=std::string("") );
-    ~QueryGeometry();
-
-    void reset();
-
-    // TBD implement copy constructor
-
-    virtual void drawImplementation( osg::RenderInfo& renderInfo ) const;
-
-    unsigned int getNumPixels( const osg::Camera* cam );
-
-
-    void releaseGLObjects( osg::State* state = 0 );
-    static void deleteQueryObject( unsigned int contextID, GLuint handle );
-    static void flushDeletedQueryObjects( unsigned int contextID, double currentTime, double& availableTime );
-    static void discardDeletedQueryObjects( unsigned int contextID );
-    
-protected:
-    typedef std::map< const osg::Camera*, TestResult > ResultMap;
-    mutable ResultMap _results;
-    mutable OpenThreads::Mutex _mapMutex;
-
-    // Needed for debug only
-    std::string _oqnName;
-};
+}
 
 struct RetrieveQueriesCallback : public osg::Camera::DrawCallback
 {
-    typedef std::vector<TestResult*> ResultsVector;
-    ResultsVector _results;
+    typedef std::vector<osg::TestResult*> ResultsVector;
+    typedef osg::buffered_object< ResultsVector > AllResultsMap;
+    AllResultsMap _results;
 
     RetrieveQueriesCallback( osg::Drawable::Extensions* ext=NULL )
       : _extensionsFallback( ext )
@@ -181,10 +127,20 @@ struct RetrieveQueriesCallback : public osg::Camera::DrawCallback
     RetrieveQueriesCallback( const RetrieveQueriesCallback&, const osg::CopyOp& ) {}
     META_Object( osgOQ, RetrieveQueriesCallback )
 
-    virtual void operator() (const osg::Camera& camera) const
+    virtual void operator()( osg::RenderInfo& renderInfo ) const
     {
         if (_results.empty())
             return;
+
+        osg::Camera* camera = renderInfo.getCurrentCamera();
+        unsigned int contextID = renderInfo.getContextID();
+        const ResultsVector& rv = _results[ contextID ];
+        if( rv.empty() )
+            return;
+
+        osg::notify( osg::INFO ) << "osgOQ: RQCB start, camera: " 
+            << std::hex << camera << std::dec
+            << ", ctx: " << contextID << std::dec << std::endl;
 
         const osg::Timer& timer = *osg::Timer::instance();
         osg::Timer_t start_tick = timer.tick();
@@ -192,11 +148,11 @@ struct RetrieveQueriesCallback : public osg::Camera::DrawCallback
         int count( 0 );
 
         osg::Drawable::Extensions* ext;
-        if (camera.getGraphicsContext())
+        if (camera->getGraphicsContext())
         {
             // The typical path, for osgViewer-based applications or any
             //   app that has set up a valid GraphicsCOntext for the Camera.
-            unsigned int contextID = camera.getGraphicsContext()->getState()->getContextID();
+            unsigned int contextID = camera->getGraphicsContext()->getState()->getContextID();
             RetrieveQueriesCallback* const_this = const_cast<RetrieveQueriesCallback*>( this );
             ext = const_this->getExtensions( contextID, true );
         }
@@ -215,10 +171,12 @@ struct RetrieveQueriesCallback : public osg::Camera::DrawCallback
             }
         }
 
-        ResultsVector::const_iterator it = _results.begin();
-        while (it != _results.end())
+        osg::notify( osg::INFO ) << "osgOQ: RQCB: rv.size() = " << rv.size() << std::endl;
+        ResultsVector::const_iterator it = rv.begin();
+        while (it != rv.end())
         {
-            TestResult* tr = const_cast<TestResult*>( *it );
+            osg::TestResult* tr = const_cast<osg::TestResult*>( *it );
+            //osg::notify( osg::INFO ) << "osgOQ: RQCB: TestResult = " << std::hex << tr << std::dec << std::endl;
 
             if (!tr->_active || !tr->_init)
             {
@@ -269,14 +227,16 @@ struct RetrieveQueriesCallback : public osg::Camera::DrawCallback
             " queries in " << elapsedTime << " seconds." << std::endl;
     }
 
-    void reset()
+    void reset( unsigned int contextID )
     {
-        _results.clear();
+        // TBDrev
+        _results[ contextID ].clear();
     }
 
-    void add( TestResult* tr )
+    void add( osg::TestResult* tr, unsigned int contextID )
     {
-        _results.push_back( tr );
+        osg::notify( osg::INFO ) << "osgOQ: RQCB::add(), ctx: " << contextID << std::endl;
+        _results[ contextID ].push_back( tr );
     }
 
     osg::Drawable::Extensions* getExtensions( unsigned int contextID, bool createIfNotInitalized )
@@ -299,14 +259,22 @@ struct ClearQueriesCallback : public osg::Camera::DrawCallback
     ClearQueriesCallback( const ClearQueriesCallback&, const osg::CopyOp& ) {}
     META_Object( osgOQ, ClearQueriesCallback )
 
-    virtual void operator() (const osg::Camera&) const
+    virtual void operator()( osg::RenderInfo& renderInfo ) const
     {
+        osg::Camera* camera = renderInfo.getCurrentCamera();
+        unsigned int contextID = renderInfo.getContextID();
+        osg::notify( osg::INFO ) << "osgOQ: CQCB start, camera: " 
+            << std::hex << camera << std::dec
+            << ", ctx: " << renderInfo.getContextID() << std::dec << std::endl;
+
         if (!_rqcb)
         {
             osg::notify( osg::FATAL ) << "osgOQ: CQCB: Invalid RQCB." << std::endl;
             return;
         }
-        _rqcb->reset();
+        _rqcb->reset( contextID );
+
+        osg::notify( osg::INFO ) << "osgOQ: CQCB end." << std::endl;
     }
 
     RetrieveQueriesCallback* _rqcb;
@@ -321,6 +289,10 @@ typedef osg::buffered_object< QueryObjectList > DeletedQueryObjectCache;
 
 static OpenThreads::Mutex s_mutex_deletedQueryObjectCache;
 static DeletedQueryObjectCache s_deletedQueryObjectCache;
+
+namespace osg
+{
+
 
 QueryGeometry::QueryGeometry( const std::string& oqnName )
   : _oqnName( oqnName )
@@ -338,15 +310,14 @@ QueryGeometry::~QueryGeometry()
 void
 QueryGeometry::reset()
 {
-    OpenThreads::ScopedLock<OpenThreads::Mutex> lock( _mapMutex );
-
-    ResultMap::iterator it = _results.begin();
-    while (it != _results.end())
+    unsigned int idx;
+    for( idx=0; idx<_results.size(); idx++ )
     {
-        TestResult& tr = it->second;
+        TestResult& tr = _results[ idx ];
         if (tr._init)
             QueryGeometry::deleteQueryObject( tr._contextID, tr._id );
-        it++;
+        tr._init = false;
+        tr._active = false;
     }
     _results.clear();
 }
@@ -372,22 +343,17 @@ QueryGeometry::drawImplementation( osg::RenderInfo& renderInfo ) const
         cam->setPreDrawCallback( cqcb );
     }
 
-    // Get TestResult from Camera map
-    TestResult* tr;
-    {
-        OpenThreads::ScopedLock<OpenThreads::Mutex> lock( _mapMutex );
-        tr = &( _results[ cam ] );
-    }
+    TestResult* tr = &( _results[ contextID ] );
 
     // Add TestResult to RQCB.
     RetrieveQueriesCallback* rqcb = dynamic_cast<
         RetrieveQueriesCallback* >( cam->getPostDrawCallback() );
     if (!rqcb)
     {
-        osg::notify( osg::FATAL ) << "osgOQ: QG: Invalid RQCB." << std::endl;
+        osg::notify( osg::WARN ) << "osgOQ: QG: Invalid RQCB." << std::endl;
         return;
     }
-    rqcb->add( tr );
+    rqcb->add( tr, contextID );
 
 
     // Issue query
@@ -425,14 +391,22 @@ QueryGeometry::drawImplementation( osg::RenderInfo& renderInfo ) const
 
 
 unsigned int
-QueryGeometry::getNumPixels( const osg::Camera* cam )
+QueryGeometry::getNumPixels()
 {
-    TestResult tr;
+    // Usually called during cull, where we do not have a context ID.
+    // So, instead of returning the per-context result, instead
+    // find the max pixel count and return it.
+    int pixels( 0 );
+    unsigned int idx;
+    for( idx=0; idx < _results.size(); idx++ )
     {
-        OpenThreads::ScopedLock<OpenThreads::Mutex> lock( _mapMutex );
-        tr =  _results[ cam ];
+        TestResult tr =  _results[ idx ];
+        if( !tr._init )
+            continue;
+        if( tr._numPixels > pixels )
+            pixels = tr._numPixels;
     }
-    return tr._numPixels;
+    return( (unsigned int)pixels );
 }
 
 
@@ -447,16 +421,11 @@ QueryGeometry::releaseGLObjects( osg::State* state )
     {
         // Delete all query IDs for the specified context.
         unsigned int contextID = state->getContextID();
-        ResultMap::iterator it = _results.begin();
-        while (it != _results.end())
+        TestResult& tr = _results[ contextID ];
+        if (tr._contextID == contextID)
         {
-            TestResult& tr = it->second;
-            if (tr._contextID == contextID)
-            {
-                QueryGeometry::deleteQueryObject( contextID, tr._id );
-                tr._init = false;
-            }
-            it++;
+            QueryGeometry::deleteQueryObject( contextID, tr._id );
+            tr._init = false;
         }
     }
 }
@@ -516,9 +485,6 @@ QueryGeometry::discardDeletedQueryObjects( unsigned int contextID )
 //
 
 
-
-namespace osg
-{
 
 
 OcclusionQueryNode::OcclusionQueryNode()
@@ -598,7 +564,7 @@ OcclusionQueryNode::getPassed( const osg::Camera* camera, osg::NodeVisitor& nv )
     _passed = ( distance <= 0.f );
     if (!_passed)
     {
-        int result = qg->getNumPixels( camera );
+        int result = qg->getNumPixels();
         _passed = ( (unsigned int)(result) > _visThreshold );
     }
 

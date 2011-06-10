@@ -154,6 +154,7 @@ SET(LIB_PUBLIC_HEADERS
     ${HEADER_PATH}/Texture
     ${HEADER_PATH}/Texture1D
     ${HEADER_PATH}/Texture2D
+    ${HEADER_PATH}/Texture2DMultisample
     ${HEADER_PATH}/Texture2DArray
     ${HEADER_PATH}/Texture3D
     ${HEADER_PATH}/TextureCubeMap
@@ -309,6 +310,7 @@ ADD_LIBRARY(${LIB_NAME}
     Texture1D.cpp
     Texture2DArray.cpp
     Texture2D.cpp
+    Texture2DMultisample.cpp
     Texture3D.cpp
     Texture.cpp
     TextureCubeMap.cpp
@@ -326,7 +328,7 @@ ADD_LIBRARY(${LIB_NAME}
 LINK_INTERNAL(${LIB_NAME}     
     OpenThreads
 )
-LINK_EXTERNAL(${LIB_NAME} ${CMAKE_THREAD_LIBS_INIT}    ${MATH_LIBRARY} )
+LINK_EXTERNAL(${LIB_NAME} ${CMAKE_THREAD_LIBS_INIT}    ${MATH_LIBRARY} ${DL_LIBRARY})
 LINK_CORELIB_DEFAULT(${LIB_NAME} ${CMAKE_THREAD_LIBS_INIT} ${MATH_LIBRARY} )
 
 INCLUDE(ModuleInstall OPTIONAL)

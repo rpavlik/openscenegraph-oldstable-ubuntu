@@ -1,3 +1,9 @@
+openscenegraph (2.8.5-1) unstable; urgency=low
+
+  * New upstream stable release.
+
+ --
+
 openscenegraph (2.8.3-7) unstable; urgency=low
 
   * Rearranged headers to compile with ffmpeg 0.6. This is solved in current SVN. (Closes: #614467).
