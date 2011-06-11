@@ -331,7 +331,10 @@ MANEXAMPLES = \
 	osgwidgetstyled.1 \
 	osgwidgettable.1 \
 	osgwidgetwindow.1 \
-	osgwindows.1
+	osgwindows.1 \
+	osgviewerGTK.1 \
+	osgviewerQT.1 \
+	osgviewerSDL.1
 
 install: build
 	dh_testdir
