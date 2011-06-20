@@ -290,13 +290,14 @@ install-arch: build-arch
 	$(MAKE) -C build/osgstatic DESTDIR=$(CURDIR)/debian/tmp/usr install
 	$(MAKE) -C build/osg DESTDIR=$(CURDIR)/debian/tmp/usr install
 	-mv $(CURDIR)/debian/tmp/usr/share/OpenSceneGraph/bin/* $(CURDIR)/debian/tmp/usr/bin
+	for man in ${MANEXAMPLES} ; do rm -f $$man ; ln -s debian/osgexamples.1 $$man ; done
+	for man in ${MANAPPLICATIONS} ; do rm -f $$man ; ln -s debian/osgapplications.1 $$man ; done
 
 # Build architecture-independent files here.
 binary-indep: install-indep
 	dh_installdocs -i
 	dh_installchangelogs -i
 	dh_install -i -XCMakeLists.txt
-	dh_installman -p openscenegraph ${MANPAGES}
 	dh_lintian -i
 	dh_compress -i
 	dh_fixperms -i
@@ -308,8 +309,6 @@ binary-indep: install-indep
 install-indep: build-indep
 	mkdir -p debian/tmp/usr/share/openscenegraph/
 	cp -r OpenSceneGraph/examples debian/tmp/usr/share/openscenegraph
-	for man in ${MANEXAMPLES} ; do rm -f $$man ; ln -s debian/osgexamples.1 $$man ; done
-	for man in ${MANAPPLICATIONS} ; do rm -f $$man ; ln -s debian/osgapplications.1 $$man ; done
 
 # Build architecture-dependent files here.
 binary-arch: install-arch
@@ -317,6 +316,7 @@ binary-arch: install-arch
 	dh_installdocs -a
 	dh_installchangelogs -a
 	dh_installexamples -a
+	dh_installman -p openscenegraph ${MANPAGES}
 	dh_lintian -a
 	dh_link -a
 	dh_compress -a
