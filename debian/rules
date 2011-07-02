@@ -68,6 +68,8 @@ define INTROSPECTION
 endef
 endif
 
+LDFLAGS = -Wl,--as-needed
+
 #
 # Shared libraries version numbers
 #
