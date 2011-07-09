@@ -78,7 +78,6 @@ Description: 3D scene graph, documentation
  This package contains the documentation.
 
 Package: openscenegraph
-Section: devel
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: 3D scene graph, utilities and examples (binaries)
@@ -92,7 +91,6 @@ Description: 3D scene graph, utilities and examples (binaries)
  This package contains utilities and examples (binaries).
 
 Package: openscenegraph-examples
-Section: devel
 Architecture: all
 Depends: ${misc:Depends}
 Description: 3D scene graph, examples (sources)
