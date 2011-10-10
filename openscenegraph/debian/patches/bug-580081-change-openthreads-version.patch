@@ -1,7 +1,7 @@
 Author: <alberto@negro>
 Description: No description.
---- openscenegraph-2.8.3~/OpenSceneGraph/src/OpenThreads/CMakeLists.txt	2010-05-03 22:02:52.000000000 +0200
-+++ openscenegraph-2.8.3/OpenSceneGraph/src/OpenThreads/CMakeLists.txt	2010-05-03 22:03:02.000000000 +0200
+--- a/OpenSceneGraph/src/OpenThreads/CMakeLists.txt
++++ b/OpenSceneGraph/src/OpenThreads/CMakeLists.txt
 @@ -4,7 +4,7 @@
  
  SET(OPENTHREADS_MAJOR_VERSION 2)

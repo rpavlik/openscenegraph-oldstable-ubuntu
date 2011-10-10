@@ -1,17 +1,15 @@
-Author: <alberto@pantallon>
-Description: No description.
 --- a/OpenSceneGraph/src/osgPlugins/CMakeLists.txt
 +++ b/OpenSceneGraph/src/osgPlugins/CMakeLists.txt
-@@ -228,9 +228,9 @@
-     ADD_SUBDIRECTORY(qfont)
- ENDIF()
- 
+@@ -223,9 +223,9 @@
+ IF(FREETYPE_FOUND)
+     ADD_SUBDIRECTORY(freetype)
+ ENDIF(FREETYPE_FOUND)
 -IF(ZLIB_FOUND)
 -    ADD_SUBDIRECTORY(zip)
--ENDIF()
-+# IF(ZLIB_FOUND)
-+#     ADD_SUBDIRECTORY(zip)
-+# ENDIF()
+-ENDIF(ZLIB_FOUND)
++#IF(ZLIB_FOUND)
++#    ADD_SUBDIRECTORY(zip)
++#ENDIF(ZLIB_FOUND)
  
- IF(RSVG_FOUND)
+ IF(RSVG_FOUND AND CAIRO_FOUND)
      ADD_SUBDIRECTORY(svg)
