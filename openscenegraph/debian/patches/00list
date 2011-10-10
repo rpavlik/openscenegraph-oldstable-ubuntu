@@ -1,5 +1,0 @@
-bug-528229.dpatch
-override-soversions.dpatch
-disable-zip-plugin-with-embedded-zlib.dpatch
-remove-broken-FindGDAL.dpatch
-bug-580081-change-openthreads-version.dpatch
