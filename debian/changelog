@@ -12,7 +12,7 @@ openscenegraph (2.8.5-1~rp~lucid1) lucid; urgency=low
     - Remove Section entries for some binary packages (quell lintian warning
       binary-control-field-duplicates-source)
 
- -- Ryan Pavlik <abiryan@ryand.net>  Mon, 10 Oct 2011 15:16:56 -0500
+ -- Ryan Pavlik <abiryan@ryand.net>  Mon, 10 Oct 2011 15:32:41 -0500
 
 openscenegraph (2.8.5-1) unstable; urgency=low
 
