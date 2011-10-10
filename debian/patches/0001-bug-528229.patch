@@ -1,8 +1,50 @@
-Author: unknown
-Description: fix bug 528229
+From: Alberto Luaces <aluaces@udc.es>
+Date: Mon, 10 Oct 2011 16:01:07 -0500
+Subject: [PATCH] bug-528229
+
+---
+ OpenSceneGraph/CMakeLists.txt                      |   33 +++++++++++++++++--
+ .../packaging/pkgconfig/openscenegraph-osg.pc.in   |   15 +++++++++
+ .../pkgconfig/openscenegraph-osgAnimation.pc.in    |   14 ++++++++
+ .../packaging/pkgconfig/openscenegraph-osgDB.pc.in |   14 ++++++++
+ .../packaging/pkgconfig/openscenegraph-osgFX.pc.in |   14 ++++++++
+ .../packaging/pkgconfig/openscenegraph-osgGA.pc.in |   14 ++++++++
+ .../openscenegraph-osgIntrospection.pc.in          |   14 ++++++++
+ .../pkgconfig/openscenegraph-osgManipulator.pc.in  |   14 ++++++++
+ .../pkgconfig/openscenegraph-osgParticle.pc.in     |   14 ++++++++
+ .../pkgconfig/openscenegraph-osgShadow.pc.in       |   14 ++++++++
+ .../pkgconfig/openscenegraph-osgSim.pc.in          |   14 ++++++++
+ .../pkgconfig/openscenegraph-osgTerrain.pc.in      |   14 ++++++++
+ .../pkgconfig/openscenegraph-osgText.pc.in         |   14 ++++++++
+ .../pkgconfig/openscenegraph-osgUtil.pc.in         |   14 ++++++++
+ .../pkgconfig/openscenegraph-osgViewer.pc.in       |   14 ++++++++
+ .../pkgconfig/openscenegraph-osgVolume.pc.in       |   14 ++++++++
+ .../pkgconfig/openscenegraph-osgWidget.pc.in       |   14 ++++++++
+ .../packaging/pkgconfig/openscenegraph.pc.in       |    1 +
+ .../packaging/pkgconfig/openthreads.pc.in          |    4 +-
+ 19 files changed, 257 insertions(+), 6 deletions(-)
+ create mode 100644 OpenSceneGraph/packaging/pkgconfig/openscenegraph-osg.pc.in
+ create mode 100644 OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgAnimation.pc.in
+ create mode 100644 OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgDB.pc.in
+ create mode 100644 OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgFX.pc.in
+ create mode 100644 OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgGA.pc.in
+ create mode 100644 OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgIntrospection.pc.in
+ create mode 100644 OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgManipulator.pc.in
+ create mode 100644 OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgParticle.pc.in
+ create mode 100644 OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgShadow.pc.in
+ create mode 100644 OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgSim.pc.in
+ create mode 100644 OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgTerrain.pc.in
+ create mode 100644 OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgText.pc.in
+ create mode 100644 OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgUtil.pc.in
+ create mode 100644 OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgViewer.pc.in
+ create mode 100644 OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgVolume.pc.in
+ create mode 100644 OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgWidget.pc.in
+
+diff --git a/OpenSceneGraph/CMakeLists.txt b/OpenSceneGraph/CMakeLists.txt
+index 75b233c..3d0a5f3 100644
 --- a/OpenSceneGraph/CMakeLists.txt
 +++ b/OpenSceneGraph/CMakeLists.txt
-@@ -808,14 +808,39 @@
+@@ -808,14 +808,39 @@ IF(CMAKE_CPACK_COMMAND)
      ENDIF(BUILD_OSG_PACKAGES)
  ENDIF(CMAKE_CPACK_COMMAND)
  
@@ -46,6 +88,9 @@ Description: fix bug 528229
  
  # Run this as late as possible so users can easier spot the message
  IF (${CMAKE_INSTALL_PREFIX} STREQUAL "/usr/local")
+diff --git a/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osg.pc.in b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osg.pc.in
+new file mode 100644
+index 0000000..cae3035
 --- /dev/null
 +++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osg.pc.in
 @@ -0,0 +1,15 @@
@@ -64,6 +109,9 @@ Description: fix bug 528229
 +Libs.private: /usr/lib/libGLU.so /usr/lib/libGL.so /usr/lib/libSM.so /usr/lib/libICE.so /usr/lib/libX11.so /usr/lib/libXext.so
 +Libs: -L${libdir} -losg
 +Cflags: -I${includedir}
+diff --git a/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgAnimation.pc.in b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgAnimation.pc.in
+new file mode 100644
+index 0000000..7447edb
 --- /dev/null
 +++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgAnimation.pc.in
 @@ -0,0 +1,14 @@
@@ -81,6 +129,9 @@ Description: fix bug 528229
 +Conflicts:
 +Libs: -L${libdir} -losgAnimation
 +Cflags: -I${includedir}
+diff --git a/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgDB.pc.in b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgDB.pc.in
+new file mode 100644
+index 0000000..7a78259
 --- /dev/null
 +++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgDB.pc.in
 @@ -0,0 +1,14 @@
@@ -98,6 +149,9 @@ Description: fix bug 528229
 +Conflicts:
 +Libs: -L${libdir} -losgDB
 +Cflags: -I${includedir}
+diff --git a/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgFX.pc.in b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgFX.pc.in
+new file mode 100644
+index 0000000..ffbf22f
 --- /dev/null
 +++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgFX.pc.in
 @@ -0,0 +1,14 @@
@@ -115,6 +169,9 @@ Description: fix bug 528229
 +Conflicts:
 +Libs: -L${libdir} -losgFX
 +Cflags: -I${includedir}
+diff --git a/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgGA.pc.in b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgGA.pc.in
+new file mode 100644
+index 0000000..e6a915c
 --- /dev/null
 +++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgGA.pc.in
 @@ -0,0 +1,14 @@
@@ -132,6 +189,9 @@ Description: fix bug 528229
 +Conflicts:
 +Libs: -L${libdir} -losgGA
 +Cflags: -I${includedir}
+diff --git a/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgIntrospection.pc.in b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgIntrospection.pc.in
+new file mode 100644
+index 0000000..57f8fa1
 --- /dev/null
 +++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgIntrospection.pc.in
 @@ -0,0 +1,14 @@
@@ -149,6 +209,9 @@ Description: fix bug 528229
 +Conflicts:
 +Libs: -L${libdir} -losgIntrospection
 +Cflags: -I${includedir}
+diff --git a/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgManipulator.pc.in b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgManipulator.pc.in
+new file mode 100644
+index 0000000..30549fb
 --- /dev/null
 +++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgManipulator.pc.in
 @@ -0,0 +1,14 @@
@@ -166,6 +229,9 @@ Description: fix bug 528229
 +Conflicts:
 +Libs: -L${libdir} -losgManipulator
 +Cflags: -I${includedir}
+diff --git a/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgParticle.pc.in b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgParticle.pc.in
+new file mode 100644
+index 0000000..8bd0f44
 --- /dev/null
 +++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgParticle.pc.in
 @@ -0,0 +1,14 @@
@@ -183,6 +249,9 @@ Description: fix bug 528229
 +Conflicts:
 +Libs: -L${libdir} -losgParticle
 +Cflags: -I${includedir}
+diff --git a/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgShadow.pc.in b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgShadow.pc.in
+new file mode 100644
+index 0000000..f4c32a4
 --- /dev/null
 +++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgShadow.pc.in
 @@ -0,0 +1,14 @@
@@ -200,6 +269,9 @@ Description: fix bug 528229
 +Conflicts:
 +Libs: -L${libdir} -losgShadow
 +Cflags: -I${includedir}
+diff --git a/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgSim.pc.in b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgSim.pc.in
+new file mode 100644
+index 0000000..de2354c
 --- /dev/null
 +++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgSim.pc.in
 @@ -0,0 +1,14 @@
@@ -217,6 +289,9 @@ Description: fix bug 528229
 +Conflicts:
 +Libs: -L${libdir} -losgSim
 +Cflags: -I${includedir}
+diff --git a/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgTerrain.pc.in b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgTerrain.pc.in
+new file mode 100644
+index 0000000..47ca61e
 --- /dev/null
 +++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgTerrain.pc.in
 @@ -0,0 +1,14 @@
@@ -234,6 +309,9 @@ Description: fix bug 528229
 +Conflicts:
 +Libs: -L${libdir} -losgTerrain
 +Cflags: -I${includedir}
+diff --git a/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgText.pc.in b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgText.pc.in
+new file mode 100644
+index 0000000..7d67b51
 --- /dev/null
 +++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgText.pc.in
 @@ -0,0 +1,14 @@
@@ -251,6 +329,9 @@ Description: fix bug 528229
 +Conflicts:
 +Libs: -L${libdir} -losgText
 +Cflags: -I${includedir}
+diff --git a/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgUtil.pc.in b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgUtil.pc.in
+new file mode 100644
+index 0000000..129f97d
 --- /dev/null
 +++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgUtil.pc.in
 @@ -0,0 +1,14 @@
@@ -268,6 +349,9 @@ Description: fix bug 528229
 +Conflicts:
 +Libs: -L${libdir} -losgUtil
 +Cflags: -I${includedir}
+diff --git a/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgViewer.pc.in b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgViewer.pc.in
+new file mode 100644
+index 0000000..b7c5b80
 --- /dev/null
 +++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgViewer.pc.in
 @@ -0,0 +1,14 @@
@@ -285,6 +369,9 @@ Description: fix bug 528229
 +Conflicts:
 +Libs: -L${libdir} -losgViewer
 +Cflags: -I${includedir}
+diff --git a/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgVolume.pc.in b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgVolume.pc.in
+new file mode 100644
+index 0000000..6166bdb
 --- /dev/null
 +++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgVolume.pc.in
 @@ -0,0 +1,14 @@
@@ -302,6 +389,9 @@ Description: fix bug 528229
 +Conflicts:
 +Libs: -L${libdir} -losgVolume
 +Cflags: -I${includedir}
+diff --git a/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgWidget.pc.in b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgWidget.pc.in
+new file mode 100644
+index 0000000..e136527
 --- /dev/null
 +++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph-osgWidget.pc.in
 @@ -0,0 +1,14 @@
@@ -319,18 +409,22 @@ Description: fix bug 528229
 +Conflicts:
 +Libs: -L${libdir} -losgWidget
 +Cflags: -I${includedir}
+diff --git a/OpenSceneGraph/packaging/pkgconfig/openscenegraph.pc.in b/OpenSceneGraph/packaging/pkgconfig/openscenegraph.pc.in
+index b333015..5a01e8f 100644
 --- a/OpenSceneGraph/packaging/pkgconfig/openscenegraph.pc.in
 +++ b/OpenSceneGraph/packaging/pkgconfig/openscenegraph.pc.in
-@@ -10,5 +10,6 @@
+@@ -10,5 +10,6 @@ Description: 3D scenegraph
  Version: @OPENSCENEGRAPH_VERSION@
  Requires: openthreads
  Conflicts:
 +Libs.private: /usr/lib/libGLU.so /usr/lib/libGL.so /usr/lib/libSM.so /usr/lib/libICE.so /usr/lib/libX11.so /usr/lib/libXext.so
  Libs: -L${libdir} -losg -losgDB -losgFX -losgGA -losgParticle -losgSim -losgText -losgUtil -losgTerrain -losgManipulator -losgViewer -losgWidget -losgShadow -losgAnimation -losgVolume
  Cflags: -I${includedir}
+diff --git a/OpenSceneGraph/packaging/pkgconfig/openthreads.pc.in b/OpenSceneGraph/packaging/pkgconfig/openthreads.pc.in
+index efe72b7..c755235 100644
 --- a/OpenSceneGraph/packaging/pkgconfig/openthreads.pc.in
 +++ b/OpenSceneGraph/packaging/pkgconfig/openthreads.pc.in
-@@ -10,5 +10,5 @@
+@@ -10,5 +10,5 @@ Description: Object-Oriented (OO) thread interface for C++ programmers
  Version: @OPENTHREADS_VERSION@
  Requires:
  Conflicts:
@@ -338,3 +432,4 @@ Description: fix bug 528229
 -Cflags: -I${includedir}
 +Libs: -L${libdir} -lOpenThreads -pthread
 +Cflags: -I${includedir} -pthread
+-- 

@@ -1,5 +1,15 @@
-Author: <alberto@negro>
-Description: No description.
+From: Alberto Luaces <alberto@udc.es>
+Date: Mon, 10 Oct 2011 16:04:47 -0500
+Subject: [PATCH] remove-broken-FindGDAL
+
+---
+ OpenSceneGraph/CMakeModules/FindGDAL.cmake |   94 ----------------------------
+ 1 files changed, 0 insertions(+), 94 deletions(-)
+ delete mode 100644 OpenSceneGraph/CMakeModules/FindGDAL.cmake
+
+diff --git a/OpenSceneGraph/CMakeModules/FindGDAL.cmake b/OpenSceneGraph/CMakeModules/FindGDAL.cmake
+deleted file mode 100644
+index 4070baf..0000000
 --- a/OpenSceneGraph/CMakeModules/FindGDAL.cmake
 +++ /dev/null
 @@ -1,94 +0,0 @@
@@ -97,3 +107,4 @@ Description: No description.
 -
 -
 -
+-- 

@@ -1,0 +1,22 @@
+From: Alberto Luaces <alberto@udc.es>
+Date: Mon, 10 Oct 2011 16:05:17 -0500
+Subject: [PATCH] bug-580081-change-openthreads-version
+
+---
+ OpenSceneGraph/src/OpenThreads/CMakeLists.txt |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/OpenSceneGraph/src/OpenThreads/CMakeLists.txt b/OpenSceneGraph/src/OpenThreads/CMakeLists.txt
+index b2417b0..430e48c 100644
+--- a/OpenSceneGraph/src/OpenThreads/CMakeLists.txt
++++ b/OpenSceneGraph/src/OpenThreads/CMakeLists.txt
+@@ -4,7 +4,7 @@ ADD_DEFINITIONS(-DOPENTHREADS_EXPORTS)
+ 
+ SET(OPENTHREADS_MAJOR_VERSION 2)
+ SET(OPENTHREADS_MINOR_VERSION 4)
+-SET(OPENTHREADS_PATCH_VERSION 0)
++SET(OPENTHREADS_PATCH_VERSION 1)
+ IF(NOT OPENTHREADS_SOVERSION)
+     SET(OPENTHREADS_SOVERSION 11)
+ ENDIF (NOT OPENTHREADS_SOVERSION)
+-- 

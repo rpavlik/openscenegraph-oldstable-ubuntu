@@ -1,0 +1,26 @@
+From: Alberto Luaces <aluaces@udc.es>
+Date: Mon, 10 Oct 2011 16:03:20 -0500
+Subject: [PATCH] disable-zip-plugin-with-embedded-zlib
+
+---
+ OpenSceneGraph/src/osgPlugins/CMakeLists.txt |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/OpenSceneGraph/src/osgPlugins/CMakeLists.txt b/OpenSceneGraph/src/osgPlugins/CMakeLists.txt
+index d8334d8..cd1d735 100644
+--- a/OpenSceneGraph/src/osgPlugins/CMakeLists.txt
++++ b/OpenSceneGraph/src/osgPlugins/CMakeLists.txt
+@@ -223,9 +223,9 @@ ENDIF(QUICKTIME_FOUND)
+ IF(FREETYPE_FOUND)
+     ADD_SUBDIRECTORY(freetype)
+ ENDIF(FREETYPE_FOUND)
+-IF(ZLIB_FOUND)
+-    ADD_SUBDIRECTORY(zip)
+-ENDIF(ZLIB_FOUND)
++#IF(ZLIB_FOUND)
++#    ADD_SUBDIRECTORY(zip)
++#ENDIF(ZLIB_FOUND)
+ 
+ IF(RSVG_FOUND AND CAIRO_FOUND)
+     ADD_SUBDIRECTORY(svg)
+-- 

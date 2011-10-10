@@ -1,5 +1,5 @@
-bug-528229.patch
-override-soversions.patch
-disable-zip-plugin-with-embedded-zlib.patch
-remove-broken-FindGDAL.patch
-bug-580081-change-openthreads-version.patch
+0001-bug-528229.patch
+0002-override-soversions.patch
+0003-disable-zip-plugin-with-embedded-zlib.patch
+0004-remove-broken-FindGDAL.patch
+0005-bug-580081-change-openthreads-version.patch
